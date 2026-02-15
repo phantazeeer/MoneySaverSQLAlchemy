@@ -1,5 +1,6 @@
 from app.db.database import get_session
 from app.utils import get_password_hash
+from datetime import datetime, timezone
 
 
 class UserService:
@@ -7,8 +8,8 @@ class UserService:
         self.conn = await get_session()
 
     async def add_user(self, username: str, email: str, password: str):
-        await self.conn.execute("""INSERT INTO user (username, email, password) VALUES (?, ?, ?);""",
-                                (username, email, get_password_hash(password)))
+        await self.conn.execute("""INSERT INTO user (username, email, password, created_at) VALUES (?, ?, ?, ?);""",
+                                (username, email, get_password_hash(password)), datetime.now(timezone.utc))
         await self.conn.commit()
 
     async def get_user_by(self, email: str | None = None, id: int | None = None):
