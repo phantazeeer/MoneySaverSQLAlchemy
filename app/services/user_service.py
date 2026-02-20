@@ -29,9 +29,3 @@ class UserService:
     async def update_goal(self, id: int, goal: str):
         await self.conn.execute("""UPDATE user SET goal = ? WHERE id = ?""", (goal, id))
         await self.conn.commit()
-
-
-async def test_class():
-    service = UserService()
-    await service.init_session()
-    await service.update_goal(id=2, goal='FFF:123')
