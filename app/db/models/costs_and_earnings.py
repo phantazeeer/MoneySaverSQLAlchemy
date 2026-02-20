@@ -10,4 +10,4 @@ async def create_costs_and_earnings_table():
     value INTEGER NOT NULL,
     comment TEXT,
     created_at TEXT,
-    FOREIGN KEY (user_id) REFERENCES user (id));""")
+    FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE);""")
