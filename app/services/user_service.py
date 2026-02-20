@@ -9,7 +9,7 @@ class UserService:
 
     async def add_user(self, username: str, email: str, password: str):
         await self.conn.execute("""INSERT INTO user (username, email, password, created_at) VALUES (?, ?, ?, ?);""",
-                                (username, email, get_password_hash(password)), datetime.now(timezone.utc))
+                                (username, email, get_password_hash(password), datetime.now(timezone.utc)))
         await self.conn.commit()
 
     async def get_user_by(self, email: str | None = None, id: int | None = None):
