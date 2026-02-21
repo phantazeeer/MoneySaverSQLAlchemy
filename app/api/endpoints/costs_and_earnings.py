@@ -1,10 +1,47 @@
 from fastapi import APIRouter, Depends, status
 
-from app.services import CostsAndEarningsService
+from app.services import CostsAndEarningsService as CEService
+from app.utils import get_jwt_payload
+from app.api.schemas import AddRecord, ChangeRecord
 
 router = APIRouter(prefix='/records', tags=['Working with records'])
 
-async def get_service():
-    service = CostsAndEarningsService()
+
+async def get_service() -> CEService:
+    service = CEService()
     await service.init_session()
     return service
+
+
+@router.post('/add_record')
+async def add_record(record: AddRecord, user_id: int = Depends(get_jwt_payload),
+                     service: CEService = Depends(get_service)):
+    await service.add_record(user_id, **(record.model_dump()))
+    return "OK"
+
+
+@router.get('/get_user_records')
+async def get_user_records(user_id: int = Depends(get_jwt_payload),
+                           service: CEService = Depends(get_service)):
+    return await service.get_records_by(user_id=user_id)
+
+
+@router.get('/record_by_id')
+async def get_record_by_id(id: int, user_id: int = Depends(get_jwt_payload),
+                           service: CEService = Depends(get_service)):
+    print(id)
+    return await service.get_records_by(id=id, user_id=user_id)
+
+
+@router.delete('/delete_record_by_id')
+async def delete_record(id: int, user_id: int = Depends(get_jwt_payload),
+                        service: CEService = Depends(get_service)):
+    await service.delete_record(id=id, user_id=user_id)
+    return "OK"
+
+
+@router.put('/update_record')
+async def update_record(changes: ChangeRecord, user_id: int = Depends(get_jwt_payload),
+                        service: CEService = Depends(get_service)):
+    await service.update_record(changes.id, user_id, changes.operation_type, changes.value, changes.comment)
+    return "OK"
