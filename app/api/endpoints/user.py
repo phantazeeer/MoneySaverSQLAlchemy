@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, status, Response
+from types import NoneType
 
-from app.api.schemas import UserLogin
+from fastapi import APIRouter, Depends, status, Response, HTTPException
+
+from app.api.schemas import UserLogin, UserChange
 from app.services import UserService
 from app.api.schemas import UserRegister
 from app.utils import get_jwt_payload
@@ -38,3 +40,21 @@ async def logout():
     res = Response("OK", status_code=200)
     res.delete_cookie('Authorization')
     return res
+
+
+@router.put('/change_user')
+async def change_user(changes: UserChange, user_id: int = Depends(get_jwt_payload),
+                      service: UserService = Depends(get_service)):
+    changes = changes.model_dump()
+
+    if "goal_name" in changes.keys() and "goal_value" in changes.keys():
+        changes["goal"] = changes.pop("goal_name") + "#" + str(changes.pop("goal_value"))
+    elif "goal_name" in changes.keys():
+        changes.pop("goal_name")
+    elif "goal_value" in changes.keys():
+        changes.pop("goal_value")
+    if len(changes.keys()) == 0:
+        raise HTTPException(400, "Пустой запрос")
+
+    await service.update_user(user_id, **changes)
+    return "OK"
