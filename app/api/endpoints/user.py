@@ -1,5 +1,3 @@
-from types import NoneType
-
 from fastapi import APIRouter, Depends, status, Response, HTTPException
 
 from app.api.schemas import UserLogin, UserChange
