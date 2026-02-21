@@ -33,16 +33,16 @@ def create_jwt(payload: dict) -> str:
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.ENCRYPT_ALG)
 
 
-def get_jwt_payload(token: Annotated[str, Cookie()]) -> dict | str:
+def get_jwt_payload(Authorization: Annotated[str, Cookie(include_in_schema=False)]) -> int:
     """
     This function decodes token
     if token invalid :return: name of error
     else :return: payload(json)
-    :param token: str
+    :param Authorization: str
     """
     try:
-        decoded = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.ENCRYPT_ALG])
-        return decoded
+        decoded = jwt.decode(Authorization, settings.JWT_SECRET_KEY, algorithms=[settings.ENCRYPT_ALG])
+        return int(decoded['sub'])
     except jwt.ExpiredSignatureError:
         raise HTTPException(401, "Bearer token expired")
     except jwt.InvalidTokenError:
