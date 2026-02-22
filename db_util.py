@@ -31,12 +31,12 @@ async def fill_costs_and_earnings_table():
     service = CostsAndEarningsService()
     await service.init_session()
     await service.add_record(1, 1, 500)
-    await service.add_record(1, 2, 1500)
+    await service.add_record(1, 0, 1500)
     await service.add_record(1, 1, 300, "Купил пирожок в столовой")
-    await service.add_record(1, 2, 5000, "Мама дала на обеды")
-    await service.add_record(5, 2, 1500)
+    await service.add_record(1, 0, 5000, "Мама дала на обеды")
+    await service.add_record(5, 0, 1500)
     await service.add_record(5, 1, 500)
-    await service.add_record(5, 2, 350000, "Пришла зарплата")
+    await service.add_record(5, 0, 350000, "Пришла зарплата")
     await service.add_record(5, 1, 10000, "Штраф за плохую архитектуру проекта")
 
 async def fill_all_tables():

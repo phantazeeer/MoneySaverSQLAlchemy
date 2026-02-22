@@ -1,5 +1,8 @@
+from fastapi import HTTPException
+
 from app.db.database import get_session
 from datetime import datetime, timezone
+from types import NoneType
 
 
 class CostsAndEarningsService:
@@ -14,32 +17,54 @@ class CostsAndEarningsService:
                                 ((-1) ** operation_type * value, user_id))
         await self.conn.commit()
 
-    async def delete_record(self, id: int):
+    async def delete_record(self, id: int, user_id: int):
         record = await (await self.conn.execute("""SELECT * FROM costs_and_earnings WHERE id = ?""", (id,))).fetchone()
-        user = await self.conn.execute("""SELECT * FROM user WHERE id = ?""", (record[1],))
+        if isinstance(record, NoneType):
+            raise HTTPException(404, "Такой записи нет")
+        if not record[1] == user_id:
+            raise HTTPException(400, "Пользователь не является владельцем маршрута")
+        user = await (await self.conn.execute("""SELECT * FROM user WHERE id = ?""", (record[1],))).fetchone()
         await self.conn.execute("""UPDATE user SET balance = balance - ? WHERE id = ?""",
                                 ((-1) ** record[2] * record[3], user[0]))
         await self.conn.execute("""DELETE FROM costs_and_earnings WHERE id = ?""", (id,))
         await self.conn.commit()
 
-    async def get_records_by(self, id: str | None = None, user_id: int | None = None):
-        if id:
+    async def get_records_by(self, id: int | None = None, user_id: int | None = None):
+        if not isinstance(id, NoneType) and not isinstance(user_id, NoneType):
             cursor = await self.conn.execute("""SELECT * FROM costs_and_earnings WHERE id = ?""", (id,))
-        elif user_id:
+            res = await cursor.fetchone()
+            if isinstance(res, NoneType):
+                raise HTTPException(404, "Такой записи нет")
+            if not res[1] == user_id:
+                raise HTTPException(400, "Пользователь не владелец записи")
+        elif not isinstance(user_id, NoneType):
             cursor = await self.conn.execute("""SELECT * FROM costs_and_earnings WHERE user_id = ?""", (user_id,))
+            res = await cursor.fetchall()
         else:
-            raise Exception('incorrect using get_records_by')
-        res = await cursor.fetchall()
+            raise HTTPException(400, 'incorrect using get_records_by')
         return res
 
-    async def update_record(self, id: int, operation_type: int, value: int, comment: str | None = None):
+    async def update_record(self, id: int, user_id: int, operation_type: int | None = None, value: int | None = None,
+                            comment: str | None = None):
         record = await (await self.conn.execute("""SELECT * FROM costs_and_earnings WHERE id = ?""", (id,))).fetchone()
-        if not operation_type:
+        if isinstance(record, NoneType):
+            raise HTTPException(404, "Такой записи нет")
+        if not record[1] == user_id:
+            raise HTTPException(400, "Пользователь не владелец записи")
+        if isinstance(operation_type, NoneType):
             operation_type = record[2]
-        if not value:
+        if isinstance(value, NoneType):
             value = record[3]
-        if not comment:
+        if isinstance(comment, NoneType):
             comment = record[4]
+        if not (operation_type == record[2] and value == record[3]):
+            if operation_type == record[2]:
+                balance_change = (value - record[3]) * (-1) ** operation_type
+            else:
+                balance_change = (value + record[3]) * (-1) ** operation_type
+            user = await (await self.conn.execute("""SELECT * FROM user WHERE id = ?""", (record[1],))).fetchone()
+            await self.conn.execute("""UPDATE user SET balance = balance + ? WHERE id = ?""",
+                                    (balance_change, user[0]))
         await self.conn.execute(
             """UPDATE costs_and_earnings SET operation_type = ?, value = ?, comment = ? WHERE id = ?""",
             (operation_type, value, comment, id))
