@@ -9,5 +9,5 @@ async def create_user_table():
     username TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
-    goal TEXT,
+    goal TEXT NOT NULL DEFAULT '#',
     created_at TEXT);""")
