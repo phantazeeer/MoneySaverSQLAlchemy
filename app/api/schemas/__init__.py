@@ -1,3 +1,2 @@
-from .user import UserRegister, UserLogin, UserChange
-from .costs_and_earnings import AddRecord, ChangeRecord
+from .user import UserRegister, UserLogin, UserChange, User
 from .costs_and_earnings import AddRecord, ChangeRecord, Record

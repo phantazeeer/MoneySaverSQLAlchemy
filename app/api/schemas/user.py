@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, model_validator, field_validator
 from types import NoneType
-
+from datetime import datetime
 
 class UserRegister(BaseModel):
     username: str
@@ -28,3 +28,11 @@ class UserChange(BaseModel):
             if isinstance(attrs[i], NoneType):
                 self.__delattr__(i)
         return self
+
+
+class User(BaseModel):
+    balance: int
+    username: str
+    email: EmailStr
+    goal: str | None = None
+    created_at: datetime
