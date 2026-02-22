@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status, Response, HTTPException
+from fastapi import APIRouter, Depends, status, Response, HTTPException, Form
 
 from app.api.schemas import UserLogin, UserChange, User
 from app.services import UserService
@@ -16,26 +16,26 @@ async def get_service():
     return service
 
 
-@router.post('/me')
+@router.get('/me')
 async def me(user_id: int = Depends(get_jwt_payload), service: UserService = Depends(get_service)) -> User:
     res = await service.get_user_by(id=user_id)
     return res
 
 
 @router.post('/register', status_code=status.HTTP_201_CREATED)
-async def register(create: UserRegister, service: UserService = Depends(get_service)) -> None:
+async def register(create: Annotated[UserRegister, Form()], service: UserService = Depends(get_service)) -> None:
     await service.add_user(create.username, str(create.email), create.password)
 
 
 @router.post('/login', status_code=status.HTTP_200_OK, response_model=None)
-async def login(user: UserLogin, service: UserService = Depends(get_service)) -> Response:
+async def login(user: Annotated[UserLogin, Form()], service: UserService = Depends(get_service)) -> Response:
     token = await service.login(str(user.email), user.password)
     res = Response("OK", status_code=200)
     res.set_cookie('Authorization', token, httponly=True)
     return res
 
 
-@router.post('/logout', status_code=status.HTTP_200_OK, response_model=None)
+@router.get('/logout', status_code=status.HTTP_200_OK, response_model=None)
 async def logout() -> Response:
     res = Response("OK", status_code=200)
     res.delete_cookie('Authorization')
@@ -43,7 +43,7 @@ async def logout() -> Response:
 
 
 @router.put('/change_user', status_code=status.HTTP_200_OK)
-async def change_user(changes: UserChange, user_id: int = Depends(get_jwt_payload),
+async def change_user(changes: Annotated[UserChange, Form()], user_id: int = Depends(get_jwt_payload),
                       service: UserService = Depends(get_service)) -> str:
     changes = changes.model_dump()
 
