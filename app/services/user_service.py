@@ -1,5 +1,6 @@
 from app.db.database import get_session
 from app.utils import get_password_hash, verify_password, create_token
+from app.api.schemas import User
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from sqlite3 import IntegrityError
@@ -9,12 +10,12 @@ class UserService:
     async def init_session(self):
         self.conn = await get_session()
 
-    async def add_user(self, username: str, email: str, password: str):
+    async def add_user(self, username: str, email: str, password: str) -> None:
         await self.conn.execute("""INSERT INTO user (username, email, password, created_at) VALUES (?, ?, ?, ?);""",
                                 (username, email, get_password_hash(password), datetime.now(timezone.utc)))
         await self.conn.commit()
 
-    async def get_user_by(self, email: str | None = None, id: int | None = None):
+    async def get_user_by(self, email: str | None = None, id: int | None = None) -> User:
         if email:
             cursor = await self.conn.execute(
                 """SELECT balance, username, email, goal, created_at FROM user WHERE email = ?""", (email,))
@@ -22,15 +23,20 @@ class UserService:
             cursor = await self.conn.execute(
                 """SELECT balance, username, email, goal, created_at FROM user WHERE id = ?""", (id,))
         else:
-            raise Exception('incorrect using get_user_by')
-        res = await cursor.fetchone()
-        return res
+            raise HTTPException(400, 'incorrect using get_user_by')
+        row = await cursor.fetchone()
+        user = User(balance=row[0],
+                    username=row[1],
+                    email=row[2],
+                    goal=row[3],
+                    created_at=row[4])
+        return user
 
-    async def delete_user(self, id: int):
+    async def delete_user(self, id: int) -> None:
         await self.conn.execute("""DELETE FROM user WHERE id = ?""", (id,))
         await self.conn.commit()
 
-    async def update_user(self, id: int, **kwargs):
+    async def update_user(self, id: int, **kwargs) -> None:
         base = """UPDATE user \nSET """
         values = tuple(kwargs.values()) + (id,)
         for i in kwargs.keys():

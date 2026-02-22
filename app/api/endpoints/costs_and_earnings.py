@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 
 from app.services import CostsAndEarningsService as CEService
 from app.utils import get_jwt_payload
-from app.api.schemas import AddRecord, ChangeRecord
+from app.api.schemas import AddRecord, ChangeRecord, Record
 
 router = APIRouter(prefix='/records', tags=['Working with records'])
 
@@ -13,34 +13,34 @@ async def get_service() -> CEService:
     return service
 
 
-@router.post('/add_record')
+@router.post('/add_record', status_code=status.HTTP_201_CREATED)
 async def add_record(record: AddRecord, user_id: int = Depends(get_jwt_payload),
-                     service: CEService = Depends(get_service)):
+                     service: CEService = Depends(get_service)) -> str:
     await service.add_record(user_id, **(record.model_dump()))
     return "OK"
 
 
 @router.get('/get_user_records')
 async def get_user_records(user_id: int = Depends(get_jwt_payload),
-                           service: CEService = Depends(get_service)):
+                           service: CEService = Depends(get_service)) -> list[Record]:
     return await service.get_records_by(user_id=user_id)
 
 
 @router.get('/record_by_id')
 async def get_record_by_id(id: int, user_id: int = Depends(get_jwt_payload),
-                           service: CEService = Depends(get_service)):
+                           service: CEService = Depends(get_service)) -> Record:
     return await service.get_records_by(id=id, user_id=user_id)
 
 
 @router.delete('/delete_record_by_id')
 async def delete_record(id: int, user_id: int = Depends(get_jwt_payload),
-                        service: CEService = Depends(get_service)):
+                        service: CEService = Depends(get_service)) -> str:
     await service.delete_record(id=id, user_id=user_id)
     return "OK"
 
 
 @router.put('/update_record')
 async def update_record(changes: ChangeRecord, user_id: int = Depends(get_jwt_payload),
-                        service: CEService = Depends(get_service)):
+                        service: CEService = Depends(get_service)) -> str:
     await service.update_record(changes.id, user_id, changes.operation_type, changes.value, changes.comment)
     return "OK"
