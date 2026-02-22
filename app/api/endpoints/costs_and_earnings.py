@@ -29,7 +29,6 @@ async def get_user_records(user_id: int = Depends(get_jwt_payload),
 @router.get('/record_by_id')
 async def get_record_by_id(id: int, user_id: int = Depends(get_jwt_payload),
                            service: CEService = Depends(get_service)):
-    print(id)
     return await service.get_records_by(id=id, user_id=user_id)
 
 
