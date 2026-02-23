@@ -44,5 +44,5 @@ async def delete_record(id: int, user_id: int = Depends(get_jwt_payload),
 @router.put('/update_record')
 async def update_record(changes: Annotated[ChangeRecord, Form()], user_id: int = Depends(get_jwt_payload),
                         service: CEService = Depends(get_service)) -> str:
-    await service.update_record(changes.id, user_id, changes.operation_type, changes.value, changes.comment)
+    await service.update_record(changes.id, user_id, int(changes.operation_type), changes.value, changes.comment)
     return "OK"

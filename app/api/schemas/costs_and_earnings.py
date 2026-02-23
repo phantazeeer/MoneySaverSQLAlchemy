@@ -4,14 +4,14 @@ from datetime import datetime
 
 
 class AddRecord(BaseModel):
-    operation_type: Literal[0, 1]
+    operation_type: Literal["0", "1"]
     value: int
     comment: Annotated[str, Field(max_length=150)] | None = None
 
 
 class ChangeRecord(BaseModel):
     id: int
-    operation_type: Literal[0, 1] | None = None
+    operation_type: Literal["0", "1"] | None = None
     value: int | None = None
     comment: Annotated[str, Field(max_length=150)] | None = None
 
