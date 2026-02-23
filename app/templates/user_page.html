@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="flex justify-between mx-10 my-3">
+    <div>
+        <h2>Баланс:</h2>
+        <p class="mt-5">{{ user.balance }}</p>
+        <form method="POST" action="/records/add_record" class="border mt-5 rounded-sm p-3 bg-gray-200"
+              id="FastAddRecordForm">
+            {{ FastAddRecordForm.hidden_tag }}
+            <div>
+                <p>{{ FastAddRecordForm.value.label }}</p>
+                {{ FastAddRecordForm.value(class="form-control bg-gray-300 rounded-sm") }}<br>
+                {% for error in FastAddRecordForm.value.errors %}
+                <p class="alert alert-danger" role="alert">
+                    {{ error }}
+                </p>
+                {% endfor %}
+            </div>
+            <div class="mt-3">
+                <p>{{ FastAddRecordForm.operation_type.label }}</p>
+                {{ FastAddRecordForm.operation_type(class="form-control bg-gray-300 p-1 rounded-sm") }}<br>
+                {% for error in FastAddRecordForm.operation_type.errors %}
+                <p class="alert alert-danger" role="alert">
+                    {{ error }}
+                </p>
+                {% endfor %}
+            </div>
+            <p>{{ FastAddRecordForm.submit(class="mt-3 bg-gray-300 rounded-sm cursor-pointer px-3", type="submit") }}</p>
+        </form>
+    </div>
+    <div>
+        <h2>Цель:</h2>
+        <div class="mt-5">
+            {% if user.goal_value %}
+            <p>{{ user.goal_value }}</p>
+            <progress max="{{ user.goal_value }}" value="{{ user.balance }}"></progress>
+            {% else %}
+            <p>У вас нет цели</p>
+            {% endif %}
+        </div>
+        <button class="mt-5 px-4 border rounded-sm bg-gray-300 cursor-pointer hover:bg-gray-400">Статистика</button>
+    </div>
+    <div class="max-w-md">
+        <h2>Записи:</h2>
+        <table class="my-5 table-auto border-collapse border border-gray-400">
+            <thead>
+            <tr class="bg-gray-100">
+                <th class="border border-gray-300 p-3">Тип операции</th>
+                <th class="border border-gray-300 p-3">Значение</th>
+                <th class="border border-gray-300 p-3">Комментарий</th>
+            </tr>
+            </thead>
+            <tbody style="word-break: break-all;">
+            {% for item in records %}
+            <tr>
+                <td class="border border-gray-300 p-3">{% if item.operation_type %} Расход {% else %} Доход {% endif
+                    %}
+                </td>
+                <td class="border border-gray-300 p-3">{{ item.value }}</td>
+                <td class="border border-gray-300 p-3">{{ item.comment }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for("change_record_page") }}" class="mt-5 px-4 border rounded-sm bg-gray-300 cursor-pointer
+        hover:bg-gray-400">Изменить запись
+        </a>
+    </div>
+
+</div>
+<script>
+    document.getElementById('FastAddRecordForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch('http://localhost:8000/records/add_record', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            window.location.href = 'http://localhost:8000/';
+        })
+        .catch(error => console.error('Ошибка:', error));
+    });
+</script>
+{% endblock %}

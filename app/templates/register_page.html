@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block body %}
+<form method="POST" class="mt-5 border bg-gray-200 mx-auto w-100 rounded-sm px-10 py-3" id="RegisterForm">
+    {{ form.hidden_tag }}
+    <div>
+        <p>{{ form.username.label }}</p>
+        {{ form.username(class="form-control bg-gray-300 rounded-sm") }}<br>
+        {% for error in form.username.errors %}
+        <p class="alert alert-danger" role="alert">
+            {{ error }}
+        </p>
+        {% endfor %}
+    </div>
+    <div class="mt-5">
+        <p>{{ form.email.label }}</p>
+        {{ form.email(class="form-control bg-gray-300 rounded-sm") }}<br>
+        {% for error in form.email.errors %}
+        <p class="alert alert-danger" role="alert">
+            {{ error }}
+        </p>
+        {% endfor %}
+    </div>
+    <div class="mt-5">
+        <p>{{ form.password.label }}</p>
+        {{ form.password(class="form-control bg-gray-300 rounded-sm") }}<br>
+        {% for error in form.email.errors %}
+        <p class="alert alert-danger" role="alert">
+            {{ error }}
+        </p>
+        {% endfor %}
+    </div>
+    <p>{{ form.submit(class="px-3 mt-3 cursor-pointer rounded-sm bg-gray-300", type="submit") }}</p>
+</form>
+<script>
+    document.getElementById('RegisterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch('http://localhost:8000/user/register', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            window.location.href = 'http://localhost:8000/login';
+        })
+        .catch(error => console.error('Ошибка:', error));
+    });
+</script>
+{% endblock %}
