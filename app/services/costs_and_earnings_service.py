@@ -10,12 +10,12 @@ class CostsAndEarningsService:
     async def init_session(self) -> None:
         self.conn = await get_session()
 
-    async def add_record(self, user_id: int, operation_type: int, value: int, comment: str | None = None) -> None:
+    async def add_record(self, user_id: int, operation_type: str, value: int, comment: str | None = None) -> None:
         await self.conn.execute(
             """INSERT INTO costs_and_earnings (user_id, operation_type, value, comment, created_at) VALUES (?, ?, ?, ?, ?)""",
             (user_id, operation_type, value, comment, datetime.now(timezone.utc)))
         await self.conn.execute("""UPDATE user SET balance = balance + ? WHERE id = ?""",
-                                ((-1) ** operation_type * value, user_id))
+                                ((-1) ** int(operation_type) * value, user_id))
         await self.conn.commit()
 
     async def delete_record(self, id: int, user_id: int) -> None:

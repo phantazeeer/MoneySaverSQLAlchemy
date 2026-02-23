@@ -25,10 +25,12 @@ class UserService:
         else:
             raise HTTPException(400, 'incorrect using get_user_by')
         row = await cursor.fetchone()
+        goal_value = row[3][row[3].index('#') + 1:]
         user = User(balance=row[0],
                     username=row[1],
                     email=row[2],
-                    goal=row[3],
+                    goal_name=row[3][:row[3].index('#')],
+                    goal_value= int(goal_value) if goal_value else 0,  # доделать страницу отображения пользователя
                     created_at=row[4])
         return user
 

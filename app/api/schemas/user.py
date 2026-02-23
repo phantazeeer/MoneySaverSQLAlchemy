@@ -34,5 +34,6 @@ class User(BaseModel):
     balance: int
     username: str
     email: EmailStr
-    goal: str | None = None
+    goal_name: str | None = None
+    goal_value: int | None = None
     created_at: datetime

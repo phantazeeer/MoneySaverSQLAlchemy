@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, status, Form
 
 from app.services import CostsAndEarningsService as CEService
 from app.utils import get_jwt_payload
@@ -14,7 +16,7 @@ async def get_service() -> CEService:
 
 
 @router.post('/add_record', status_code=status.HTTP_201_CREATED)
-async def add_record(record: AddRecord, user_id: int = Depends(get_jwt_payload),
+async def add_record(record: Annotated[AddRecord, Form()], user_id: int = Depends(get_jwt_payload),
                      service: CEService = Depends(get_service)) -> str:
     await service.add_record(user_id, **(record.model_dump()))
     return "OK"
@@ -40,7 +42,7 @@ async def delete_record(id: int, user_id: int = Depends(get_jwt_payload),
 
 
 @router.put('/update_record')
-async def update_record(changes: ChangeRecord, user_id: int = Depends(get_jwt_payload),
+async def update_record(changes: Annotated[ChangeRecord, Form()], user_id: int = Depends(get_jwt_payload),
                         service: CEService = Depends(get_service)) -> str:
-    await service.update_record(changes.id, user_id, changes.operation_type, changes.value, changes.comment)
+    await service.update_record(changes.id, user_id, int(changes.operation_type), changes.value, changes.comment)
     return "OK"
