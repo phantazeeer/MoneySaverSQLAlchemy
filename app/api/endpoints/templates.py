@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from types import NoneType
 
 from fastapi import APIRouter, Request, Depends, Query
@@ -29,9 +29,13 @@ async def get_user_service() -> UserService:
 @router.get("/", name="main_page")
 async def main(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
                ce_service: CEService = Depends(get_ce_service),
+               filter_by: Annotated[Literal["costs", "earnings"], Query()] | None = None,
                user_service: UserService = Depends(get_user_service)):
     print(user_id)
-    records = await ce_service.get_records_by(user_id=user_id)
+    if not isinstance(filter_by, NoneType):
+        records = await ce_service.user_costs_or_earnings(user_id=user_id, filter=filter_by)
+    else:
+        records = await ce_service.get_records_by(user_id=user_id)
     user = await user_service.get_user_by(id=user_id)
 
     return templates.TemplateResponse(
