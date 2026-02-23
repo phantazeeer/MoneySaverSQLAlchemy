@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import HTTPException
 
 from app.db.database import get_session
@@ -84,3 +86,18 @@ class CostsAndEarningsService:
             """UPDATE costs_and_earnings SET operation_type = ?, value = ?, comment = ? WHERE id = ?""",
             (operation_type, value, comment, id))
         await self.conn.commit()
+
+
+    async def user_costs_or_earnings(self, user_id: int, filter: Literal["costs", "earnings"]) -> list[Record]:
+        op_type = 0 if filter == "earnings" else 1
+        cursor = await self.conn.execute("""SELECT * FROM costs_and_earnings WHERE user_id = ? and operation_type = ?""", (user_id, op_type,))
+        records = await cursor.fetchall()
+        res = list()
+        for record in records:
+            res.append(Record(id=record[0],
+                              user_id=record[1],
+                              operation_type=record[2],
+                              value=record[3],
+                              comment=record[4],
+                              created_at=record[5]))
+        return res
