@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 from app.services import CostsAndEarningsService as CEService
 from app.services import UserService
 from app.utils import get_jwt_payload
-from app.forms import FastAddRecordForm, LoginForm, RegisterForm, ChangeRecordForm, ChooseDateForm
+from app.forms import FastAddRecordForm, LoginForm, RegisterForm, ChangeRecordForm, ChooseDateForm, ChangeTargetForm
 
 router = APIRouter(tags=['Working with templates'])
 
@@ -33,16 +33,21 @@ async def main(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
                filter_by: Annotated[Literal["costs", "earnings"], Query()] | None = None,
                change_targ: Annotated[Literal["1"], Query()] | None = None,
                user_service: UserService = Depends(get_user_service)):
-    if not isinstance(filter_by, NoneType):
-        records = await ce_service.user_costs_or_earnings(user_id=user_id, filter=filter_by)
-    else:
-        records = await ce_service.get_records_by(user_id=user_id)
     user = await user_service.get_user_by(id=user_id)
+    change_target_form = None
+    records = await ce_service.get_records_by(user_id=user_id)
+    if change_targ and filter_by:
+        return RedirectResponse('/')
+    elif filter_by:
+        records = await ce_service.user_costs_or_earnings(user_id=user_id, filter=filter_by)
+    elif change_targ:
+        change_target_form = ChangeTargetForm()
 
     return templates.TemplateResponse(
         request=req, name="user_page.html", context={"user": user,
                                                      "records": records,
-                                                     "FastAddRecordForm": FastAddRecordForm()}
+                                                     "FastAddRecordForm": FastAddRecordForm(),
+                                                     "ChangeTargetForm": change_target_form}
     )
 
 

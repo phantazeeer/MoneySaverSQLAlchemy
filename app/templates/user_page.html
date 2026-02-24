@@ -31,16 +31,50 @@
         </form>
     </div>
     <div>
-        <h2>Цель:</h2>
-        <div class="my-5">
+        <h2>Ваша цель:</h2>
+        <div class="mt-2">
             {% if user.goal_value %}
-            <p>{{ user.goal_value }}</p>
-            <progress max="{{ user.goal_value }}" value="{{ user.balance }}"></progress>
+            <p class="mb-2">{{ user.goal_value }}</p>
+            {% if user.goal_name %}
+            <p class="mb-2">На {{ user.goal_name }}</p>
+            {% endif %}
+            <progress max="{{ user.goal_value }}" value="{{ user.balance }}"></progress><br>
             {% else %}
             <p>У вас нет цели</p>
             {% endif %}
+            <a href="{{ url_for("statistics_page") }}" class="px-4 border rounded-sm bg-gray-300 cursor-pointer hover:bg-gray-400">Статистика</a>
+
+            {% if ChangeTargetForm %}
+            <a href="/" class="px-4 border rounded-sm bg-gray-300 cursor-pointer hover:bg-gray-400">Не менять цель</a>
+            <form method="POST" action="/records/add_record" class="border mt-5 rounded-sm p-3 bg-gray-200"
+              id="ChangeTargetForm">
+            {{ ChangeTargetForm.hidden_tag }}
+            <div>
+                <p>{{ ChangeTargetForm.goal_name.label }}</p>
+                {{ ChangeTargetForm.goal_name(class="form-control bg-gray-300 rounded-sm") }}<br>
+                {% for error in ChangeTargetForm.goal_name.errors %}
+                <p class="alert alert-danger" role="alert">
+                    {{ error }}
+                </p>
+                {% endfor %}
+            </div>
+            <div class="mt-3">
+                <p>{{ ChangeTargetForm.goal_value.label }}</p>
+                {{ ChangeTargetForm.goal_value(class="form-control bg-gray-300 p-1 rounded-sm") }}<br>
+                {% for error in ChangeTargetForm.goal_value.errors %}
+                <p class="alert alert-danger" role="alert">
+                    {{ error }}
+                </p>
+                {% endfor %}
+            </div>
+            <p>{{ ChangeTargetForm.submit(class="mt-3 bg-gray-300 rounded-sm cursor-pointer px-3", type="submit")
+                }}</p>
+        </form>
+            {% else %}
+            <a href="/?change_targ=1" class="px-4 border rounded-sm bg-gray-300 cursor-pointer hover:bg-gray-400">Изменить цель</a>
+
+            {% endif %}
         </div>
-        <a href="{{ url_for("statistics_page") }}" class="px-4 border rounded-sm bg-gray-300 cursor-pointer hover:bg-gray-400">Статистика</a>
     </div>
     <div class="max-w-md">
         <h2>Записи:</h2>
@@ -83,6 +117,20 @@
 
         fetch('http://localhost:8000/records/add_record', {
             method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            window.location.href = 'http://localhost:8000/';
+        })
+        .catch(error => console.error('Ошибка:', error));
+    });
+    document.getElementById('ChangeTargetForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch('http://localhost:8000/user/change_user', {
+            method: 'PUT',
             body: formData
         })
         .then(response => {
