@@ -32,7 +32,7 @@
     </div>
     <div>
         <h2>Цель:</h2>
-        <div class="mt-5">
+        <div class="my-5">
             {% if user.goal_value %}
             <p>{{ user.goal_value }}</p>
             <progress max="{{ user.goal_value }}" value="{{ user.balance }}"></progress>
@@ -40,7 +40,7 @@
             <p>У вас нет цели</p>
             {% endif %}
         </div>
-        <button class="mt-5 px-4 border rounded-sm bg-gray-300 cursor-pointer hover:bg-gray-400">Статистика</button>
+        <a href="{{ url_for("statistics_page") }}" class="px-4 border rounded-sm bg-gray-300 cursor-pointer hover:bg-gray-400">Статистика</a>
     </div>
     <div class="max-w-md">
         <h2>Записи:</h2>
