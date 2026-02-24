@@ -1,5 +1,6 @@
 from typing import Annotated, Literal
 from types import NoneType
+from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Request, Depends, Query
 from fastapi.responses import RedirectResponse
@@ -7,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 from app.services import CostsAndEarningsService as CEService
 from app.services import UserService
 from app.utils import get_jwt_payload
-from app.forms import FastAddRecordForm, LoginForm, RegisterForm, ChangeRecordForm
+from app.forms import FastAddRecordForm, LoginForm, RegisterForm, ChangeRecordForm, ChooseDateForm
 
 router = APIRouter(tags=['Working with templates'])
 
@@ -30,8 +31,8 @@ async def get_user_service() -> UserService:
 async def main(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
                ce_service: CEService = Depends(get_ce_service),
                filter_by: Annotated[Literal["costs", "earnings"], Query()] | None = None,
+               change_targ: Annotated[Literal["1"], Query()] | None = None,
                user_service: UserService = Depends(get_user_service)):
-    print(user_id)
     if not isinstance(filter_by, NoneType):
         records = await ce_service.user_costs_or_earnings(user_id=user_id, filter=filter_by)
     else:
@@ -74,12 +75,11 @@ async def change_record(req: Request, user_id: Annotated[int, Depends(get_jwt_pa
     if isinstance(id, NoneType):
         records = await ce_service.get_records_by(user_id=user_id)
         user = await user_service.get_user_by(id=user_id)
-        record = None
         return templates.TemplateResponse(
-            request=req, name="change_record.html", context={"record": record,
+            request=req, name="change_record.html", context={"record": None,
                                                              "user": user,
                                                              "records": records,
-                                                             "form": ChangeRecordForm()}
+                                                             "form": None}
         )
     else:
         records = await ce_service.get_records_by(user_id=user_id)
@@ -95,3 +95,56 @@ async def change_record(req: Request, user_id: Annotated[int, Depends(get_jwt_pa
                                                              "records": records,
                                                              "form": form}
         )
+
+
+@router.get('/statistics', name='statistics_page')
+async def statistics(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
+                     delta: Annotated[Literal["1", "6", "12"], Query()] | None = None,
+                     user_service: UserService = Depends(get_user_service)):
+    if not isinstance(delta, NoneType):
+        return RedirectResponse(
+            f"/statistics/choose_date?start={(datetime.now(timezone.utc) - timedelta(days=int(delta) * 30)).date()}&end={(datetime.now(timezone.utc)).date()}")
+    user = await user_service.get_user_by(id=user_id)
+    return templates.TemplateResponse(
+        request=req, name="statistics.html", context={"user": user,
+                                                      "form": None}
+    )
+
+
+@router.get('/statistics/choose_date', name='statistics_page')
+async def statistics(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
+                     ce_service: CEService = Depends(get_ce_service),
+                     start: Annotated[str, Query()] | None = None,
+                     end: Annotated[str, Query()] | None = None,
+                     user_service: UserService = Depends(get_user_service)):
+    user = await user_service.get_user_by(id=user_id)
+    if isinstance(end, NoneType) or isinstance(start, NoneType):
+        print("params missing")
+    else:
+        try:
+            start = datetime.strptime(start, '%Y-%m-%d')
+            end = datetime.strptime(end, '%Y-%m-%d')
+            print(start, end)
+            if start >= end:
+                raise ValueError
+            image = await ce_service.create_graphics(period=(start, end), user_id=user_id)
+            return templates.TemplateResponse(
+                request=req, name="statistics.html", context={"user": user,
+                                                              "form": ChooseDateForm(),
+                                                              "error": None,
+                                                              "image": image}
+            )
+        except ValueError as e:
+            print(str(e))
+            return templates.TemplateResponse(
+                request=req, name="statistics.html", context={"user": user,
+                                                              "form": ChooseDateForm(),
+                                                              "error": "Введите корректные данные",
+                                                              "image": None}
+            )
+    return templates.TemplateResponse(
+        request=req, name="statistics.html", context={"user": user,
+                                                      "form": ChooseDateForm(),
+                                                      "error": None,
+                                                      "image": None}
+    )

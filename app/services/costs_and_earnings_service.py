@@ -1,11 +1,15 @@
+from calendar import month
 from typing import Literal
 
 from fastapi import HTTPException
 
 from app.db.database import get_session
 from app.api.schemas import Record
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from types import NoneType
+import matplotlib.pyplot as plt
+import io
+import base64
 
 
 class CostsAndEarningsService:
@@ -87,10 +91,10 @@ class CostsAndEarningsService:
             (operation_type, value, comment, id))
         await self.conn.commit()
 
-
     async def user_costs_or_earnings(self, user_id: int, filter: Literal["costs", "earnings"]) -> list[Record]:
         op_type = 0 if filter == "earnings" else 1
-        cursor = await self.conn.execute("""SELECT * FROM costs_and_earnings WHERE user_id = ? and operation_type = ?""", (user_id, op_type,))
+        cursor = await self.conn.execute(
+            """SELECT * FROM costs_and_earnings WHERE user_id = ? and operation_type = ?""", (user_id, op_type,))
         records = await cursor.fetchall()
         res = list()
         for record in records:
@@ -101,3 +105,39 @@ class CostsAndEarningsService:
                               comment=record[4],
                               created_at=record[5]))
         return res
+
+    async def create_graphics(self, period: tuple[datetime, datetime], user_id: int):
+        record = await self.conn.execute(
+            """SELECT * FROM costs_and_earnings WHERE (created_at BETWEEN ? AND ?) AND user_id = ?""",
+            (period[0].replace(tzinfo=timezone.utc), period[1].replace(tzinfo=timezone.utc), user_id))
+        user = await (await self.conn.execute(
+            """SELECT balance FROM user WHERE id = ? ORDER BY created_at""", (user_id,))).fetchone()
+        records = await record.fetchall()
+        if not records:
+            return None
+
+        records = [(i[0], i[1], i[2], i[3], i[4], datetime.strptime(i[5], "%Y-%m-%d %H:%M:%S.%f%z")) for i in records]
+        now = datetime.now(timezone.utc)
+        if now - records[0][5] < timedelta(days=30):
+            x = [i[5].date().strftime("%d") for i in records]
+        elif now - records[0][5] <= timedelta(days=360):
+            x = [i[5].date().strftime("%d.%m") for i in records]
+        else:
+            x = [i[5].date().strftime("%d.%m.%Y") for i in records]
+
+        balance = user[0]
+        balance_y = []
+        for i in records[::-1]:
+            balance_y.append(balance - (-1) ** i[2] * i[3])
+            balance -= (-1) ** i[2] * i[3]
+        balance_y = balance_y[::-1]
+
+        fig, ax = plt.subplots()
+        ax.plot(x, balance_y)
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+        plt.close()
+
+        buf.seek(0)
+        img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+        return img_base64
