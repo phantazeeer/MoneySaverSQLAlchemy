@@ -38,10 +38,10 @@
         </div>
         <a href="/" class="bg-gray-300 rounded-sm cursor-pointer px-3 py-1">На главную страницу</a>
     </div>
-    {% if image %}
-    <img src="data:image/png;base64,{{ image }}" alt="График Matplotlib">
-    {% endif %}
     <div>
+        {% if image %}
+        <img src="data:image/png;base64,{{ image }}" alt="График Matplotlib">
+        {% endif %}
     </div>
 </div>
 <script>

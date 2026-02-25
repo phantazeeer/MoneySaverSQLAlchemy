@@ -108,10 +108,10 @@ class CostsAndEarningsService:
 
     async def create_graphics(self, period: tuple[datetime, datetime], user_id: int):
         record = await self.conn.execute(
-            """SELECT * FROM costs_and_earnings WHERE (created_at BETWEEN ? AND ?) AND user_id = ?""",
+            """SELECT * FROM costs_and_earnings WHERE (created_at BETWEEN ? AND ?) AND user_id = ? ORDER BY created_at""",
             (period[0].replace(tzinfo=timezone.utc), period[1].replace(tzinfo=timezone.utc), user_id))
         user = await (await self.conn.execute(
-            """SELECT balance FROM user WHERE id = ? ORDER BY created_at""", (user_id,))).fetchone()
+            """SELECT balance FROM user WHERE id = ? """, (user_id,))).fetchone()
         records = await record.fetchall()
         if not records:
             return None
