@@ -34,14 +34,14 @@ async def main(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
                change_targ: Annotated[Literal["1"], Query()] | None = None,
                user_service: UserService = Depends(get_user_service)):
     user = await user_service.get_user_by(id=user_id)
-    change_target_form = None
-    records = await ce_service.get_records_by(user_id=user_id)
-    if change_targ and filter_by:
-        return RedirectResponse('/')
-    elif filter_by:
+    if filter_by:
         records = await ce_service.user_costs_or_earnings(user_id=user_id, filter=filter_by)
-    elif change_targ:
+    else:
+        records = await ce_service.get_records_by(user_id=user_id)
+    if change_targ:
         change_target_form = ChangeTargetForm()
+    else:
+        change_target_form = None
 
     return templates.TemplateResponse(
         request=req, name="user_page.html", context={"user": user,
@@ -123,14 +123,11 @@ async def statistics(req: Request, user_id: Annotated[int, Depends(get_jwt_paylo
                      end: Annotated[str, Query()] | None = None,
                      user_service: UserService = Depends(get_user_service)):
     user = await user_service.get_user_by(id=user_id)
-    if isinstance(end, NoneType) or isinstance(start, NoneType):
-        print("params missing")
-    else:
+    if not (isinstance(end, NoneType) or isinstance(start, NoneType)):
         try:
             start = datetime.strptime(start, '%Y-%m-%d')
             end = datetime.strptime(end, '%Y-%m-%d')
-            print(start, end)
-            if start >= end:
+            if start >= end and datetime.now() < start:
                 raise ValueError
             image = await ce_service.create_graphics(period=(start, end), user_id=user_id)
             return templates.TemplateResponse(
