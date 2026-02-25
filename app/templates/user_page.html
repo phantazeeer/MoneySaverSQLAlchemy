@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block body %}
-<div class="flex justify-between mx-10 my-3">
+<div class="flex justify-between mx-40 my-3">
     <div>
         <h2>Баланс:</h2>
         <p class="mt-5">{{ user.balance }}</p>
@@ -34,10 +34,12 @@
         <h2>Ваша цель:</h2>
         <div class="mt-2">
             {% if user.goal_value %}
-            <p class="mb-2">{{ user.goal_value }}</p>
-            {% if user.goal_name %}
-            <p class="mb-2">На {{ user.goal_name }}</p>
-            {% endif %}
+            <div class="flex justify-start gap-2">
+                <p class="mb-2">{{ user.goal_value }}</p>
+                {% if user.goal_name %}
+                <p class="mb-2">На {{ user.goal_name }}</p>
+                {% endif %}
+            </div>
             <progress max="{{ user.goal_value }}" value="{{ user.balance }}"></progress><br>
             {% else %}
             <p>У вас нет цели</p>
