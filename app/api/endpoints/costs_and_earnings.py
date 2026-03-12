@@ -5,13 +5,14 @@ from fastapi import APIRouter, Depends, status, Form
 from app.services import CostsAndEarningsService as CEService
 from app.utils import get_jwt_payload
 from app.api.schemas import AddRecord, ChangeRecord, Record
+from app.db.DAO import SQLiteUserDAO, SQLiteCostsAndEarningsDAO as SQLiteCEDAO
 
 router = APIRouter(prefix='/records', tags=['Working with records'])
 
 
 async def get_service() -> CEService:
     service = CEService()
-    await service.init_session()
+    await service.init_session(SQLiteUserDAO(), SQLiteCEDAO())
     return service
 
 

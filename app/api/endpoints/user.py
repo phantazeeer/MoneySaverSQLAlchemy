@@ -6,13 +6,14 @@ from app.api.schemas import UserLogin, UserChange, User
 from app.services import UserService
 from app.api.schemas import UserRegister
 from app.utils import get_jwt_payload
+from app.db.DAO import SQLiteUserDAO
 
 router = APIRouter(prefix='/user', tags=['Working with user'])
 
 
 async def get_service():
     service = UserService()
-    await service.init_session()
+    await service.init_session(SQLiteUserDAO())
     return service
 
 

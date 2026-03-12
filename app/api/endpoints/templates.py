@@ -9,6 +9,7 @@ from app.services import CostsAndEarningsService as CEService
 from app.services import UserService
 from app.utils import get_jwt_payload
 from app.forms import FastAddRecordForm, LoginForm, RegisterForm, ChangeRecordForm, ChooseDateForm, ChangeTargetForm
+from app.db.DAO import SQLiteUserDAO, SQLiteCostsAndEarningsDAO as SQLiteCEDAO
 
 router = APIRouter(tags=['Working with templates'])
 
@@ -17,13 +18,13 @@ templates = Jinja2Templates(directory="app/templates")
 
 async def get_ce_service() -> CEService:
     service = CEService()
-    await service.init_session()
+    await service.init_session(SQLiteUserDAO(), SQLiteCEDAO())
     return service
 
 
 async def get_user_service() -> UserService:
     service = UserService()
-    await service.init_session()
+    await service.init_session(SQLiteUserDAO())
     return service
 
 
