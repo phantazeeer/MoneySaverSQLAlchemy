@@ -28,6 +28,10 @@ class CostsAndEarningsDAO(ABC):
     async def update(self, id: int, **kwargs):
         pass
 
+    @abstractmethod
+    async def do_raw_sql(self, query: str, params: tuple):
+        pass
+
 
 class SQLiteCostsAndEarningsDAO(CostsAndEarningsDAO):
     __slots__ = ["session"]
@@ -36,7 +40,7 @@ class SQLiteCostsAndEarningsDAO(CostsAndEarningsDAO):
     async def init_conn(self):
         self.session = await get_session()
 
-    async def get_by(self, mode: Literal["OR", "AND"] = "AND", **kwargs):
+    async def get_by(self, mode: Literal["OR", "AND"] = "AND", **kwargs) -> list:
         query = "SELECT id, user_id, operation_type, value, comment, created_at FROM costs_and_earnings"
         if mode not in ("OR", "AND"):
             raise ValueError("choose OR either AND")
@@ -104,3 +108,8 @@ class SQLiteCostsAndEarningsDAO(CostsAndEarningsDAO):
         values.append(record_id)
         await self.session.execute(query, tuple(values))
         await self.session.commit()
+
+    async def do_raw_sql(self, query: str, params: tuple):
+        cursor = await self.session.execute(query, params)
+        await self.session.commit()
+        return cursor

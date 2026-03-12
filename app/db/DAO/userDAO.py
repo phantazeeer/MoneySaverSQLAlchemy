@@ -28,6 +28,10 @@ class UserDAO(ABC):
     async def update(self, id: int, **kwargs):
         pass
 
+    @abstractmethod
+    async def do_raw_sql(self, query: str, params: tuple):
+        pass
+
 
 class SQLiteUserDAO(UserDAO):
     __slots__ = ["session"]
@@ -36,8 +40,8 @@ class SQLiteUserDAO(UserDAO):
     async def init_conn(self):
         self.session = await get_session()
 
-    async def get_by(self, mode: Literal["OR", "AND"] = "AND", **kwargs):
-        query = "SELECT balance, username, email, goal, created_at FROM user"
+    async def get_by(self, mode: Literal["OR", "AND"] = "AND", **kwargs) -> list:
+        query = "SELECT id, balance, username, email, password, goal, created_at FROM user"
         if mode not in ("OR", "AND"):
             raise ValueError("choose OR either AND")
 
@@ -101,3 +105,8 @@ class SQLiteUserDAO(UserDAO):
         values.append(user_id)
         await self.session.execute(query, tuple(values))
         await self.session.commit()
+
+    async def do_raw_sql(self, query: str, params: tuple):
+        cursor = await self.session.execute(query, params)
+        await self.session.commit()
+        return cursor
