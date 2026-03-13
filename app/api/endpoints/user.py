@@ -7,6 +7,7 @@ from app.services import UserService
 from app.api.schemas import UserRegister
 from app.utils import get_jwt_payload
 from app.db.DAO import SQLiteUserDAO
+from app.api.endpoints.costs_and_earnings import get_service as get_ce_service, CEService, Record
 
 router = APIRouter(prefix='/user', tags=['Working with user'])
 
@@ -43,7 +44,7 @@ async def logout() -> Response:
     return res
 
 
-@router.put('/change_user', status_code=status.HTTP_200_OK)
+@router.put('/change_user', status_code=status.HTTP_200_OK, deprecated=True)
 async def change_user(changes: Annotated[UserChange, Form()], user_id: int = Depends(get_jwt_payload),
                       service: UserService = Depends(get_service)) -> str:
     changes = changes.model_dump()
@@ -59,3 +60,14 @@ async def change_user(changes: Annotated[UserChange, Form()], user_id: int = Dep
 
     await service.update_user(user_id, **changes)
     return "OK"
+
+@router.put('/me', status_code=status.HTTP_200_OK)
+async def change_me(changes: Annotated[UserChange, Form()], user_id: int = Depends(get_jwt_payload),
+                      service: UserService = Depends(get_service)) -> str:
+    res = await change_user(changes=changes, user_id=user_id, service=service)
+    return res
+
+@router.get('/me/records')
+async def get_records(user_id: int = Depends(get_jwt_payload),
+                           service: CEService = Depends(get_ce_service)) -> list[Record]:
+    return await service.get_records_by(user_id=user_id)
