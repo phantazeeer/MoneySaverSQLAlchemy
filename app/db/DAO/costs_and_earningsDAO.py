@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from aiosqlite import IntegrityError
 from abc import ABC, abstractmethod
 from app.db.database import get_session
-
+from app.db.DTO import CostsAndEarningsDTO as CEDTO
 
 class CostsAndEarningsDAO(ABC):
     @abstractmethod
@@ -13,7 +13,7 @@ class CostsAndEarningsDAO(ABC):
         pass
 
     @abstractmethod
-    async def get_by(self, mode: Literal["OR", "AND"], **kwargs):
+    async def get_by(self, mode: Literal["OR", "AND"] = "AND", **kwargs):
         pass
 
     @abstractmethod
@@ -40,7 +40,7 @@ class SQLiteCostsAndEarningsDAO(CostsAndEarningsDAO):
     async def init_conn(self):
         self.session = await get_session()
 
-    async def get_by(self, mode: Literal["OR", "AND"] = "AND", **kwargs) -> list:
+    async def get_by(self, mode: Literal["OR", "AND"] = "AND", **kwargs) -> list[CEDTO]:
         query = "SELECT id, user_id, operation_type, value, comment, created_at FROM costs_and_earnings"
         if mode not in ("OR", "AND"):
             raise ValueError("choose OR either AND")
@@ -58,7 +58,12 @@ class SQLiteCostsAndEarningsDAO(CostsAndEarningsDAO):
             if kwargs:
                 query += " WHERE " + f" {mode} ".join(columns)
         cursor = await self.session.execute(query, tuple(values))
-        return await cursor.fetchall()
+        return [CEDTO(id=i[0],
+                      user_id=i[1],
+                      operation_type=i[2],
+                      value=i[3],
+                      comment=i[4],
+                      created_at=i[5]) for i in (await cursor.fetchall())]
 
     async def create(self, user_id: int, operation_type: int, value: int, comment: str | None = None):
         query = """INSERT INTO costs_and_earnings (user_id, operation_type, value, comment, created_at)

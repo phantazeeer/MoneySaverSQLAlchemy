@@ -5,6 +5,7 @@ from typing import Literal
 from abc import ABC, abstractmethod
 from sqlite3 import IntegrityError
 from app.db.database import get_session
+from app.db.DTO import UserDTO
 
 
 class UserDAO(ABC):
@@ -13,7 +14,7 @@ class UserDAO(ABC):
         pass
 
     @abstractmethod
-    async def get_by(self, mode: Literal["OR", "AND"], **kwargs):
+    async def get_by(self, mode: Literal["OR", "AND"] = "AND", **kwargs):
         pass
 
     @abstractmethod
@@ -35,13 +36,13 @@ class UserDAO(ABC):
 
 class SQLiteUserDAO(UserDAO):
     __slots__ = ["session"]
-    __allowed_columns = ["id", "balance", "username", "email", "goal", "created_at"]
+    __allowed_columns = ["id", "balance", "username", "email", "goal_name", "goal_value", "created_at"]
 
     async def init_conn(self):
         self.session = await get_session()
 
     async def get_by(self, mode: Literal["OR", "AND"] = "AND", **kwargs) -> list:
-        query = "SELECT id, balance, username, email, password, goal, created_at FROM user"
+        query = "SELECT id, balance, username, email, password, goal_name, goal_value, created_at FROM user"
         if mode not in ("OR", "AND"):
             raise ValueError("choose OR either AND")
 
@@ -58,7 +59,14 @@ class SQLiteUserDAO(UserDAO):
             if kwargs:
                 query += " WHERE " + f" {mode} ".join(columns)
         cursor = await self.session.execute(query, tuple(values))
-        return await cursor.fetchall()
+        return [UserDTO(id=i[0],
+                        balance=i[1],
+                        username=i[2],
+                        email=i[3],
+                        password=i[4],
+                        goal_name=i[5],
+                        goal_value=i[6],
+                        created_at=i[7]) for i in (await cursor.fetchall())]
 
     async def create(self, username: str, email: str, password: str):
         query = """INSERT INTO user (username, email, password, created_at)
@@ -82,17 +90,18 @@ class SQLiteUserDAO(UserDAO):
 
     async def update(self, id: int, **kwargs):
         keys = kwargs.keys()
-        if not any(i in keys for i in ("balance", "username", "email", "goal")):
+        print(2222)
+        if not any(i in keys for i in ("balance", "username", "email", "goal_name", "goal_value")):
             return
 
         query = "UPDATE user"
         for i in list(keys):
-            if i not in ("balance", "username", "email", "goal") or isinstance(kwargs[i], NoneType):
+            if i not in ("balance", "username", "email", "goal_name", "goal_value") or isinstance(kwargs[i], NoneType):
                 kwargs.pop(i)
             else:
-                if i != "balance" and not isinstance(kwargs[i], str):
+                if i != "balance" and i != "goal_value" and not isinstance(kwargs[i], str):
                     raise ValueError("username, email, goal should be str")
-                if i == "balance" and not isinstance(kwargs[i], int):
+                if (i == "balance" or i == "goal_value") and not isinstance(kwargs[i], int):
                     raise ValueError("balance should be int")
 
         columns = []
