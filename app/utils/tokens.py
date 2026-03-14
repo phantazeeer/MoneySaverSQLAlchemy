@@ -10,8 +10,6 @@ import jwt
 
 from app.config import settings
 
-secured = OAuth2PasswordBearer(tokenUrl="/auth/docs/login")
-
 
 # Authentification
 def create_jwt(payload: dict) -> str:
