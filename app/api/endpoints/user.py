@@ -48,13 +48,6 @@ async def logout() -> Response:
 async def change_user(changes: Annotated[UserChange, Form()], user_id: int = Depends(get_jwt_payload),
                       service: UserService = Depends(get_service)) -> str:
     changes = changes.model_dump()
-
-    if "goal_name" in changes.keys() and "goal_value" in changes.keys():
-        changes["goal"] = changes.pop("goal_name") + "#" + str(changes.pop("goal_value"))
-    elif "goal_name" in changes.keys():
-        changes.pop("goal_name")
-    elif "goal_value" in changes.keys():
-        changes.pop("goal_value")
     if len(changes.keys()) == 0:
         raise HTTPException(400, "Пустой запрос")
 
