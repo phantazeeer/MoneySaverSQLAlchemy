@@ -9,7 +9,7 @@ class UserDTO(BaseModel):
     balance: int
     username: str
     email: Annotated[str, EmailStr]
-    goal: str | None = None
+    password: str
     goal_value: int | None = None
     goal_name: str | None = None
     created_at: datetime
@@ -18,20 +18,7 @@ class UserDTO(BaseModel):
     def goal_check(self):
         goal_name_exists = not isinstance(self.goal_name, NoneType)
         goal_value_exists = not isinstance(self.goal_value, NoneType)
-        goal_exists = not isinstance(self.goal, NoneType)
 
-        if not goal_exists and not goal_value_exists and not goal_name_exists:
-            raise ValueError('goal should be filled')
-        if goal_exists:
-            if self.goal.count("#") != 1:
-                raise ValueError('incorrect goal')
-            self.goal_name, gv = self.goal.split("#")
-            gv = "0" + gv
-            if not gv.isdigit():
-                raise ValueError('goal_value should be integer')
-            self.goal_value = int(gv)
-        elif not goal_name_exists or not goal_value_exists:
-            raise ValueError('goal or goal_name and goal_value should be filled')
-        else:
-            self.goal = self.goal_name + "#" + str(self.goal_value)
+        if goal_value_exists != goal_name_exists:
+            raise ValueError('goal_value and goal_name should be filled')
         return self
