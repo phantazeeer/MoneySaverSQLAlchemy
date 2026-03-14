@@ -33,7 +33,6 @@ class UserService:
 
     async def update_user(self, id: int, **kwargs) -> None:
         try:
-            print("123123123123213")
             await self.user_dao.update(id=id, **kwargs)
         except IntegrityError as err:
             if "user.email" in str(err):

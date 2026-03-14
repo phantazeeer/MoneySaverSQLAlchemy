@@ -90,7 +90,6 @@ class SQLiteUserDAO(UserDAO):
 
     async def update(self, id: int, **kwargs):
         keys = kwargs.keys()
-        print(2222)
         if not any(i in keys for i in ("balance", "username", "email", "goal_name", "goal_value")):
             return
 
