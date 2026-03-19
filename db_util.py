@@ -4,6 +4,7 @@ from app.services.user_service import UserService
 from app.services.costs_and_earnings_service import CostsAndEarningsService
 from app.db.models.user import create_user_table
 from app.db.models.costs_and_earnings import create_costs_and_earnings_table
+import argparse
 from app.db.DAO import SQLiteCostsAndEarningsDAO as SQLiteCEDAO, SQLiteUserDAO
 
 
@@ -40,13 +41,16 @@ async def fill_costs_and_earnings_table():
     await service.add_record(5, 0, 350000, "Пришла зарплата")
     await service.add_record(5, 1, 10000, "Штраф за плохую архитектуру проекта")
 
+
 async def fill_all_tables():
     await fill_user_table()
     await fill_costs_and_earnings_table()
 
 
 if __name__ == "__main__":
-    choice = input('d for delete/c for create/f for fill table:\n')
+    parser = argparse.ArgumentParser(description='Tool for creating database')
+    parser.add_argument("choice", choices=["d", "D", "c", "C", "f", "F"])
+    choice = (parser.parse_args()).choice
     if choice in "dD":
         asyncio.run(drop_all_tables())
     elif choice in "cC":
