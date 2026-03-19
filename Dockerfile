@@ -3,6 +3,7 @@ WORKDIR /application
 COPY ./requirements.txt .
 RUN python -m venv .venv && source .venv/bin/activate && pip install --no-cache-dir -r requirements.txt
 COPY . .
+RUN .venv/bin/python db_util.py c
 
 FROM python:3.13-alpine AS runner
 WORKDIR /application

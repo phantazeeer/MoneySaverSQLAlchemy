@@ -3,3 +3,4 @@
 ./venv/
 ./venv.bak/
 __pycache__/
+./app/db/database.db
