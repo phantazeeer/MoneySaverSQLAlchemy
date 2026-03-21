@@ -1,14 +1,16 @@
-from app.db.database import get_session
+from .base import Base
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from datetime import datetime, timezone
 
+class User(Base):
+    __tablename__ = "user"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    balance: Mapped[int] = mapped_column(nullable=False, default=0)
+    username: Mapped[str] = mapped_column(nullable=False)
+    email: Mapped[str] = mapped_column(unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(nullable=False)
+    goal_name: Mapped[str]
+    goal_value: Mapped[int]
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(tz=timezone.utc))
 
-async def create_user_table():
-    conn = await get_session()
-    await conn.execute("""CREATE TABLE user (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    balance INTEGER NOT NULL DEFAULT 0,
-    username TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL,
-    goal_name TEXT,
-    goal_value INTEGER,
-    created_at TEXT);""")
+    costs_and_earnings: Mapped[list["CostsAndEarnings"]] = relationship(back_populates="user")
