@@ -5,7 +5,7 @@
     <div>
         <h2>Баланс:</h2>
         <p class="mt-5">{{ user.balance }}</p>
-        <form method="POST" action="/records/add_record" class="border mt-5 rounded-sm p-3 bg-gray-200"
+        <form method="POST" action="/records/" class="border mt-5 rounded-sm p-3 bg-gray-200"
               id="FastAddRecordForm">
             {{ FastAddRecordForm.hidden_tag }}
             <div>
@@ -48,7 +48,7 @@
 
             {% if ChangeTargetForm %}
             <a href="/" class="px-4 border rounded-sm bg-gray-300 cursor-pointer hover:bg-gray-400">Не менять цель</a>
-            <form method="POST" action="/records/add_record" class="border mt-5 rounded-sm p-3 bg-gray-200"
+            <form method="POST" action="/records/" class="border mt-5 rounded-sm p-3 bg-gray-200"
               id="ChangeTargetForm">
             {{ ChangeTargetForm.hidden_tag }}
             <div>
@@ -117,7 +117,7 @@
 
         const formData = new FormData(this);
 
-        fetch('http://localhost:8000/records/add_record', {
+        fetch('http://localhost:8000/records/', {
             method: 'POST',
             body: formData
         })
@@ -131,7 +131,7 @@
 
         const formData = new FormData(this);
 
-        fetch('http://localhost:8000/user/change_user', {
+        fetch('http://localhost:8000/user/me', {
             method: 'PUT',
             body: formData
         })
