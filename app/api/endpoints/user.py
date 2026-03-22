@@ -38,7 +38,11 @@ async def login(user: Annotated[UserLogin, Form()], service: UserService = Depen
     try:
         token = await service.login(str(user.email), user.password)
     except Exception as err:
-        raise HTTPException(400, str(err))
+        if str(err) == "Пользователь не найден":
+            raise HTTPException(400, "Пользователь не найден")
+        if str(err) == "Неправильный пароль":
+            raise HTTPException(400, "Неправильный пароль")
+        raise err
     res = Response("OK", status_code=200)
     res.set_cookie('Authorization', token, httponly=True)
     return res
@@ -57,9 +61,13 @@ async def change_me(changes: Annotated[UserChange, Form()], user_id: int = Depen
     changes = changes.model_dump()
     if len(changes.keys()) == 0:
         raise HTTPException(400, "Пустой запрос")
-
-    await service.update_user(user_id, **changes)
-    return "OK"
+    try:
+        await service.update_user(user_id, **changes)
+        return "OK"
+    except Exception as err:
+        if str(err) == "Введите другую почту":
+            raise HTTPException(400, "Введите другую почту")
+        raise err
 
 
 @router.get('/me/records')
@@ -70,3 +78,6 @@ async def get_records(user_id: int = Depends(get_jwt_payload),
     except ValueError as err:
         if str(err) == "Пользователь не является владельцем записи":
             raise HTTPException(403, "Пользователь не является владельцем записи")
+    except Exception as err:
+        if str(err) == "Записи не найдены":
+            raise HTTPException(404, "Записи не найдены")

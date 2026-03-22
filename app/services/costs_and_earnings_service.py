@@ -44,7 +44,7 @@ class CostsAndEarningsService:
                     records = await self.uow.records.get_list_by(user_id=user_id)
                     res = [Record.model_validate(i) for i in records]
                 except NoResultFound:
-                    raise Exception("Запись не найдена")
+                    raise Exception("Записи не найдены")
         else:
             raise ValueError('Введите user_id или user_id и id')
         return res
