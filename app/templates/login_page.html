@@ -44,7 +44,11 @@
         window.location.href = 'http://localhost:8000/';
     })
     .catch(error => {
-        alert(error.message);
+        if (error.message == "Неправильный пароль") {
+            alert(error.message);
+        } else if (error.message == "[object Object]"){
+            alert("Введите корректную почту");
+        }
     });
     });
 </script>

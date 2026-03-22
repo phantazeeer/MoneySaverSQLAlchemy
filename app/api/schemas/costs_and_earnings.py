@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Literal, Annotated
 from datetime import datetime
 
@@ -10,12 +10,12 @@ class AddRecord(BaseModel):
 
 
 class ChangeRecord(BaseModel):
-    id: int
     operation_type: Literal["0", "1"] | None = None
     value: int | None = None
     comment: Annotated[str, Field(max_length=150)] | None = None
 
 class Record(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     user_id: int
     operation_type: bool

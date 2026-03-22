@@ -33,7 +33,7 @@
         </a>
     </div>
     {% if form %}
-    <form method="POST" action="/records/update_record"
+    <form method="POST" action="/records/"
           id="Form" class="mt-5 border bg-gray-200 ml-5 rounded-sm p-3">
         {{ form.hidden_tag }}
         {% if record %}
@@ -79,9 +79,8 @@
 
         const formData = new FormData(this);
         {% if record %}
-        formData.append('id', {{ record.id }})
-        {% endif %}
-        fetch('http://localhost:8000/records/update_record', {
+
+        fetch('http://localhost:8000/records/{{ record.id }}', {
             method: 'PUT',
             body: new URLSearchParams(formData)
         }).then(response => {
@@ -89,5 +88,6 @@
         })
         .catch(error => console.error('Ошибка:', error));
     });
+        {% endif %}
 </script>
 {% endblock %}

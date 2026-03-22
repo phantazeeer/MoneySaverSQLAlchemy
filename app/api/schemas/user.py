@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, model_validator, field_validator
+from pydantic import BaseModel, EmailStr, model_validator, ConfigDict
 from types import NoneType
 from datetime import datetime
 
@@ -31,6 +31,8 @@ class UserChange(BaseModel):
 
 
 class User(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
     balance: int
     username: str
     email: EmailStr

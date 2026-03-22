@@ -1,13 +1,15 @@
-from app.db.database import get_session
+from .base import Base
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, CheckConstraint
+from datetime import datetime, timezone
 
+class CostsAndEarnings(Base):
+    __tablename__ = "costs_and_earnings"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    operation_type: Mapped[int] = mapped_column(CheckConstraint('operation_type = 1 or operation_type = 0'))
+    value: Mapped[int] = mapped_column(nullable=False)
+    comment: Mapped[str]
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now(tz=timezone.utc))
 
-async def create_costs_and_earnings_table():
-    conn = await get_session()
-    await conn.execute("""CREATE TABLE costs_and_earnings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    operation_type INTEGER NOT NULL,
-    value INTEGER NOT NULL,
-    comment TEXT,
-    created_at TEXT,
-    FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE);""")
+    user: Mapped["User"] = relationship(back_populates="costs_and_earnings")

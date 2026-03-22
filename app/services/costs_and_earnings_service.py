@@ -1,129 +1,99 @@
 from typing import Literal
 
-from fastapi import HTTPException
-
-from app.db.database import get_session
 from app.api.schemas import Record
 from datetime import datetime, timezone, timedelta
 from types import NoneType
 import matplotlib.pyplot as plt
 import io
 import base64
-from app.db.DAO import UserDAO, CostsAndEarningsDAO as CEDAO
-
+from app.utils.uow import IUnitOfWork
+from sqlalchemy.exc import NoResultFound
 
 class CostsAndEarningsService:
 
-    async def init_session(self, userdao: UserDAO, cedao: CEDAO) -> None:
-        self.userdao = userdao
-        await self.userdao.init_conn()
-        self.cedao = cedao
-        await self.cedao.init_conn()
+    def __init__(self, uow: IUnitOfWork) -> None:
+        self.uow = uow
 
     async def add_record(self, user_id: int, operation_type: str, value: int, comment: str | None = None) -> None:
-        await self.cedao.create(user_id=user_id, operation_type=int(operation_type), value=value, comment=comment)
-        await self.userdao.do_raw_sql("""UPDATE user SET balance = balance + ? WHERE id = ?""",
-                                      ((-1) ** int(operation_type) * value, user_id))
+        async with self.uow:
+            await self.uow.records.add_one(user_id=user_id, operation_type=int(operation_type), value=value, comment=comment)
 
     async def delete_record(self, id: int, user_id: int) -> None:
-        records = await self.cedao.get_by(id=id)
-        if not records:
-            raise HTTPException(404, "Такой записи нет")
-        record = records[0]
-        if record.user_id != user_id:
-            raise HTTPException(400, "Пользователь не является владельцем маршрута")
-        user = (await self.userdao.get_by(id=user_id))[0]
-        await self.userdao.do_raw_sql("""UPDATE user SET balance = balance - ? WHERE id = ?""",
-                                      ((-1) ** record.operation_type * record.value, user.id))
-        await self.cedao.delete(id=id)
+        async with self.uow:
+            try:
+                record = await self.uow.records.get_one(id=id)
+                if user_id != record.user_id:
+                    raise ValueError("Пользователь не является владельцем записи")
+                await self.uow.records.delete_by_id(id)
+            except NoResultFound:
+                raise Exception('Запись не найдена')
 
     async def get_records_by(self, id: int | None = None, user_id: int | None = None) -> Record | list[Record]:
         if not isinstance(id, NoneType) and not isinstance(user_id, NoneType):
-            records = await self.cedao.get_by(id=id)
-            if not records:
-                raise HTTPException(404, "Такой записи нет")
-            record = records[0]
-            if not record.user_id == user_id:
-                raise HTTPException(400, "Пользователь не владелец записи")
-            res = Record(id=record.id,
-                         user_id=record.user_id,
-                         operation_type=record.operation_type,
-                         value=record.value,
-                         comment=record.comment,
-                         created_at=record.created_at)
+            async with self.uow:
+                try:
+                    record = await self.uow.records.get_one(id=id)
+                    if not record.user_id == user_id:
+                        raise ValueError("Пользователь не является владельцем записи")
+                    res = Record.model_validate(record)
+                except NoResultFound:
+                    raise Exception("Запись не найдена")
         elif not isinstance(user_id, NoneType):
-            records = await self.cedao.get_by(user_id=user_id)
-            res = list()
-            for record in records:
-                res.append(Record(id=record.id,
-                                  user_id=record.user_id,
-                                  operation_type=record.operation_type,
-                                  value=record.value,
-                                  comment=record.comment,
-                                  created_at=record.created_at))
+            async with self.uow:
+                try:
+                    records = await self.uow.records.get_list_by(user_id=user_id)
+                    res = [Record.model_validate(i) for i in records]
+                except NoResultFound:
+                    raise Exception("Записи не найдены")
         else:
-            raise HTTPException(400, 'incorrect using get_records_by')
+            raise ValueError('Введите user_id или user_id и id')
         return res
 
     async def update_record(self, id: int, user_id: int, operation_type: int | None = None, value: int | None = None,
                             comment: str | None = None) -> None:
-        records = await self.cedao.get_by(id=id)
-        if not records:
-            raise HTTPException(404, "Такой записи нет")
-        record = records[0]
-        if not record.user_id == user_id:
-            raise HTTPException(400, "Пользователь не владелец записи")
-        if isinstance(operation_type, NoneType):
-            operation_type = record.operation_type
-        if isinstance(value, NoneType):
-            value = record.value
-        if isinstance(comment, NoneType):
-            comment = record.comment
-        if not (operation_type == record.operation_type and value == record.value):
-            if operation_type == record.operation_type:
-                balance_change = (value - record.value) * (-1) ** operation_type
-            else:
-                balance_change = (value + record.value) * (-1) ** operation_type
-            user = (await self.userdao.get_by(id=record.user_id))[0]
-            await self.userdao.do_raw_sql("""UPDATE user SET balance = balance + ? WHERE id = ?""",
-                                          (balance_change, user.id))
-        await self.cedao.update(id=id, operation_type=operation_type, value=value, comment=comment)
+        async with self.uow:
+            try:
+                record = await self.uow.records.get_one(id=id)
+                if record.user_id != user_id:
+                    raise ValueError("Пользователь не является владельцем записи")
+                if isinstance(operation_type, NoneType):
+                    operation_type = record.operation_type
+                if isinstance(value, NoneType):
+                    value = record.value
+                if isinstance(comment, NoneType):
+                    comment = record.comment
+                await self.uow.records.update_record(id, user_id, operation_type=operation_type, value=value, comment=comment)
+            except NoResultFound:
+                raise Exception("Запись не найдена")
+
 
     async def user_costs_or_earnings(self, user_id: int, filter: Literal["costs", "earnings"]) -> list[Record]:
-        op_type = 0 if filter == "earnings" else 1
-        records = await self.cedao.get_by(user_id=user_id, operation_type=op_type)
-        res = list()
-        for record in records:
-            res.append(Record(id=record.id,
-                              user_id=record.user_id,
-                              operation_type=record.operation_type,
-                              value=record.value,
-                              comment=record.comment,
-                              created_at=record.created_at))
-        return res
+        async with self.uow:
+            op_type = 0 if filter == "earnings" else 1
+            records = await self.uow.records.get_list_by(user_id=user_id, operation_type=op_type)
+            res = [Record.model_validate(i) for i in records]
+            return res
 
     async def create_graphics(self, period: tuple[datetime, datetime], user_id: int):
-        record = await self.cedao.do_raw_sql(
-            """SELECT * FROM costs_and_earnings WHERE (created_at BETWEEN ? AND ?) AND user_id = ? ORDER BY created_at""",
-            (period[0].replace(tzinfo=timezone.utc), period[1].replace(tzinfo=timezone.utc), user_id))
-        balance = (await self.userdao.get_by(id=user_id))[0].balance
-        records = await record.fetchall()
+        records = await self.uow.records.get_list_by_date(start=period[0].replace(tzinfo=timezone.utc),
+                                                         end=period[1].replace(tzinfo=timezone.utc),
+                                                         user_id=user_id)
+        balance = (await self.uow.users.get_one(id=user_id)).balance
         if not records:
-            return None
+             return None
 
-        records = [(i[0], i[1], i[2], i[3], i[4], datetime.strptime(i[5], "%Y-%m-%d %H:%M:%S.%f%z")) for i in records]
         now = datetime.now(timezone.utc)
-        if now - records[0][5] < timedelta(days=30):
-            x = [i[5].date().strftime("%d") for i in records]
-        elif now - records[0][5] <= timedelta(days=360):
-            x = [i[5].date().strftime("%d.%m") for i in records]
+        if now - records[0].created_at < timedelta(days=30):
+            x = [i.created_at.date().strftime("%d") for i in records]
+        elif now - records[0].created_at <= timedelta(days=360):
+            x = [i.created_at.date().strftime("%d.%m") for i in records]
         else:
-            x = [i[5].date().strftime("%d.%m.%Y") for i in records]
+            x = [i.created_at.date().strftime("%d.%m.%Y") for i in records]
 
         balance_y = []
         for i in records[::-1]:
-            balance_y.append(balance - (-1) ** i[2] * i[3])
-            balance -= (-1) ** i[2] * i[3]
+            balance_y.append(balance - (-1) ** i.operation_type * i.value)
+            balance -= (-1) ** i.operation_type * i.value
         balance_y = balance_y[::-1]
 
         fig, ax = plt.subplots()
