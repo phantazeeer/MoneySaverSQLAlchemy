@@ -16,14 +16,12 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 async def get_ce_service(uow: IUnitOfWork = Depends(UnitOfWork)) -> CEService:
-    service = CEService()
-    await service.init_session(uow)
+    service = CEService(uow)
     return service
 
 
 async def get_user_service(uow: IUnitOfWork = Depends(UnitOfWork)) -> UserService:
-    service = UserService()
-    await service.init_session(uow)
+    service = UserService(uow)
     return service
 
 

@@ -13,8 +13,7 @@ router = APIRouter(prefix='/user', tags=['Working with user'])
 
 
 async def get_service(uow: IUnitOfWork = Depends(UnitOfWork)):
-    service = UserService()
-    await service.init_session(uow)
+    service = UserService(uow)
     return service
 
 

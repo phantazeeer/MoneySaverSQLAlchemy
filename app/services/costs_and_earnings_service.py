@@ -11,7 +11,7 @@ from sqlalchemy.exc import NoResultFound
 
 class CostsAndEarningsService:
 
-    async def init_session(self, uow: IUnitOfWork) -> None:
+    def __init__(self, uow: IUnitOfWork) -> None:
         self.uow = uow
 
     async def add_record(self, user_id: int, operation_type: str, value: int, comment: str | None = None) -> None:

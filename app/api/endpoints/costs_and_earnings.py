@@ -11,8 +11,7 @@ router = APIRouter(prefix='/records', tags=['Working with records'])
 
 
 async def get_service(uow: IUnitOfWork = Depends(UnitOfWork)) -> CEService:
-    service = CEService()
-    await service.init_session(uow)
+    service = CEService(uow)
     return service
 
 

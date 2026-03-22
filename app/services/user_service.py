@@ -5,7 +5,7 @@ from app.utils.uow import IUnitOfWork
 
 
 class UserService:
-    async def init_session(self, uow: IUnitOfWork):
+    def __init__(self, uow: IUnitOfWork):
         self.uow = uow
 
     async def add_user(self, username: str, email: str, password: str) -> None:
