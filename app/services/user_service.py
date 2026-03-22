@@ -15,7 +15,6 @@ class UserService:
         except ValueError as err:
             if "Почта неуникальна" in str(err):
                 raise Exception("Эта почта уже занята")
-            print(err)
             raise err
 
     async def get_user_by(self, **kwargs) -> User:
@@ -24,7 +23,6 @@ class UserService:
                 res = await self.uow.users.get_one(**kwargs)
                 return User.model_validate(res)
         except Exception as err:
-            print("Exception:", str(err))
             raise err
 
 
