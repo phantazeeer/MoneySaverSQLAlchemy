@@ -13,7 +13,7 @@ class UserRepository(BasicRepository):
         except IntegrityError as err:
             if "user.email" in str(err):
                 raise ValueError("Почта неуникальна")
-            raise ValueError("Неправильные данные для вставки")
+            raise err
 
     async def delete_by_user(self, id: int):
         return await self.delete_by_id(id)

@@ -1,27 +1,12 @@
 import asyncio
-from app.db.database import get_session
 from app.services.user_service import UserService
 from app.services.costs_and_earnings_service import CostsAndEarningsService
-from app.db.models.user import create_user_table
-from app.db.models.costs_and_earnings import create_costs_and_earnings_table
-import argparse
-from app.db.DAO import SQLiteCostsAndEarningsDAO as SQLiteCEDAO, SQLiteUserDAO
+from app.utils.uow import UnitOfWork
 
-
-async def create_all_tables():
-    await create_user_table()
-    await create_costs_and_earnings_table()
-
-
-async def drop_all_tables():
-    conn = await get_session()
-    await conn.execute("""DROP TABLE costs_and_earnings""")
-    await conn.execute("""DROP TABLE user""")
 
 
 async def fill_user_table():
-    service = UserService()
-    await service.init_session(SQLiteUserDAO())
+    service = UserService(UnitOfWork())
     await service.add_user('Максим Струнников', 'ms@gmail.com', '123')
     await service.add_user('Николас Сенченков', 'ns@gmail.com', '123')
     await service.add_user('Дэнис Качалин', 'dk@gmail.com', '123')
@@ -30,8 +15,7 @@ async def fill_user_table():
 
 
 async def fill_costs_and_earnings_table():
-    service = CostsAndEarningsService()
-    await service.init_session(SQLiteUserDAO(), SQLiteCEDAO())
+    service = CostsAndEarningsService(UnitOfWork())
     await service.add_record(1, 1, 500)
     await service.add_record(1, 0, 1500)
     await service.add_record(1, 1, 300, "Купил пирожок в столовой")
@@ -48,14 +32,4 @@ async def fill_all_tables():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Tool for creating database')
-    parser.add_argument("choice", choices=["d", "D", "c", "C", "f", "F"])
-    choice = (parser.parse_args()).choice
-    if choice in "dD":
-        asyncio.run(drop_all_tables())
-    elif choice in "cC":
-        asyncio.run(create_all_tables())
-    elif choice in "fF":
-        asyncio.run(fill_all_tables())
-    else:
-        print('Incorrect input')
+    asyncio.run(fill_all_tables())
