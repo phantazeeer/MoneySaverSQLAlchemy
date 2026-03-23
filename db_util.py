@@ -1,4 +1,3 @@
-import subprocess
 import asyncio
 from app.services.user_service import UserService
 from app.services.costs_and_earnings_service import CostsAndEarningsService
