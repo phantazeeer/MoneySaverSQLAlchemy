@@ -1,8 +1,8 @@
-"""first migration
+"""empty message
 
-Revision ID: 41664f7e3ffd
+Revision ID: 9028175d2721
 Revises: 
-Create Date: 2026-03-23 13:13:02.175346
+Create Date: 2026-03-23 13:33:56.868278
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '41664f7e3ffd'
+revision: str = '9028175d2721'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,8 +27,8 @@ def upgrade() -> None:
     sa.Column('username', sa.String(), nullable=False),
     sa.Column('email', sa.String(), nullable=False),
     sa.Column('password', sa.String(), nullable=False),
-    sa.Column('goal_name', sa.String(), nullable=False),
-    sa.Column('goal_value', sa.Integer(), nullable=False),
+    sa.Column('goal_name', sa.String(), nullable=True),
+    sa.Column('goal_value', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
@@ -38,7 +38,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('operation_type', sa.Integer(), nullable=False),
     sa.Column('value', sa.Integer(), nullable=False),
-    sa.Column('comment', sa.String(), nullable=False),
+    sa.Column('comment', sa.String(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
