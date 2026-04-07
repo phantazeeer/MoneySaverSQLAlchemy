@@ -40,12 +40,15 @@ async def main(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
         change_target_form = ChangeTargetForm()
     else:
         change_target_form = None
+    earnings, costs = await ce_service.get_sum_of_costs_and_earn(user_id)
 
     return templates.TemplateResponse(
         request=req, name="user_page.html", context={"user": user,
                                                      "records": records,
                                                      "FastAddRecordForm": FastAddRecordForm(),
-                                                     "ChangeTargetForm": change_target_form}
+                                                     "ChangeTargetForm": change_target_form,
+                                                     "total_earnings": earnings,
+                                                     "total_costs": costs}
     )
 
 
