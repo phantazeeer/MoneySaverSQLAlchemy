@@ -83,9 +83,9 @@ class CostsAndEarningsService:
              return None
 
         now = datetime.now(timezone.utc)
-        if now - records[0].created_at < timedelta(days=30):
+        if now - records[0].created_at.replace(tzinfo=timezone.utc) < timedelta(days=30):
             x = [i.created_at.date().strftime("%d") for i in records]
-        elif now - records[0].created_at <= timedelta(days=360):
+        elif now - records[0].created_at.replace(tzinfo=timezone.utc) <= timedelta(days=360):
             x = [i.created_at.date().strftime("%d.%m") for i in records]
         else:
             x = [i.created_at.date().strftime("%d.%m.%Y") for i in records]
