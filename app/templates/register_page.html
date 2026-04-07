@@ -23,7 +23,7 @@
     <div class="mt-5">
         <p>{{ form.password.label }}</p>
         {{ form.password(class="form-control bg-gray-300 rounded-sm") }}<br>
-        {% for error in form.email.errors %}
+        {% for error in form.password.errors %}
         <p class="alert alert-danger" role="alert">
             {{ error }}
         </p>
