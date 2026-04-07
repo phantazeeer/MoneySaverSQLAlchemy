@@ -91,6 +91,7 @@
                 <th class="border border-gray-300 p-3">Тип операции</th>
                 <th class="border border-gray-300 p-3">Значение</th>
                 <th class="border border-gray-300 p-3">Комментарий</th>
+                <th class="border border-gray-300 p-3">Время операции</th>
             </tr>
             </thead>
             <tbody style="word-break: break-all;">
@@ -101,6 +102,7 @@
                 </td>
                 <td class="border border-gray-300 p-3">{{ item.value }}</td>
                 <td class="border border-gray-300 p-3">{{ item.comment }}</td>
+                <td class="border border-gray-300 p-3">{{ item.created_at }}</td>
             </tr>
             {% endfor %}
             </tbody>
