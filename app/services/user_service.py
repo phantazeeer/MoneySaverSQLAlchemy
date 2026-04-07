@@ -25,11 +25,9 @@ class UserService:
         except Exception as err:
             raise err
 
-
     async def delete_user(self, id: int) -> None:
         async with self.uow:
             await self.uow.users.delete_by_user(id)
-
 
     async def update_user(self, id: int, **kwargs) -> None:
         try:
@@ -50,3 +48,8 @@ class UserService:
             else:
                 access_token = create_token(user.id)
                 return access_token
+
+    async def get_sum_of_costs_and_earn(self, user_id: int):
+        async with self.uow:
+            earnings, costs = await self.uow.users.get_user_costs_and_earnings(user_id)
+            return earnings, costs
