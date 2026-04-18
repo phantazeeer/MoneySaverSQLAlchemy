@@ -28,11 +28,11 @@ class IUnitOfWork(ABC):
 
 
 class UnitOfWork(IUnitOfWork):
-    def __init__(self, session_factory: AsyncGenerator[AsyncSession]):
+    def __init__(self, session_factory):
         self.session_factory = session_factory
 
     async def __aenter__(self):
-        self.session = await anext(self.session_factory)
+        self.session = self.session_factory()
 
         self.users = UserRepository(self.session)
         self.records = CostsAndEarningsRepository(self.session)
