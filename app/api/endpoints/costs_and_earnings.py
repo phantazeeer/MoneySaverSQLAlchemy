@@ -5,14 +5,9 @@ from fastapi import APIRouter, Depends, status, Form, Path, HTTPException
 from app.services import CostsAndEarningsService as CEService
 from app.utils import get_jwt_payload
 from app.api.schemas import AddRecord, ChangeRecord, Record
-from app.utils.uow import UnitOfWork, IUnitOfWork
+from app.utils.dependencies import get_ce_service as get_service
 
 router = APIRouter(prefix='/records', tags=['Working with records'])
-
-
-async def get_service(uow: IUnitOfWork = Depends(UnitOfWork)) -> CEService:
-    service = CEService(uow)
-    return service
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)

@@ -9,20 +9,11 @@ from app.services import CostsAndEarningsService as CEService
 from app.services import UserService
 from app.utils import get_jwt_payload
 from app.forms import FastAddRecordForm, LoginForm, RegisterForm, ChangeRecordForm, ChooseDateForm, ChangeTargetForm
-from app.utils.uow import IUnitOfWork, UnitOfWork
+from app.utils.dependencies import get_ce_service, get_user_service
+
 router = APIRouter(tags=['Working with templates'])
 
 templates = Jinja2Templates(directory="app/templates")
-
-
-async def get_ce_service(uow: IUnitOfWork = Depends(UnitOfWork)) -> CEService:
-    service = CEService(uow)
-    return service
-
-
-async def get_user_service(uow: IUnitOfWork = Depends(UnitOfWork)) -> UserService:
-    service = UserService(uow)
-    return service
 
 
 @router.get("/", name="main_page")

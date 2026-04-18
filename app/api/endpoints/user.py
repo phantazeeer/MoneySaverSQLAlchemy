@@ -6,15 +6,10 @@ from app.api.schemas import UserLogin, UserChange, User
 from app.services import UserService
 from app.api.schemas import UserRegister
 from app.utils import get_jwt_payload
+from app.utils.dependencies import get_user_service as get_service
 from app.api.endpoints.costs_and_earnings import (get_service as get_ce_service, CEService, Record)
-from app.utils.uow import IUnitOfWork, UnitOfWork
 
 router = APIRouter(prefix='/user', tags=['Working with user'])
-
-
-async def get_service(uow: IUnitOfWork = Depends(UnitOfWork)):
-    service = UserService(uow)
-    return service
 
 
 @router.get('/me')

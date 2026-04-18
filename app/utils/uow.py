@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from app.db.database import AsyncSession, session_factory
+from app.db.database import AsyncSession
+from typing import AsyncGenerator
 from app.repositories.costs_and_earnings_repo import CostsAndEarningsRepository
 from app.repositories.user_repo import UserRepository
 
@@ -27,11 +28,11 @@ class IUnitOfWork(ABC):
 
 
 class UnitOfWork(IUnitOfWork):
-    def __init__(self):
+    def __init__(self, session_factory: AsyncGenerator[AsyncSession]):
         self.session_factory = session_factory
 
     async def __aenter__(self):
-        self.session = self.session_factory()
+        self.session = await anext(self.session_factory)
 
         self.users = UserRepository(self.session)
         self.records = CostsAndEarningsRepository(self.session)
