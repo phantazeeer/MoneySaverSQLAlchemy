@@ -33,8 +33,8 @@ class UserService:
         try:
             async with self.uow:
                 await self.uow.users.update_user(id, **kwargs)
-        except IntegrityError as err:
-            if "user.email" in str(err):
+        except ValueError as err:
+            if str(err) == "email is already used":
                 raise Exception("Введите другую почту")
 
     async def login(self, email: str, password: str) -> str:

@@ -49,7 +49,7 @@ class CostsAndEarningsService:
             raise ValueError('Введите user_id или user_id и id')
         return res
 
-    async def update_record(self, id: int, user_id: int, operation_type: int | None = None, value: int | None = None,
+    async def update_record(self, id: int, user_id: int, operation_type = None, value: int | None = None,
                             comment: str | None = None) -> None:
         async with self.uow:
             try:
