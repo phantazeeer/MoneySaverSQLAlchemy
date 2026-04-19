@@ -72,9 +72,7 @@ async def test_update_user_success(user_service, uow_mock):
 
 
 async def test_update_user_integrity_error(user_service, uow_mock):
-    orig_error = Exception('duplicate key value violates unique constraint "user_email_key"')
-    integrity_error = IntegrityError("INSERT", {}, orig_error)
-    integrity_error.args = (str(integrity_error) + " user.email",)
+    integrity_error = ValueError("email is already used")
     uow_mock.users.update_user.side_effect = integrity_error
 
     with pytest.raises(Exception) as exc_info:
