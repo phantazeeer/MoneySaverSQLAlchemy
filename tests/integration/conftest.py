@@ -6,7 +6,7 @@ from app.db.models import *
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-DB_PATH = "./db_for_test"
+DB_PATH = "./db_for_integration_test"
 DB_URL = "sqlite+aiosqlite:///" + DB_PATH
 
 engine = create_async_engine(DB_URL)
