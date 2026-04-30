@@ -3,12 +3,14 @@ from app.db.database import AsyncSession
 from typing import AsyncGenerator
 from app.repositories.costs_and_earnings_repo import CostsAndEarningsRepository
 from app.repositories.user_repo import UserRepository
+from app.repositories.category_repo import CategoryRepository
 
 
 class IUnitOfWork(ABC):
     session: AsyncSession = None
     users: UserRepository
     records: CostsAndEarningsRepository
+    category: CategoryRepository
 
     @abstractmethod
     async def __aenter__(self):
@@ -36,6 +38,7 @@ class UnitOfWork(IUnitOfWork):
 
         self.users = UserRepository(self.session)
         self.records = CostsAndEarningsRepository(self.session)
+        self.categories = CategoryRepository(self.session)
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         try:
