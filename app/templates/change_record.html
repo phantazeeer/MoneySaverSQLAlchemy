@@ -1,93 +1,224 @@
 {% extends 'base.html' %}
+{% block title %}Записи — MoneySaver{% endblock %}
 {% block body %}
-<div class="p-5 flex justify-between">
-    <div class="max-w-2xl ml-10">
-        <h2>Записи:</h2>
-        <table class="my-5 table-auto border-collapse border border-gray-400">
-            <thead>
-            <tr class="bg-gray-100">
-                <th class="border border-gray-300 p-3">Тип операции</th>
-                <th class="border border-gray-300 p-3">Значение</th>
-                <th class="border border-gray-300 p-3">Комментарий</th>
-                <th class="border border-gray-300 p-3">Загрузить для изменения</th>
-            </tr>
-            </thead>
-            <tbody style="word-break: break-all;">
-            {% for item in records %}
-            <tr>
-                <td class="border border-gray-300 p-3">{% if item.operation_type %} Расход {% else %} Доход {% endif
-                    %}
-                </td>
-                <td class="border border-gray-300 p-3">{{ item.value }}</td>
-                <td class="border border-gray-300 p-3">{{ item.comment }}</td>
-                <td class="border border-gray-300 p-3">
-                    <a href="/change_record?id={{item.id}}" class="load_button bg-gray-300 rounded-sm
-                    cursor-pointer p-1">Загрузить</a>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <a class="px-4 border rounded-sm bg-gray-300 cursor-pointer
-        hover:bg-gray-400" href="{{ url_for("main_page") }}">Вернуться на главную
-        </a>
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Хлебные крошки + заголовок -->
+    <div class="mb-6">
+        <nav class="text-sm text-slate-500 mb-2">
+            <a href="/" class="hover:text-emerald-600 transition">Главная</a>
+            <span class="mx-2">/</span>
+            <span class="text-slate-700">Записи</span>
+        </nav>
+        <div class="flex items-center justify-between flex-wrap gap-3">
+            <h1 class="text-2xl font-bold text-slate-900">📋 Управление записями</h1>
+            <a href="/"
+               class="text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl px-4 py-2 transition">
+                ← На главную
+            </a>
+        </div>
     </div>
-    {% if form %}
-    <form method="POST" action="/records/"
-          id="Form" class="mt-5 border bg-gray-200 ml-5 rounded-sm p-3">
-        {{ form.hidden_tag }}
-        {% if record %}
-        <div class="flex justify-between gap-5">
-            <div>
-                <div>
-                    <p>{{ form.operation_type.label }}</p>
-                    {{ form.operation_type(class="form-control bg-gray-300 p-1 rounded-sm") }}<br>
-                    {% for error in form.operation_type.errors %}
-                    <p class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </p>
-                    {% endfor %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Список записей -->
+        <section class="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100">
+            {% if records %}
+            <p class="text-sm text-slate-500 mb-3 px-2">
+                Всего записей: <span class="font-semibold text-slate-700">{{ records|length }}</span>
+            </p>
+            <div class="divide-y divide-slate-100">
+                {% for item in records %}
+                <div class="flex items-center justify-between py-3 px-3 rounded-xl transition
+                            {% if record and record.id == item.id %}ring-2 ring-emerald-500 bg-emerald-50/30{% else %}hover:bg-slate-50{% endif %}">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
+                                    {% if item.operation_type %}bg-rose-50{% else %}bg-emerald-50{% endif %}">
+                            <span class="text-lg">{% if item.operation_type %}💸{% else %}💵{% endif %}</span>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-slate-900 truncate">
+                                {{ item.comment or 'Без комментария' }}
+                            </p>
+                            <p class="text-xs text-slate-500">
+                                {{ item.created_at.strftime('%d.%m.%Y, %H:%M') if item.created_at.strftime else
+                                item.created_at }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 flex-shrink-0 ml-3">
+                        <p class="text-sm font-semibold whitespace-nowrap
+                                  {% if item.operation_type %}text-rose-600{% else %}text-emerald-600{% endif %}">
+                            {% if item.operation_type %}-{% else %}+{% endif %}{{ item.value }} ₽
+                        </p>
+                        <a href="/change_record?id={{ item.id }}"
+                           title="Изменить"
+                           class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600 text-slate-500 flex items-center justify-center transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                 stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </a>
+                        <button type="button"
+                                onclick="deleteRecord({{ item.id }})"
+                                title="Удалить"
+                                class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-rose-100 hover:text-rose-600 text-slate-500 flex items-center justify-center transition cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                 stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="mt-5">
-                    <p>{{ form.value.label }}</p>
-                    {{ form.value(class="form-control bg-gray-300 rounded-sm") }}<br>
-                    {% for error in form.value.errors %}
-                    <p class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </p>
-                    {% endfor %}
-                </div>
-            </div>
-            <div>
-                <p>{{ form.comment.label }}</p>
-                {{ form.comment(class="form-control rounded-sm bg-gray-300") }}<br>
-                {% for error in form.comment.errors %}
-                <p class="alert alert-danger" role="alert">
-                    {{ error }}
-                </p>
                 {% endfor %}
             </div>
-        </div>
-        <p>{{ form.submit(type="submit", class="mt-3 cursor-pointer rounded-sm bg-gray-300 p-1 px-2") }}</p>
-        {% endif %}
-    </form>
-    {% endif %}
-</div>
+            {% else %}
+            <div class="text-center py-16">
+                <p class="text-5xl mb-3">📭</p>
+                <p class="text-slate-700 font-medium">Записей пока нет</p>
+                <p class="text-sm text-slate-400 mt-1">Добавьте первую на главной странице</p>
+                <a href="/"
+                   class="mt-4 inline-block bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl px-5 py-2.5 transition">
+                    Добавить запись
+                </a>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Форма редактирования (sticky) -->
+        <aside class="lg:col-span-1">
+            <div class="lg:sticky lg:top-20">
+                {% if form and record %}
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="text-lg font-semibold text-slate-900">Изменить запись</h2>
+                        <span class="text-xs font-medium text-slate-500 bg-slate-100 rounded-full px-2.5 py-0.5">
+                            #{{ record.id }}
+                        </span>
+                    </div>
+
+                    <form id="Form" method="POST" class="space-y-4">
+                        {{ form.hidden_tag }}
+
+                        <!-- ✅ SelectField с динамической подсветкой -->
+                        <div>
+                            <label class="text-xs font-medium text-slate-600 block mb-2">
+                                {{ form.operation_type.label.text }}
+                            </label>
+                            <div class="relative">
+                                {{ form.operation_type(
+                                class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-white
+                                focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+                                outline-none transition appearance-none cursor-pointer
+                                font-medium text-slate-700",
+                                id="operation_type_select"
+                                ) }}
+                                <!-- Стрелка справа -->
+                                <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </div>
+                                <!-- Цветной индикатор слева -->
+                                <div id="type_indicator"
+                                     class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full">
+                                </div>
+                            </div>
+                            <!-- Бейдж под селектом -->
+                            <p id="type_badge" class="text-xs font-medium mt-1.5"></p>
+
+                            {% for error in form.operation_type.errors %}
+                            <p class="text-xs text-rose-600 mt-1">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+
+                        <!-- Сумма -->
+                        <div>
+                            <label class="text-xs font-medium text-slate-600 block mb-1">{{ form.value.label.text
+                                }}</label>
+                            <div class="relative">
+                                {{ form.value(class="w-full border border-slate-200 rounded-xl px-4 py-2.5 pr-10
+                                focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition",
+                                placeholder="0") }}
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₽</span>
+                            </div>
+                            {% for error in form.value.errors %}
+                            <p class="text-xs text-rose-600 mt-1">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Комментарий -->
+                        <div>
+                            <label class="text-xs font-medium text-slate-600 block mb-1">{{ form.comment.label.text
+                                }}</label>
+                            {{ form.comment(class="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2
+                            focus:ring-emerald-500 focus:border-transparent outline-none transition resize-none",
+                            rows="3", maxlength="150", id="commentField", placeholder="например: продукты в пятёрочке")
+                            }}
+                            <p class="text-xs text-slate-400 mt-1 text-right">
+                                <span id="charCount">0</span>/150
+                            </p>
+                            {% for error in form.comment.errors %}
+                            <p class="text-xs text-rose-600 mt-1">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Действия -->
+                        <div class="flex gap-2 pt-2">
+                            {{ form.submit(type="submit", class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white
+                            font-medium rounded-xl py-2.5 cursor-pointer transition") }}
+                            <a href="/change_record"
+                               class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl py-2.5 px-4 transition flex items-center">
+                                Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                {% else %}
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 text-center">
+                    <p class="text-5xl mb-3">✏️</p>
+                    <p class="text-slate-700 font-medium">Выберите запись</p>
+                    <p class="text-sm text-slate-400 mt-1">
+                        Нажмите на иконку карандаша слева, чтобы редактировать
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </aside>
+    </div>
+</main>
+
 <script>
-    document.getElementById('Form').addEventListener('submit', function(e) {
+    const commentField = document.getElementById('commentField');
+    const charCount = document.getElementById('charCount');
+    if (commentField && charCount) {
+        const update = () => charCount.textContent = commentField.value.length;
+        update();
+        commentField.addEventListener('input', update);
+    }
+
+    function deleteRecord(id) {
+        if (!confirm('Удалить эту запись? Действие нельзя отменить.')) return;
+        fetch('/records/' + id, { method: 'DELETE' })
+            .then(r => window.location.href = '/change_record')
+            .catch(err => console.error(err));
+    }
+
+    {% if record %}
+    document.getElementById('Form')?.addEventListener('submit', function(e) {
         e.preventDefault();
-
-        const formData = new FormData(this);
-        {% if record %}
-
-        fetch('http://localhost:8000/records/{{ record.id }}', {
+        fetch('/records/{{ record.id }}', {
             method: 'PUT',
-            body: new URLSearchParams(formData)
-        }).then(response => {
-            window.location.href = '{{ url_for('change_record_page') }}';
+            body: new URLSearchParams(new FormData(this))
         })
-        .catch(error => console.error('Ошибка:', error));
+        .then(r => window.location.href = '/change_record')
+        .catch(err => console.error(err));
     });
-        {% endif %}
+    {% endif %}
 </script>
 {% endblock %}

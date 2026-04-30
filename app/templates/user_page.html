@@ -1,155 +1,179 @@
 {% extends 'base.html' %}
-
+{% block title %}Главная — MoneySaver{% endblock %}
 {% block body %}
-<div class="flex justify-between mx-40 my-3">
-    <div>
-        <h2>Баланс:</h2>
-        <p class="mt-5">{{ user.balance }}</p>
-        <form method="POST" action="/records/" class="border mt-5 rounded-sm p-3 bg-gray-200"
-              id="FastAddRecordForm">
-            {{ FastAddRecordForm.hidden_tag }}
-            <div>
-                <p>{{ FastAddRecordForm.value.label }}</p>
-                {{ FastAddRecordForm.value(class="form-control bg-gray-300 rounded-sm") }}<br>
-                {% for error in FastAddRecordForm.value.errors %}
-                <p class="alert alert-danger" role="alert">
-                    {{ error }}
-                </p>
-                {% endfor %}
+<main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Верхний ряд: 3 stat-карточки -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <!-- Баланс -->
+        <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 text-white rounded-2xl p-6 shadow-sm">
+            <p class="text-emerald-50 text-sm font-medium">Текущий баланс</p>
+            <p class="text-3xl font-bold mt-2">{{ user.balance }} ₽</p>
+            <p class="text-emerald-100 text-xs mt-3">Привет, {{ user.username }} 👋</p>
+        </div>
+        <!-- Доходы -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+            <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-slate-500">Доходы</p>
+                <span class="text-xl">📈</span>
             </div>
-            <div class="mt-3">
-                <p>{{ FastAddRecordForm.operation_type.label }}</p>
-                {{ FastAddRecordForm.operation_type(class="form-control bg-gray-300 p-1 rounded-sm") }}<br>
-                {% for error in FastAddRecordForm.operation_type.errors %}
-                <p class="alert alert-danger" role="alert">
-                    {{ error }}
-                </p>
-                {% endfor %}
+            <p class="text-3xl font-bold text-emerald-600 mt-2">+{{ total_earnings or 0 }} ₽</p>
+            <a href="/?filter_by=earnings" class="text-xs text-emerald-600 hover:underline mt-3 inline-block">
+                Показать все →
+            </a>
+        </div>
+        <!-- Расходы -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+            <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-slate-500">Расходы</p>
+                <span class="text-xl">📉</span>
             </div>
-            <div class="mt-3">
-                <p>{{ FastAddRecordForm.comment.label }}</p>
-                {{ FastAddRecordForm.comment(class="form-control bg-gray-300 p-1 rounded-sm") }}<br>
-                {% for error in FastAddRecordForm.comment.errors %}
-                <p class="alert alert-danger" role="alert">
-                    {{ error }}
-                </p>
-                {% endfor %}
-            </div>
-            <p>{{ FastAddRecordForm.submit(class="mt-3 bg-gray-300 rounded-sm cursor-pointer px-3", type="submit")
-                }}</p>
-        </form>
+            <p class="text-3xl font-bold text-rose-600 mt-2">-{{ total_costs or 0 }} ₽</p>
+            <a href="/?filter_by=costs" class="text-xs text-rose-600 hover:underline mt-3 inline-block">
+                Показать все →
+            </a>
+        </div>
     </div>
-    <div>
-        <h2>Ваша цель:</h2>
-        <div class="mt-2">
-            {% if user.goal_value %}
-            <div class="flex justify-start gap-2">
-                <p class="mb-2">{{ user.goal_value }}</p>
-                {% if user.goal_name %}
-                <p class="mb-2">На {{ user.goal_name }}</p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Левая колонка: цель + быстрое добавление -->
+        <div class="lg:col-span-1 space-y-6">
+
+            <!-- Цель -->
+            <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-slate-900">🎯 Ваша цель</h2>
+                </div>
+                {% if user.goal_value %}
+                    {% set percent = ((user.balance / user.goal_value) * 100) | round(1) %}
+                    <p class="text-2xl font-bold text-slate-900">{{ user.goal_value }} ₽</p>
+                    {% if user.goal_name %}
+                    <p class="text-sm text-slate-500 mt-1">На «{{ user.goal_name }}»</p>
+                    {% endif %}
+                    <div class="mt-4">
+                        <div class="flex justify-between text-xs text-slate-600 mb-1">
+                            <span>Прогресс</span>
+                            <span class="font-semibold text-emerald-600">{{ percent if percent < 100 else 100 }}%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                            <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full transition-all"
+                                 style="width: {{ percent if percent < 100 else 100 }}%"></div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-4xl mb-2">🎯</p>
+                        <p class="text-sm text-slate-500">У вас пока нет цели</p>
+                    </div>
                 {% endif %}
-            </div>
-            <progress max="{{ user.goal_value }}" value="{{ user.balance }}"></progress><br>
-            {% else %}
-            <p>У вас нет цели</p>
-            {% endif %}
-            <a href="{{ url_for("statistics_page") }}" class="px-4 border rounded-sm bg-gray-300 cursor-pointer hover:bg-gray-400">Статистика</a>
 
-            {% if ChangeTargetForm %}
-            <a href="/" class="px-4 border rounded-sm bg-gray-300 cursor-pointer hover:bg-gray-400">Не менять цель</a>
-            <form method="POST" action="/records/" class="border mt-5 rounded-sm p-3 bg-gray-200"
-              id="ChangeTargetForm">
-            {{ ChangeTargetForm.hidden_tag }}
-            <div>
-                <p>{{ ChangeTargetForm.goal_name.label }}</p>
-                {{ ChangeTargetForm.goal_name(class="form-control bg-gray-300 rounded-sm") }}<br>
-                {% for error in ChangeTargetForm.goal_name.errors %}
-                <p class="alert alert-danger" role="alert">
-                    {{ error }}
-                </p>
+                {% if ChangeTargetForm %}
+                <form id="ChangeTargetForm" method="POST" class="mt-5 space-y-3 border-t border-slate-100 pt-4">
+                    {{ ChangeTargetForm.hidden_tag }}
+                    <div>
+                        <label class="text-xs font-medium text-slate-600">{{ ChangeTargetForm.goal_name.label.text }}</label>
+                        {{ ChangeTargetForm.goal_name(class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none") }}
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-600">{{ ChangeTargetForm.goal_value.label.text }}</label>
+                        {{ ChangeTargetForm.goal_value(class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none") }}
+                    </div>
+                    <div class="flex gap-2">
+                        {{ ChangeTargetForm.submit(type="submit", class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl py-2 cursor-pointer transition") }}
+                        <a href="/" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl py-2 px-4 transition text-center">Отмена</a>
+                    </div>
+                </form>
+                {% else %}
+                <a href="/?change_targ=1"
+                   class="mt-4 block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl py-2 transition">
+                    {% if user.goal_value %}Изменить цель{% else %}Поставить цель{% endif %}
+                </a>
+                {% endif %}
+            </section>
+
+            <!-- Быстрое добавление -->
+            <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h2 class="text-lg font-semibold text-slate-900 mb-4">➕ Быстрая запись</h2>
+                <form id="FastAddRecordForm" method="POST" action="/records/" class="space-y-4">
+                    {{ FastAddRecordForm.hidden_tag }}
+                    <div>
+                        <label class="text-xs font-medium text-slate-600">{{ FastAddRecordForm.value.label.text }}</label>
+                        {{ FastAddRecordForm.value(class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none", placeholder="0") }}
+                        {% for error in FastAddRecordForm.value.errors %}
+                            <p class="text-xs text-rose-600 mt-1">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-600">{{ FastAddRecordForm.operation_type.label.text }}</label>
+                        {{ FastAddRecordForm.operation_type(class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none") }}
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-600">{{ FastAddRecordForm.comment.label.text }}</label>
+                        {{ FastAddRecordForm.comment(class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none", placeholder="например: продукты") }}
+                    </div>
+                    {{ FastAddRecordForm.submit(type="submit", class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl py-2.5 cursor-pointer transition") }}
+                </form>
+            </section>
+        </div>
+
+        <!-- Правая колонка: записи -->
+        <section class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                <h2 class="text-lg font-semibold text-slate-900">📋 Записи</h2>
+                <div class="flex gap-2 text-sm">
+                    {% set f = request.query_params.get('filter_by') %}
+                    <a href="/" class="px-3 py-1.5 rounded-lg transition {% if not f %}bg-slate-900 text-white{% else %}bg-slate-100 hover:bg-slate-200 text-slate-700{% endif %}">Все</a>
+                    <a href="/?filter_by=earnings" class="px-3 py-1.5 rounded-lg transition {% if f == 'earnings' %}bg-emerald-600 text-white{% else %}bg-slate-100 hover:bg-slate-200 text-slate-700{% endif %}">Доходы</a>
+                    <a href="/?filter_by=costs" class="px-3 py-1.5 rounded-lg transition {% if f == 'costs' %}bg-rose-600 text-white{% else %}bg-slate-100 hover:bg-slate-200 text-slate-700{% endif %}">Расходы</a>
+                </div>
+            </div>
+
+            {% if records %}
+            <div class="divide-y divide-slate-100">
+                {% for item in records %}
+                <div class="flex items-center justify-between py-3 hover:bg-slate-50 -mx-2 px-2 rounded-lg transition">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 {% if item.operation_type %}bg-rose-50{% else %}bg-emerald-50{% endif %}">
+                            <span class="text-lg">{% if item.operation_type %}💸{% else %}💵{% endif %}</span>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-slate-900 truncate">{{ item.comment or 'Без комментария' }}</p>
+                            <p class="text-xs text-slate-500">{{ item.created_at.strftime('%d.%m.%Y %H:%M') if item.created_at.strftime else item.created_at }}</p>
+                        </div>
+                    </div>
+                    <p class="text-sm font-semibold flex-shrink-0 ml-3 {% if item.operation_type %}text-rose-600{% else %}text-emerald-600{% endif %}">
+                        {% if item.operation_type %}-{% else %}+{% endif %}{{ item.value }} ₽
+                    </p>
+                </div>
                 {% endfor %}
             </div>
-            <div class="mt-3">
-                <p>{{ ChangeTargetForm.goal_value.label }}</p>
-                {{ ChangeTargetForm.goal_value(class="form-control bg-gray-300 p-1 rounded-sm") }}<br>
-                {% for error in ChangeTargetForm.goal_value.errors %}
-                <p class="alert alert-danger" role="alert">
-                    {{ error }}
-                </p>
-                {% endfor %}
-            </div>
-            <p>{{ ChangeTargetForm.submit(class="mt-3 bg-gray-300 rounded-sm cursor-pointer px-3", type="submit")
-                }}</p>
-        </form>
+            <a href="/change_record" class="mt-5 inline-block text-sm font-medium text-emerald-600 hover:text-emerald-700">
+                Управлять записями →
+            </a>
             {% else %}
-            <a href="/?change_targ=1" class="px-4 border rounded-sm bg-gray-300 cursor-pointer hover:bg-gray-400">Изменить цель</a>
-
+            <div class="text-center py-12">
+                <p class="text-5xl mb-3">📭</p>
+                <p class="text-slate-500">Записей пока нет</p>
+                <p class="text-sm text-slate-400 mt-1">Добавьте первую слева</p>
+            </div>
             {% endif %}
-        </div>
+        </section>
     </div>
-    <div class="max-w-md">
-        <h2>Записи:</h2>
-        <div class="flex justify-between mt-2">
-            <a href="/?filter_by=earnings" class="bg-gray-300 rounded-sm cursor-pointer px-3">Доходы<br>{{ total_earnings }}</a>
-            <a href="/?filter_by=costs" class="bg-gray-300 rounded-sm cursor-pointer px-3">Расходы<br>{{ total_costs }}</a>
-            <a href="/" class="bg-gray-300 rounded-sm cursor-pointer px-3">Все записи</a>
-        </div>
-        <table class="my-5 table-auto border-collapse border border-gray-400">
-            <thead>
-            <tr class="bg-gray-100">
-                <th class="border border-gray-300 p-3">Тип операции</th>
-                <th class="border border-gray-300 p-3">Значение</th>
-                <th class="border border-gray-300 p-3">Комментарий</th>
-                <th class="border border-gray-300 p-3">Время операции</th>
-            </tr>
-            </thead>
-            <tbody style="word-break: break-all;">
-            {% for item in records %}
-            <tr>
-                <td class="border border-gray-300 p-3">{% if item.operation_type %} Расход {% else %} Доход {% endif
-                    %}
-                </td>
-                <td class="border border-gray-300 p-3">{{ item.value }}</td>
-                <td class="border border-gray-300 p-3">{{ item.comment }}</td>
-                <td class="border border-gray-300 p-3">{{ item.created_at }}</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <a href="{{ url_for("change_record_page") }}" class="mt-5 px-4 border rounded-sm bg-gray-300 cursor-pointer
-        hover:bg-gray-400">Изменить запись
-        </a>
-    </div>
+</main>
 
-</div>
 <script>
-    document.getElementById('FastAddRecordForm').addEventListener('submit', function(e) {
+    document.getElementById('FastAddRecordForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
-
-        const formData = new FormData(this);
-
-        fetch('http://localhost:8000/records/', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            window.location.href = 'http://localhost:8000/';
-        })
-        .catch(error => console.error('Ошибка:', error));
+        fetch('/records/', { method: 'POST', body: new FormData(this) })
+            .then(r => window.location.href = '/')
+            .catch(err => console.error(err));
     });
-    document.getElementById('ChangeTargetForm').addEventListener('submit', function(e) {
+    document.getElementById('ChangeTargetForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
-
-        const formData = new FormData(this);
-
-        fetch('http://localhost:8000/user/me', {
-            method: 'PUT',
-            body: formData
-        })
-        .then(response => {
-            window.location.href = 'http://localhost:8000/';
-        })
-        .catch(error => console.error('Ошибка:', error));
+        fetch('/user/me', { method: 'PUT', body: new URLSearchParams(new FormData(this)) })
+            .then(r => window.location.href = '/')
+            .catch(err => console.error(err));
     });
 </script>
 {% endblock %}

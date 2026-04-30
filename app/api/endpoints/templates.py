@@ -8,12 +8,14 @@ from fastapi.templating import Jinja2Templates
 from app.services import CostsAndEarningsService as CEService
 from app.services import UserService
 from app.utils import get_jwt_payload
+from app.utils.logger import get_logger
 from app.forms import FastAddRecordForm, LoginForm, RegisterForm, ChangeRecordForm, ChooseDateForm, ChangeTargetForm
 from app.utils.dependencies import get_ce_service, get_user_service
 
 router = APIRouter(tags=['Working with templates'])
 
 templates = Jinja2Templates(directory="app/templates")
+log = get_logger(__name__)
 
 
 @router.get("/", name="main_page")
@@ -122,6 +124,7 @@ async def statistics(req: Request, user_id: Annotated[int, Depends(get_jwt_paylo
             if start >= end and datetime.now() < start:
                 raise ValueError
             image = await ce_service.create_graphics(period=(start, end), user_id=user_id)
+            log.debug(image)
             return templates.TemplateResponse(
                 request=req, name="statistics.html", context={"user": user,
                                                               "form": ChooseDateForm(),
