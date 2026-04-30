@@ -10,6 +10,8 @@ class CostsAndEarnings(Base):
     operation_type: Mapped[int] = mapped_column(CheckConstraint('operation_type = 1 or operation_type = 0'))
     value: Mapped[int] = mapped_column(nullable=False)
     comment: Mapped[str] = mapped_column(nullable=True, default="")
+    category: Mapped[int] = mapped_column(ForeignKey('categories.id', ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(default=datetime.now(tz=timezone.utc))
 
     user: Mapped["User"] = relationship(back_populates="costs_and_earnings")
+    category: Mapped["Category"] = relationship(back_populates="costs_and_earnings")
