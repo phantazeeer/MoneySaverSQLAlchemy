@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from app.db.database import AsyncSession
-from typing import AsyncGenerator
 from app.repositories.costs_and_earnings_repo import CostsAndEarningsRepository
 from app.repositories.user_repo import UserRepository
 from app.repositories.category_repo import CategoryRepository
