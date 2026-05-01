@@ -9,7 +9,7 @@ class IUnitOfWork(ABC):
     session: AsyncSession = None
     users: UserRepository
     records: CostsAndEarningsRepository
-    category: CategoryRepository
+    categories: CategoryRepository
 
     @abstractmethod
     async def __aenter__(self):

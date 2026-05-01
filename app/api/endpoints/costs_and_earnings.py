@@ -37,7 +37,7 @@ async def update(id: Annotated[int, Path()], changes: Annotated[ChangeRecord, Fo
                  service: CEService = Depends(get_service)) -> str:
     try:
         op_type = int(changes.operation_type) if changes.operation_type else None
-        await service.update_record(id, user_id, op_type, changes.value, changes.comment)
+        await service.update_record(id, user_id, op_type, changes.value, changes.comment, changes.category)
         return "OK"
     except ValueError as err:
         if str(err) == "Пользователь не является владельцем записи":
