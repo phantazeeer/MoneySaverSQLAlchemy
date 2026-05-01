@@ -4,11 +4,12 @@ from fastapi import APIRouter, Depends, status, Form, Path, HTTPException
 
 from app.services import CostsAndEarningsService as CEService
 from app.utils import get_jwt_payload
+from app.utils.logger import get_logger
 from app.api.schemas import AddRecord, ChangeRecord, Record
 from app.utils.dependencies import get_ce_service as get_service
 
 router = APIRouter(prefix='/records', tags=['Working with records'])
-
+log = get_logger(__name__)
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def add(record: Annotated[AddRecord, Form()], user_id: int = Depends(get_jwt_payload),
@@ -35,7 +36,8 @@ async def update(id: Annotated[int, Path()], changes: Annotated[ChangeRecord, Fo
                  user_id: int = Depends(get_jwt_payload),
                  service: CEService = Depends(get_service)) -> str:
     try:
-        await service.update_record(id, user_id, changes.operation_type, changes.value, changes.comment)
+        op_type = int(changes.operation_type) if changes.operation_type else None
+        await service.update_record(id, user_id, op_type, changes.value, changes.comment)
         return "OK"
     except ValueError as err:
         if str(err) == "Пользователь не является владельцем записи":
