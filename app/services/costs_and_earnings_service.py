@@ -95,6 +95,7 @@ class CostsAndEarningsService:
                             comment: str | None = None, category: str | None = None) -> None:
         async with self.uow:
             try:
+                log.error(category)
                 record = await self.uow.records.get_one(id=id)
                 if not isinstance(category, NoneType):
                     try:
@@ -111,8 +112,6 @@ class CostsAndEarningsService:
                     value = record.value
                 if isinstance(comment, NoneType):
                     comment = record.comment
-                if isinstance(category_id, NoneType):
-                    category_id = record.category_id
                 await self.uow.records.update_record(id, user_id, operation_type=operation_type, value=value,
                                                      comment=comment, category_id=category_id)
             except NoResultFound:
