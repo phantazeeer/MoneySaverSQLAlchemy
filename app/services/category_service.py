@@ -3,7 +3,6 @@ from sqlalchemy.exc import NoResultFound
 from app.api.schemas import Category
 from app.utils.uow import IUnitOfWork
 from app.utils.logger import get_logger
-from tests.integration.repositories.test_costs_and_earnings_repo import user_id
 
 log = get_logger(__name__)
 
