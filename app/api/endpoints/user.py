@@ -7,6 +7,8 @@ from app.services import UserService
 from app.api.schemas import UserRegister
 from app.utils import get_jwt_payload
 from app.utils.dependencies import get_user_service as get_service
+from app.utils.dependencies import get_categories_service
+from app.services import CategoryService
 from app.api.endpoints.costs_and_earnings import (get_service as get_ce_service, CEService, Record)
 
 router = APIRouter(prefix='/user', tags=['Working with user'])
@@ -76,3 +78,9 @@ async def get_records(user_id: int = Depends(get_jwt_payload),
     except Exception as err:
         if str(err) == "Записи не найдены":
             raise HTTPException(404, "Записи не найдены")
+
+
+@router.get("/me/categories")
+async def get_categories(user_id: int = Depends(get_jwt_payload),
+                         service: CategoryService = Depends(get_categories_service)):
+    return await service.get_user_categories(user_id)
