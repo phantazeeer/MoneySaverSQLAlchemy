@@ -2,11 +2,12 @@ import asyncio
 from app.services.user_service import UserService
 from app.services.costs_and_earnings_service import CostsAndEarningsService
 from app.utils.uow import UnitOfWork
+from app.db.database import session_factory
 
 
 
 async def fill_user_table():
-    service = UserService(UnitOfWork())
+    service = UserService(UnitOfWork(session_factory))
     await service.add_user('Максим Струнников', 'ms@gmail.com', '123')
     await service.add_user('Николас Сенченков', 'ns@gmail.com', '123')
     await service.add_user('Дэнис Качалин', 'dk@gmail.com', '123')
@@ -15,7 +16,7 @@ async def fill_user_table():
 
 
 async def fill_costs_and_earnings_table():
-    service = CostsAndEarningsService(UnitOfWork())
+    service = CostsAndEarningsService(UnitOfWork(session_factory))
     await service.add_record(1, 1, 500)
     await service.add_record(1, 0, 1500)
     await service.add_record(1, 1, 300, "Купил пирожок в столовой")
