@@ -49,7 +49,7 @@ async def test_register_new_user(unlogged_client: AsyncClient):
     }
     resp = await unlogged_client.post("/user/register", data=data)
     assert resp.status_code == 201
-    assert resp.json() == None
+    assert resp.json() is None
 
 
 @pytest.mark.asyncio(loop_scope="session")

@@ -1,14 +1,15 @@
+import base64
+import io
+from datetime import datetime, timedelta, timezone
+from types import NoneType
 from typing import Literal
 
-from app.api.schemas import Record
-from datetime import datetime, timezone, timedelta
-from types import NoneType
 import matplotlib.pyplot as plt
-import io
-import base64
-from app.utils.uow import IUnitOfWork
-from app.utils.logger import get_logger
 from sqlalchemy.exc import NoResultFound
+
+from app.api.schemas import Record
+from app.utils.logger import get_logger
+from app.utils.uow import IUnitOfWork
 
 log = get_logger(__name__)
 
@@ -37,10 +38,10 @@ class CostsAndEarningsService:
             try:
                 record = await self.uow.records.get_one(id=id)
                 if user_id != record.user_id:
-                    raise ValueError("Пользователь не является владельцем записи")
+                    raise ValueError("Пользователь не является владельцем записи") from None
                 await self.uow.records.delete_by_id(id)
             except NoResultFound:
-                raise Exception('Запись не найдена')
+                raise Exception('Запись не найдена') from None
 
     async def get_records_by(self, id: int | None = None, user_id: int | None = None) -> Record | list[Record]:
         if not isinstance(id, NoneType) and not isinstance(user_id, NoneType):
@@ -48,7 +49,7 @@ class CostsAndEarningsService:
                 try:
                     record = await self.uow.records.get_one(id=id)
                     if not record.user_id == user_id:
-                        raise ValueError("Пользователь не является владельцем записи")
+                        raise ValueError("Пользователь не является владельцем записи") from None
                     if record.category_id:
                         category_name = (await self.uow.categories.get_one(id=record.category_id)).name
                     else:
@@ -63,7 +64,7 @@ class CostsAndEarningsService:
                         "created_at": record.created_at}
                     res = Record.model_validate(res)
                 except NoResultFound:
-                    raise Exception("Запись не найдена")
+                    raise Exception("Запись не найдена") from None
         elif not isinstance(user_id, NoneType):
             async with self.uow:
                 try:
@@ -85,9 +86,9 @@ class CostsAndEarningsService:
                         })
                     res = [Record.model_validate(i) for i in res]
                 except NoResultFound:
-                    raise Exception("Записи не найдены")
+                    raise Exception("Записи не найдены") from None
         else:
-            raise ValueError('Введите user_id или user_id и id')
+            raise ValueError('Введите user_id или user_id и id') from None
         return res
 
     async def update_record(self, id: int, user_id: int, operation_type=None, value: int | None = None,
@@ -103,7 +104,7 @@ class CostsAndEarningsService:
                 else:
                     category_id = None
                 if record.user_id != user_id:
-                    raise ValueError("Пользователь не является владельцем записи")
+                    raise ValueError("Пользователь не является владельцем записи") from None
                 if isinstance(operation_type, NoneType):
                     operation_type = record.operation_type
                 if isinstance(value, NoneType):
@@ -113,7 +114,7 @@ class CostsAndEarningsService:
                 await self.uow.records.update_record(id, user_id, operation_type=operation_type, value=value,
                                                      comment=comment, category_id=category_id)
             except NoResultFound:
-                raise Exception("Запись не найдена")
+                raise Exception("Запись не найдена") from None
 
     async def user_costs_or_earnings(self, user_id: int, filter: Literal["costs", "earnings"]) -> list[Record]:
         async with self.uow:
@@ -144,7 +145,7 @@ class CostsAndEarningsService:
             balance -= (-1) ** i.operation_type * i.value
         balance_y = balance_y[::-1]
 
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
         ax.plot(x, balance_y)
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')

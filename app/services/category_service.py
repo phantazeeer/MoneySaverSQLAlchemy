@@ -1,8 +1,8 @@
 from sqlalchemy.exc import NoResultFound
 
 from app.api.schemas import Category
-from app.utils.uow import IUnitOfWork
 from app.utils.logger import get_logger
+from app.utils.uow import IUnitOfWork
 
 log = get_logger(__name__)
 
@@ -19,7 +19,7 @@ class CategoryService:
                 log.debug("Category linked to user, 'add_category' done")
         except ValueError as err:
             if "Категория с таким именем уже существует" in str(err):
-                raise ValueError("Категория с таким именем уже существует")
+                raise ValueError("Категория с таким именем уже существует") from None
             else:
                 log.error("Error caused in add_category", exc_info=False)
                 raise err
@@ -46,4 +46,4 @@ class CategoryService:
                     category = await self.uow.categories.get_one(user_id=user_id, id=category_id)
                     await self.uow.session.delete(category)
         except NoResultFound:
-            raise ValueError("Запись не найдена")
+            raise ValueError("Запись не найдена") from None

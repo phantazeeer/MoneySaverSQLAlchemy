@@ -1,6 +1,8 @@
-from .base import Base
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime, timezone
+
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from .base import Base
 
 
 class User(Base):

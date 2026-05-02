@@ -1,11 +1,11 @@
+import pytest
 import pytest_asyncio
+from sqlalchemy import delete, insert, or_, select
 from sqlalchemy.exc import NoResultFound
 
-from app.repositories.user_repo import UserRepository
-from sqlalchemy import select, delete, insert, or_
-from app.db.models import User, CostsAndEarnings
 from app.api.schemas.user import UserChange
-import pytest
+from app.db.models import CostsAndEarnings, User
+from app.repositories.user_repo import UserRepository
 
 
 @pytest_asyncio.fixture
@@ -32,7 +32,7 @@ async def test_repo_add(user_repo, ready_session):
 async def test_repo_add_nonunique(user_repo, ready_session):
     await user_repo.add_user(username="test_user1", email="e@x.com", password="hashed_pswd")
     await ready_session.commit()
-    with pytest.raises(ValueError, match="Почта неуникальна") as e:
+    with pytest.raises(ValueError, match="Почта неуникальна"):
         await user_repo.add_user(username="test_user2", email="e@x.com", password="hashed_pswd")
 
     stmt = delete(User).where(User.username == "test_user1", User.email == "e@x.com")

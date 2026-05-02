@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
-from app.db.models import Base
+
+from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy import insert, delete
+
+from app.db.models import Base
+
 
 class AbstractRepository(ABC):
     @abstractmethod

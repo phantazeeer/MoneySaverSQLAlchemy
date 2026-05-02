@@ -1,10 +1,10 @@
+import os
 from typing import AsyncGenerator
 
-import pytest
-import os
-from app.db.models import *
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from app.db.models import *
 
 DB_PATH = "./db_for_integration_test"
 DB_URL = "sqlite+aiosqlite:///" + DB_PATH

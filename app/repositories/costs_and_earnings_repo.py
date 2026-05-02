@@ -1,11 +1,14 @@
-from .base_repo import BasicRepository
-from app.db.models import CostsAndEarnings, Category
-from sqlalchemy import select, update
-from app.db.models import User
-from app.utils.logger import get_logger
 from datetime import datetime
 
+from sqlalchemy import select, update
+
+from app.db.models import CostsAndEarnings, User
+from app.utils.logger import get_logger
+
+from .base_repo import BasicRepository
+
 log = get_logger(__name__)
+
 
 class CostsAndEarningsRepository(BasicRepository):
     model = CostsAndEarnings
@@ -43,15 +46,3 @@ class CostsAndEarningsRepository(BasicRepository):
                                                    CostsAndEarnings.user_id == user_id)
                                             .order_by(CostsAndEarnings.created_at))
         return record.scalars().all()
-
-    # async def get_one_by_id(self, id: int):
-    #     stmt = (select(CostsAndEarnings, Category.name)
-    #             .join_from(CostsAndEarnings, Category,
-    #                        Category.id == CostsAndEarnings.category_id,
-    #                        isouter=True).where(CostsAndEarnings.id == id))
-    #     log.error(stmt)
-    #     res = (await self.session.execute(stmt)).scalars().one()
-    #     log.error(1)
-    #     log.error(res.__dict__)
-    #     log.error(1)
-    #     return res

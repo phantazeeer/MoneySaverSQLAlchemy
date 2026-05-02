@@ -1,8 +1,9 @@
-from app import create_app
-import uvicorn
 import os
+
+import uvicorn
 import yaml
-from app.config import settings
+
+from app import create_app
 
 app = create_app()
 

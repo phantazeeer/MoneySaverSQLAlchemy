@@ -1,12 +1,12 @@
-import pytest
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timezone, timedelta
-from sqlalchemy.exc import NoResultFound
-from unicodedata import category
 
-from app.services.costs_and_earnings_service import CostsAndEarningsService
+import pytest
+from sqlalchemy.exc import NoResultFound
+
 from app.api.schemas import Record
 from app.db.models import CostsAndEarnings
+from app.services.costs_and_earnings_service import CostsAndEarningsService
 
 
 @pytest.fixture

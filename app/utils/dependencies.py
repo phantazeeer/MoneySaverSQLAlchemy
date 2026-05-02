@@ -1,9 +1,10 @@
-from app.utils.uow import UnitOfWork
-from app.db.database import session_factory
 from fastapi import Depends
-from app.services.user_service import UserService
-from app.services.costs_and_earnings_service import CostsAndEarningsService
+
+from app.db.database import session_factory
 from app.services.category_service import CategoryService
+from app.services.costs_and_earnings_service import CostsAndEarningsService
+from app.services.user_service import UserService
+from app.utils.uow import UnitOfWork
 
 
 def get_sqlalchemy_session():

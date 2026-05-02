@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient
 
+
 @pytest.mark.asyncio(loop_scope="session")
 async def test_get_my_records(logged_client: AsyncClient):
     resp = await logged_client.get("/user/me/records")

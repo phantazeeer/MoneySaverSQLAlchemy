@@ -1,7 +1,7 @@
 from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 class Category(Base):

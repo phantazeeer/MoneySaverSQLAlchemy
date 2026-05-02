@@ -1,4 +1,4 @@
-from wtforms import Form, DateField, SubmitField
+from wtforms import DateField, Form, SubmitField
 from wtforms.validators import DataRequired
 
 

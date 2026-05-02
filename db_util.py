@@ -1,9 +1,9 @@
 import asyncio
-from app.services.user_service import UserService
-from app.services.costs_and_earnings_service import CostsAndEarningsService
-from app.utils.uow import UnitOfWork
-from app.db.database import session_factory
 
+from app.db.database import session_factory
+from app.services.costs_and_earnings_service import CostsAndEarningsService
+from app.services.user_service import UserService
+from app.utils.uow import UnitOfWork
 
 
 async def fill_user_table():

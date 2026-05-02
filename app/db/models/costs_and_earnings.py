@@ -1,7 +1,10 @@
-from .base import Base
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, CheckConstraint
 from datetime import datetime, timezone
+
+from sqlalchemy import CheckConstraint, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from .base import Base
+
 
 class CostsAndEarnings(Base):
     __tablename__ = "costs_and_earnings"

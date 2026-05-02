@@ -1,3 +1,3 @@
 from .base_repo import BasicRepository
-from .user_repo import UserRepository
 from .costs_and_earnings_repo import CostsAndEarningsRepository
+from .user_repo import UserRepository

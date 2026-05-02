@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
+
 from app.db.database import AsyncSession
+from app.repositories.category_repo import CategoryRepository
 from app.repositories.costs_and_earnings_repo import CostsAndEarningsRepository
 from app.repositories.user_repo import UserRepository
-from app.repositories.category_repo import CategoryRepository
 
 
 class IUnitOfWork(ABC):

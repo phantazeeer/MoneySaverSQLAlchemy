@@ -1,6 +1,8 @@
-from pydantic import BaseModel, EmailStr, model_validator, ConfigDict
-from types import NoneType
 from datetime import datetime
+from types import NoneType
+
+from pydantic import BaseModel, ConfigDict, EmailStr, model_validator
+
 
 class UserRegister(BaseModel):
     username: str

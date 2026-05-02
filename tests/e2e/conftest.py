@@ -1,14 +1,14 @@
-from typing import AsyncGenerator
-
-import pytest
 import os
-from app.db.models import *
+
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import insert
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from app import create_app
+
+from app.db.models import * # isort:skip
 from app.utils.dependencies import get_sqlalchemy_session
-from httpx import AsyncClient, ASGITransport
 from app.utils.passwords import get_password_hash
 
 DB_PATH = "./db_for_e2e_test"

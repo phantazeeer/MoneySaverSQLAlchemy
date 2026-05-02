@@ -1,11 +1,12 @@
+from datetime import datetime, timedelta
+
 import pytest
 import pytest_asyncio
-from datetime import datetime, timedelta
+from sqlalchemy import delete, insert, select
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy import select, delete, insert
 
+from app.db.models import CostsAndEarnings, User
 from app.repositories.costs_and_earnings_repo import CostsAndEarningsRepository
-from app.db.models import User, CostsAndEarnings
 
 
 @pytest_asyncio.fixture

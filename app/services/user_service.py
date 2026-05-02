@@ -1,6 +1,7 @@
-from app.utils import get_password_hash, verify_password, create_token
+from sqlalchemy.exc import NoResultFound
+
 from app.api.schemas import User
-from sqlalchemy.exc import NoResultFound, IntegrityError
+from app.utils import create_token, get_password_hash, verify_password
 from app.utils.uow import IUnitOfWork
 
 
@@ -14,7 +15,7 @@ class UserService:
                 await self.uow.users.add_user(username=username, email=email, password=get_password_hash(password))
         except ValueError as err:
             if "Почта неуникальна" in str(err):
-                raise Exception("Эта почта уже занята")
+                raise Exception("Эта почта уже занята") from None
             raise err
 
     async def get_user_by(self, **kwargs) -> User:
@@ -35,16 +36,16 @@ class UserService:
                 await self.uow.users.update_user(id, **kwargs)
         except ValueError as err:
             if str(err) == "email is already used":
-                raise Exception("Введите другую почту")
+                raise Exception("Введите другую почту") from None
 
     async def login(self, email: str, password: str) -> str:
         async with self.uow:
             try:
                 user = await self.uow.users.get_one(email=email)
             except NoResultFound:
-                raise Exception("Пользователь не найден")
+                raise Exception("Пользователь не найден") from None
             if not verify_password(password, user.password):
-                raise Exception("Неправильный пароль")
+                raise Exception("Неправильный пароль") from None
             else:
                 access_token = create_token(user.id)
                 return access_token

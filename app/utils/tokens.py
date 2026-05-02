@@ -1,12 +1,8 @@
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi import Depends, Cookie
-from fastapi import HTTPException
-from fastapi.security import OAuth2PasswordBearer
 import jwt
+from fastapi import Cookie, HTTPException
 
 from app.config import settings
 
@@ -42,9 +38,9 @@ def get_jwt_payload(Authorization: Annotated[str, Cookie(include_in_schema=False
         decoded = jwt.decode(Authorization, settings.JWT_SECRET_KEY, algorithms=[settings.ENCRYPT_ALG])
         return int(decoded['sub'])
     except jwt.ExpiredSignatureError:
-        raise HTTPException(401, "Bearer token expired")
+        raise HTTPException(401, "Bearer token expired") from None
     except jwt.InvalidTokenError:
-        raise HTTPException(401, "Invalid bearer token")
+        raise HTTPException(401, "Invalid bearer token") from None
 
 
 def create_token(user_id: int) -> str:

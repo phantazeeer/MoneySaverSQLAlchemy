@@ -1,9 +1,11 @@
-import pytest
-from unittest.mock import AsyncMock, patch
-from sqlalchemy.exc import IntegrityError, NoResultFound
 from datetime import datetime
-from app.services.user_service import UserService
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from sqlalchemy.exc import NoResultFound
+
 from app.api.schemas import User
+from app.services.user_service import UserService
 
 
 @pytest.fixture

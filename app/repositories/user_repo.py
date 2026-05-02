@@ -1,7 +1,9 @@
-from .base_repo import BasicRepository
-from app.db.models import User, CostsAndEarnings
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, update, func
+
+from app.db.models import CostsAndEarnings, User
+
+from .base_repo import BasicRepository
 
 
 class UserRepository(BasicRepository):
@@ -12,7 +14,7 @@ class UserRepository(BasicRepository):
             await self.add_one(username=username, email=email, password=password)
         except IntegrityError as err:
             if "user.email" in str(err):
-                raise ValueError("Почта неуникальна")
+                raise ValueError("Почта неуникальна") from None
             raise err
 
     async def delete_by_user(self, id: int):
