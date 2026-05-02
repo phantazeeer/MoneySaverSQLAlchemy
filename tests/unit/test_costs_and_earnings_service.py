@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.exc import NoResultFound
+from unicodedata import category
+
 from app.services.costs_and_earnings_service import CostsAndEarningsService
 from app.api.schemas import Record
 from app.db.models import CostsAndEarnings
@@ -70,17 +72,34 @@ async def test_get_records_by_id_and_user_success(service, uow_mock):
     orm_record.operation_type = 0
     orm_record.value = 100
     orm_record.comment = ""
+    orm_record.category_id = None
     orm_record.created_at = None
 
     uow_mock.records.get_one.return_value = orm_record
 
-    expected_record = MagicMock(spec=Record)
+    expected_record = Record.model_validate({
+                            "id": 1,
+                            "user_id": 1,
+                            "operation_type": 0,
+                            "value": 100,
+                            "comment": "",
+                            "category": None,
+                            "created_at": None
+                        })
     with patch("app.services.costs_and_earnings_service.Record.model_validate",
                return_value=expected_record) as mock_validate:
         result = await service.get_records_by(id=1, user_id=1)
 
     uow_mock.records.get_one.assert_called_once_with(id=1)
-    mock_validate.assert_called_once_with(orm_record)
+    mock_validate.assert_called_once_with({
+                            "id": 1,
+                            "user_id": 1,
+                            "operation_type": 0,
+                            "value": 100,
+                            "comment": "",
+                            "category": None,
+                            "created_at": None
+                        })
     assert result == expected_record
 
 
@@ -102,10 +121,17 @@ async def test_get_records_by_id_not_found(service, uow_mock):
 
 
 async def test_get_records_by_user_only(service, uow_mock):
-    records_list = [
-        {"id": 1, "user_id": 1, "operation_type": 0, "value": 10},
-        {"id": 2, "user_id": 1, "operation_type": 1, "value": 20}
-    ]
+    records_list = []
+    for i in range(1, 3):
+        orm_record = MagicMock(spec=CostsAndEarnings)
+        orm_record.id = i
+        orm_record.user_id = 1
+        orm_record.operation_type = 0
+        orm_record.value = 100 * i
+        orm_record.comment = ""
+        orm_record.category_id = None
+        orm_record.created_at = None
+        records_list.append(orm_record)
     uow_mock.records.get_list_by.return_value = records_list
 
     result = await service.get_records_by(user_id=1)
@@ -127,13 +153,13 @@ async def test_get_records_by_no_params(service):
 
 
 async def test_update_record_success_all_fields(service, uow_mock):
-    record_mock = AsyncMock(user_id=1, operation_type=0, value=100, comment="old")
+    record_mock = AsyncMock(user_id=1, operation_type=0, value=100, comment="old", category_id=None)
     uow_mock.records.get_one.return_value = record_mock
 
     await service.update_record(id=1, user_id=1, operation_type=1, value=200, comment="new")
 
     uow_mock.records.update_record.assert_called_once_with(
-        1, 1, operation_type=1, value=200, comment="new"
+        1, 1, operation_type=1, value=200, comment="new", category_id=None
     )
 
 
@@ -144,7 +170,7 @@ async def test_update_record_partial_fields(service, uow_mock):
     await service.update_record(id=1, user_id=1, value=500)
 
     uow_mock.records.update_record.assert_called_once_with(
-        1, 1, operation_type=0, value=500, comment="old"
+        1, 1, operation_type=0, value=500, comment="old", category_id=None
     )
 
 

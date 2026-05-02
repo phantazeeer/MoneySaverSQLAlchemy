@@ -5,6 +5,7 @@ class AsyncContextManagerMock:
     def __init__(self):
         self.records = AsyncMock()
         self.users = AsyncMock()
+        self.categories = AsyncMock()
 
     async def __aenter__(self):
         return self

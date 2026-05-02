@@ -19,7 +19,7 @@ class CostsAndEarningsRepository(BasicRepository):
         return record
 
     async def update_record(self, id: int, user_id: int, operation_type: int, value: int, comment: str,
-                            category_id: int) -> None:
+                            category_id: int | None) -> None:
         record = await BasicRepository.get_one(self, id=id)
         balance_change = (value - (-1) ** ((record.operation_type + operation_type) % 2) * record.value) * (
             -1) ** operation_type
