@@ -5,24 +5,17 @@ from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Request, Depends, Query
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from app.services import CostsAndEarningsService as CEService
+from app.services import CostsAndEarningsService as CEService, CategoryService
 from app.services import UserService
 from app.utils import get_jwt_payload
+from app.utils.logger import get_logger
 from app.forms import FastAddRecordForm, LoginForm, RegisterForm, ChangeRecordForm, ChooseDateForm, ChangeTargetForm
-from app.utils.uow import IUnitOfWork, UnitOfWork
+from app.utils.dependencies import get_ce_service, get_user_service, get_categories_service
+
 router = APIRouter(tags=['Working with templates'])
 
 templates = Jinja2Templates(directory="app/templates")
-
-
-async def get_ce_service(uow: IUnitOfWork = Depends(UnitOfWork)) -> CEService:
-    service = CEService(uow)
-    return service
-
-
-async def get_user_service(uow: IUnitOfWork = Depends(UnitOfWork)) -> UserService:
-    service = UserService(uow)
-    return service
+log = get_logger(__name__)
 
 
 @router.get("/", name="main_page")
@@ -30,7 +23,8 @@ async def main(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
                ce_service: CEService = Depends(get_ce_service),
                filter_by: Annotated[Literal["costs", "earnings"], Query()] | None = None,
                change_targ: Annotated[Literal["1"], Query()] | None = None,
-               user_service: UserService = Depends(get_user_service)):
+               user_service: UserService = Depends(get_user_service),
+               categ_service: CategoryService = Depends(get_categories_service)):
     user = await user_service.get_user_by(id=user_id)
     if filter_by:
         records = await ce_service.user_costs_or_earnings(user_id=user_id, filter=filter_by)
@@ -40,12 +34,19 @@ async def main(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
         change_target_form = ChangeTargetForm()
     else:
         change_target_form = None
+    earnings, costs = await user_service.get_sum_of_costs_and_earn(user_id)
+    categories = await categ_service.get_user_categories(user_id)
+    categories_name = [i.name for i in categories]
+    form = FastAddRecordForm(categories=categories_name)
 
     return templates.TemplateResponse(
         request=req, name="user_page.html", context={"user": user,
                                                      "records": records,
-                                                     "FastAddRecordForm": FastAddRecordForm(),
-                                                     "ChangeTargetForm": change_target_form}
+                                                     "FastAddRecordForm": form,
+                                                     "ChangeTargetForm": change_target_form,
+                                                     "total_earnings": earnings,
+                                                     "total_costs": costs,
+                                                     "categories": categories}
     )
 
 
@@ -74,7 +75,8 @@ async def login(req: Request):
 async def change_record(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
                         id: Annotated[int | None, Query()] = None,
                         ce_service: CEService = Depends(get_ce_service),
-                        user_service: UserService = Depends(get_user_service)):
+                        user_service: UserService = Depends(get_user_service),
+                        categ_service: CategoryService = Depends(get_categories_service)):
     if isinstance(id, NoneType):
         records = await ce_service.get_records_by(user_id=user_id)
         user = await user_service.get_user_by(id=user_id)
@@ -88,7 +90,8 @@ async def change_record(req: Request, user_id: Annotated[int, Depends(get_jwt_pa
         records = await ce_service.get_records_by(user_id=user_id)
         record = await ce_service.get_records_by(id=id, user_id=user_id)
         user = await user_service.get_user_by(id=user_id)
-        form = ChangeRecordForm()
+        categories = [i.name for i in await categ_service.get_user_categories(user_id)]
+        form = ChangeRecordForm(categories=categories)
         form.value.data = record.value
         form.operation_type.data = record.operation_type
         form.comment.data = record.comment
@@ -128,6 +131,7 @@ async def statistics(req: Request, user_id: Annotated[int, Depends(get_jwt_paylo
             if start >= end and datetime.now() < start:
                 raise ValueError
             image = await ce_service.create_graphics(period=(start, end), user_id=user_id)
+            log.debug(image)
             return templates.TemplateResponse(
                 request=req, name="statistics.html", context={"user": user,
                                                               "form": ChooseDateForm(),

@@ -1,7 +1,7 @@
 from .base_repo import BasicRepository
-from app.db.models import User
+from app.db.models import User, CostsAndEarnings
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 
 
 class UserRepository(BasicRepository):
@@ -25,3 +25,10 @@ class UserRepository(BasicRepository):
             if (await self.session.execute(stmt)).fetchone():
                 raise ValueError("email is already used")
         await self.session.execute(update(self.model).values(**kwargs).where(self.model.id == id))
+
+    async def get_user_costs_and_earnings(self, id: int):
+        stmt_e = select(func.sum(CostsAndEarnings.value)).where(CostsAndEarnings.user_id == id,
+                                                                CostsAndEarnings.operation_type == 0)
+        stmt_c = select(func.sum(CostsAndEarnings.value)).where(CostsAndEarnings.user_id == id,
+                                                                CostsAndEarnings.operation_type == 1)
+        return (await self.session.execute(stmt_e)).scalar_one(), (await self.session.execute(stmt_c)).scalar_one()
