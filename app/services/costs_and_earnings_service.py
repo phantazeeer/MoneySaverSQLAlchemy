@@ -24,14 +24,13 @@ class CostsAndEarningsService:
             record_id = (
                 await self.uow.records.add_one(user_id=user_id, operation_type=int(operation_type), value=value,
                                                comment=comment)).id
-            await self.uow.session.flush()
             if category:
                 try:
                     db_category = (await self.uow.categories.get_one(name=category, user_id=user_id)).name
                 except NoResultFound:
                     db_category = (await self.uow.categories.add_one(user_id=user_id, name=category)).name
-                await self.uow.session.commit()
-                await self.update_record(id=record_id, user_id=user_id, category=db_category)
+        if category:
+            await self.update_record(id=record_id, user_id=user_id, category=db_category)
 
     async def delete_record(self, id: int, user_id: int) -> None:
         async with self.uow:
@@ -95,7 +94,6 @@ class CostsAndEarningsService:
                             comment: str | None = None, category: str | None = None) -> None:
         async with self.uow:
             try:
-                log.error(category)
                 record = await self.uow.records.get_one(id=id)
                 if not isinstance(category, NoneType):
                     try:
