@@ -58,10 +58,7 @@ async def test_repo_update_user(user_repo, ready_session):
     user_id = (await ready_session.execute(stmt)).scalar_one()
     await ready_session.commit()
 
-    changes = UserChange(username="test_user1",
-                         balance=123,
-                         goal_name="goal!!!",
-                         goal_value=124).model_dump()
+    changes = UserChange(username="test_user1", balance=123, goal_name="goal!!!", goal_value=124).model_dump()
     await user_repo.update_user(user_id, **changes)
     await ready_session.commit()
 
@@ -84,11 +81,13 @@ async def test_repo_update_with_used_email(user_repo, ready_session):
     await ready_session.execute(stmt)
     await ready_session.commit()
 
-    changes = UserChange(username="test_user1",
-                         balance=123,
-                         goal_name="goal!!!",
-                         email="e1@x.com",
-                         goal_value=124).model_dump()
+    changes = UserChange(
+        username="test_user1",
+        balance=123,
+        goal_name="goal!!!",
+        email="e1@x.com",
+        goal_value=124,
+    ).model_dump()
 
     with pytest.raises(ValueError, match="email is already used"):
         await user_repo.update_user(user_id, **changes)
@@ -104,9 +103,7 @@ async def test_repo_get_user_costs_and_earnings(user_repo, ready_session):
     user_id = (await ready_session.execute(stmt)).scalar_one()
     await ready_session.commit()
     for i in range(1, 10):
-        stmt = insert(CostsAndEarnings).values(user_id=user_id,
-                                               operation_type=i % 2,
-                                               value=100 * i)
+        stmt = insert(CostsAndEarnings).values(user_id=user_id, operation_type=i % 2, value=100 * i)
         await ready_session.execute(stmt)
         await ready_session.commit()
 
@@ -115,10 +112,8 @@ async def test_repo_get_user_costs_and_earnings(user_repo, ready_session):
     assert costs == 100 + 300 + 500 + 700 + 900
     assert earnings == 200 + 400 + 600 + 800
 
-
     stmt = delete(CostsAndEarnings).where(CostsAndEarnings.user_id == user_id)
     await ready_session.execute(stmt)
     stmt = delete(User).where(User.email == "e@x.com")
     await ready_session.execute(stmt)
     await ready_session.commit()
-

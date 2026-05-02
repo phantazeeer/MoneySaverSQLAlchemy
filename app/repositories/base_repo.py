@@ -23,6 +23,7 @@ class AbstractRepository(ABC):
     async def get_list_by(self, **kwargs):
         pass
 
+
 class BasicRepository(AbstractRepository):
     model = None
 

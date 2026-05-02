@@ -1,4 +1,3 @@
-
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,13 +7,16 @@ from app.utils import get_jwt_payload
 from app.utils.dependencies import get_categories_service as get_service
 from app.utils.logger import get_logger
 
-router = APIRouter(prefix='/categories', tags=['Working with categories'])
+router = APIRouter(prefix="/categories", tags=["Working with categories"])
 log = get_logger(__name__)
 
+
 @router.post("/", status_code=201)
-async def create_category(name: str,
-                          user_id: Annotated[int, Depends(get_jwt_payload)],
-                          service: Annotated[CategoryService, Depends(get_service)]):
+async def create_category(
+    name: str,
+    user_id: Annotated[int, Depends(get_jwt_payload)],
+    service: Annotated[CategoryService, Depends(get_service)],
+):
     try:
         await service.add_category(name=name, user_id=user_id)
         return "OK"
@@ -24,18 +26,24 @@ async def create_category(name: str,
         else:
             raise err
 
+
 @router.get("/{category}")
-async def get_category_by(category: int | str,
-                          user_id: Annotated[int, Depends(get_jwt_payload)],
-                          service: Annotated[CategoryService, Depends(get_service)]):
+async def get_category_by(
+    category: int | str,
+    user_id: Annotated[int, Depends(get_jwt_payload)],
+    service: Annotated[CategoryService, Depends(get_service)],
+):
     if category.isdigit():
         category = int(category)
     return await service.get_categories_by(category=category, user_id=user_id)
 
+
 @router.delete("/{category}")
-async def delete_category(category: int | str,
-                          user_id: Annotated[int, Depends(get_jwt_payload)],
-                          service: Annotated[CategoryService, Depends(get_service)]):
+async def delete_category(
+    category: int | str,
+    user_id: Annotated[int, Depends(get_jwt_payload)],
+    service: Annotated[CategoryService, Depends(get_service)],
+):
     if category.isdigit():
         category = int(category)
     try:

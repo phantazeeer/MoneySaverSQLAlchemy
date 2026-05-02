@@ -18,18 +18,21 @@ async def test_get_my_records_unauthorized(unlogged_client: AsyncClient):
 
 
 @pytest.mark.asyncio(loop_scope="session")
-@pytest.mark.parametrize("record_data, expected_status", [
-    ({"operation_type": "0", "value": 1000, "comment": "Зарплата"}, 201),
-    ({"operation_type": "1", "value": 500, "comment": "Продукты"}, 201),
-    ({"operation_type": "0", "value": -100}, 201),
-    ({"operation_type": "2", "value": 100}, 422),
-    ({"value": 100}, 422),
-])
+@pytest.mark.parametrize(
+    "record_data, expected_status",
+    [
+        ({"operation_type": "0", "value": 1000, "comment": "Зарплата"}, 201),
+        ({"operation_type": "1", "value": 500, "comment": "Продукты"}, 201),
+        ({"operation_type": "0", "value": -100}, 201),
+        ({"operation_type": "2", "value": 100}, 422),
+        ({"value": 100}, 422),
+    ],
+)
 async def test_add_record(logged_client: AsyncClient, record_data, expected_status):
     resp = await logged_client.post("/records/", data=record_data)
     assert resp.status_code == expected_status
     if expected_status == 201:
-        assert resp.json() == 'OK'
+        assert resp.json() == "OK"
 
 
 @pytest.mark.asyncio(loop_scope="session")
@@ -78,15 +81,12 @@ async def test_delete_record(logged_client: AsyncClient):
     add_resp = await logged_client.post("/records/", data={"operation_type": "0", "value": 777})
     assert add_resp.status_code == 201
 
-
     records_resp = await logged_client.get("/user/me/records")
     record = next(r for r in records_resp.json() if r["value"] == 777)
     record_id = record["id"]
 
-
     del_resp = await logged_client.delete(f"/records/{record_id}")
     assert del_resp.status_code == 200
-
 
     get_resp = await logged_client.get(f"/records/{record_id}")
     assert get_resp.status_code == 404

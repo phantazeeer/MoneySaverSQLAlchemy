@@ -22,7 +22,7 @@ class UserChange(BaseModel):
     goal_name: str | None = None
     goal_value: int | None = None
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def clean_model(self):
         """Удаляет поля со значениями None"""
         attrs = self.__dict__.copy()

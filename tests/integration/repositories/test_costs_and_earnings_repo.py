@@ -53,15 +53,23 @@ async def test_add_one_cost(costs_repo, ready_session, user_id):
 
 
 async def test_update_record_from_cost_to_earnings(costs_repo, ready_session, user_id):
-    stmt = (insert(CostsAndEarnings)
-            .values(user_id=user_id, operation_type=1, value=100, comment="Старый расход")
-            .returning(CostsAndEarnings.id))
+    stmt = (
+        insert(CostsAndEarnings)
+        .values(user_id=user_id, operation_type=1, value=100, comment="Старый расход")
+        .returning(CostsAndEarnings.id)
+    )
     record = (await ready_session.execute(stmt)).scalar_one()
     await ready_session.commit()
     record_id = record
 
-    await costs_repo.update_record(id=record_id, user_id=user_id,
-                                   operation_type=0, value=150, comment="Новый доход", category_id=None)
+    await costs_repo.update_record(
+        id=record_id,
+        user_id=user_id,
+        operation_type=0,
+        value=150,
+        comment="Новый доход",
+        category_id=None,
+    )
     await ready_session.commit()
 
     updated_record = await ready_session.get(CostsAndEarnings, record_id)
@@ -74,15 +82,23 @@ async def test_update_record_from_cost_to_earnings(costs_repo, ready_session, us
 
 
 async def test_update_record_earnings_to_cost(costs_repo, ready_session, user_id):
-    stmt = (insert(CostsAndEarnings)
-            .values(user_id=user_id, operation_type=0, value=300, comment="Старый доход")
-            .returning(CostsAndEarnings.id))
+    stmt = (
+        insert(CostsAndEarnings)
+        .values(user_id=user_id, operation_type=0, value=300, comment="Старый доход")
+        .returning(CostsAndEarnings.id)
+    )
     record = (await ready_session.execute(stmt)).scalar_one()
     await ready_session.commit()
     record_id = record
 
-    await costs_repo.update_record(id=record_id, user_id=user_id,
-                                   operation_type=1, value=50, comment="Новый расход", category_id=None)
+    await costs_repo.update_record(
+        id=record_id,
+        user_id=user_id,
+        operation_type=1,
+        value=50,
+        comment="Новый расход",
+        category_id=None,
+    )
     await ready_session.commit()
 
     user = await ready_session.get(User, user_id)
@@ -93,11 +109,18 @@ async def test_update_record_change_value_only(costs_repo, ready_session, user_i
     await costs_repo.add_one(user_id=user_id, operation_type=1, value=100, comment="Расход")
     await ready_session.commit()
     record = (
-        await ready_session.execute(select(CostsAndEarnings).where(CostsAndEarnings.user_id == user_id))).scalar_one()
+        await ready_session.execute(select(CostsAndEarnings).where(CostsAndEarnings.user_id == user_id))
+    ).scalar_one()
     record_id = record.id
 
-    await costs_repo.update_record(id=record_id, user_id=user_id,
-                                   operation_type=1, value=250, comment="Расход увеличен", category_id=None)
+    await costs_repo.update_record(
+        id=record_id,
+        user_id=user_id,
+        operation_type=1,
+        value=250,
+        comment="Расход увеличен",
+        category_id=None,
+    )
     await ready_session.commit()
 
     user = await ready_session.get(User, user_id)
@@ -106,15 +129,22 @@ async def test_update_record_change_value_only(costs_repo, ready_session, user_i
 
 async def test_update_record_nonexistent(costs_repo, user_id):
     with pytest.raises(NoResultFound):
-        await costs_repo.update_record(id=9999, user_id=user_id,
-                                       operation_type=0, value=100, comment="Несуществующая", category_id=None)
+        await costs_repo.update_record(
+            id=9999,
+            user_id=user_id,
+            operation_type=0,
+            value=100,
+            comment="Несуществующая",
+            category_id=None,
+        )
 
 
 async def test_delete_by_id(costs_repo, ready_session, user_id):
     await costs_repo.add_one(user_id=user_id, operation_type=0, value=500, comment="Доход")
     await ready_session.commit()
     record = (
-        await ready_session.execute(select(CostsAndEarnings).where(CostsAndEarnings.user_id == user_id))).scalar_one()
+        await ready_session.execute(select(CostsAndEarnings).where(CostsAndEarnings.user_id == user_id))
+    ).scalar_one()
     record_id = record.id
 
     await costs_repo.delete_by_id(record_id)
@@ -146,7 +176,7 @@ async def test_get_list_by_date(costs_repo, ready_session, user_id):
             user_id=user_id,
             operation_type=i % 2,
             value=100 * (i + 1),
-            created_at=dt
+            created_at=dt,
         )
         await ready_session.execute(stmt)
     await ready_session.commit()

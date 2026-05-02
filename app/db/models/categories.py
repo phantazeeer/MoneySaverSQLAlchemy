@@ -10,8 +10,6 @@ class Category(Base):
     name: Mapped[str] = mapped_column(nullable=False, unique=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
 
-    __table_args__ = (
-        UniqueConstraint('user_id', 'name', name='ix_category_user_name'),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "name", name="ix_category_user_name"),)
 
     costs_and_earnings: Mapped["CostsAndEarnings"] = relationship(back_populates="category")

@@ -12,9 +12,11 @@ DB_URL = "sqlite+aiosqlite:///" + DB_PATH
 engine = create_async_engine(DB_URL)
 _session_maker = async_sessionmaker(engine, class_=AsyncSession)
 
+
 async def get_session() -> AsyncGenerator[AsyncSession]:
     async with _session_maker() as _session:
         yield _session
+
 
 @pytest_asyncio.fixture(scope="session")
 async def create_tables():
@@ -24,6 +26,7 @@ async def create_tables():
     await engine.dispose()
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
+
 
 @pytest_asyncio.fixture(scope="function")
 async def ready_session(create_tables):

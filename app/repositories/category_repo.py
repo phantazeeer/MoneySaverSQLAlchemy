@@ -13,8 +13,8 @@ class CategoryRepository(BasicRepository):
 
     async def add_one(self, name: str, user_id: int) -> Category:
         try:
-            return await super().add_one(name=name, user_id=user_id) # TODO:  обработать добавление для
-                                                                     # несуществующего пользователя
+            return await super().add_one(name=name, user_id=user_id)  # TODO:  обработать добавление для
+            # несуществующего пользователя
         except IntegrityError as err:
             if "categories.name" in str(err):
                 raise ValueError("Категория с таким именем уже существует") from None

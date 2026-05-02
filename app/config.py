@@ -16,4 +16,5 @@ class Settings(BaseSettings):
     def database_url(self):
         return f"sqlite+aiosqlite:///{self.DB_PATH}"
 
+
 settings = Settings()

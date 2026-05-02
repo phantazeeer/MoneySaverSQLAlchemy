@@ -11,6 +11,7 @@ engine = create_async_engine(settings.database_url)
 log.info("Connecting '%s'", settings.database_url)
 session_factory = async_sessionmaker(engine, class_=AsyncSession)
 
+
 async def get_async_session() -> AsyncGenerator[AsyncSession]:
     async with session_factory() as session:
         yield session

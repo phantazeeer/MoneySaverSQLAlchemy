@@ -36,7 +36,7 @@ def get_jwt_payload(Authorization: Annotated[str, Cookie(include_in_schema=False
     """
     try:
         decoded = jwt.decode(Authorization, settings.JWT_SECRET_KEY, algorithms=[settings.ENCRYPT_ALG])
-        return int(decoded['sub'])
+        return int(decoded["sub"])
     except jwt.ExpiredSignatureError:
         raise HTTPException(401, "Bearer token expired") from None
     except jwt.InvalidTokenError:

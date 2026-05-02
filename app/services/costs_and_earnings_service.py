@@ -15,16 +15,26 @@ log = get_logger(__name__)
 
 
 class CostsAndEarningsService:
-
     def __init__(self, uow: IUnitOfWork) -> None:
         self.uow = uow
 
-    async def add_record(self, user_id: int, operation_type: str, value: int, comment: str | None = None,
-                         category: str | None = None) -> None:
+    async def add_record(
+        self,
+        user_id: int,
+        operation_type: str,
+        value: int,
+        comment: str | None = None,
+        category: str | None = None,
+    ) -> None:
         async with self.uow:
             record_id = (
-                await self.uow.records.add_one(user_id=user_id, operation_type=int(operation_type), value=value,
-                                               comment=comment)).id
+                await self.uow.records.add_one(
+                    user_id=user_id,
+                    operation_type=int(operation_type),
+                    value=value,
+                    comment=comment,
+                )
+            ).id
             if category:
                 try:
                     db_category = (await self.uow.categories.get_one(name=category, user_id=user_id)).name
@@ -41,7 +51,7 @@ class CostsAndEarningsService:
                     raise ValueError("Пользователь не является владельцем записи") from None
                 await self.uow.records.delete_by_id(id)
             except NoResultFound:
-                raise Exception('Запись не найдена') from None
+                raise Exception("Запись не найдена") from None
 
     async def get_records_by(self, id: int | None = None, user_id: int | None = None) -> Record | list[Record]:
         if not isinstance(id, NoneType) and not isinstance(user_id, NoneType):
@@ -61,7 +71,8 @@ class CostsAndEarningsService:
                         "value": record.value,
                         "comment": record.comment,
                         "category": category_name,
-                        "created_at": record.created_at}
+                        "created_at": record.created_at,
+                    }
                     res = Record.model_validate(res)
                 except NoResultFound:
                     raise Exception("Запись не найдена") from None
@@ -75,24 +86,33 @@ class CostsAndEarningsService:
                             category_name = (await self.uow.categories.get_one(id=record.category_id)).name
                         else:
                             category_name = None
-                        res.append({
-                            "id": record.id,
-                            "user_id": record.user_id,
-                            "operation_type": record.operation_type,
-                            "value": record.value,
-                            "comment": record.comment,
-                            "category": category_name,
-                            "created_at": record.created_at
-                        })
+                        res.append(
+                            {
+                                "id": record.id,
+                                "user_id": record.user_id,
+                                "operation_type": record.operation_type,
+                                "value": record.value,
+                                "comment": record.comment,
+                                "category": category_name,
+                                "created_at": record.created_at,
+                            },
+                        )
                     res = [Record.model_validate(i) for i in res]
                 except NoResultFound:
                     raise Exception("Записи не найдены") from None
         else:
-            raise ValueError('Введите user_id или user_id и id') from None
+            raise ValueError("Введите user_id или user_id и id") from None
         return res
 
-    async def update_record(self, id: int, user_id: int, operation_type=None, value: int | None = None,
-                            comment: str | None = None, category: str | None = None) -> None:
+    async def update_record(
+        self,
+        id: int,
+        user_id: int,
+        operation_type=None,
+        value: int | None = None,
+        comment: str | None = None,
+        category: str | None = None,
+    ) -> None:
         async with self.uow:
             try:
                 record = await self.uow.records.get_one(id=id)
@@ -111,8 +131,14 @@ class CostsAndEarningsService:
                     value = record.value
                 if isinstance(comment, NoneType):
                     comment = record.comment
-                await self.uow.records.update_record(id, user_id, operation_type=operation_type, value=value,
-                                                     comment=comment, category_id=category_id)
+                await self.uow.records.update_record(
+                    id,
+                    user_id,
+                    operation_type=operation_type,
+                    value=value,
+                    comment=comment,
+                    category_id=category_id,
+                )
             except NoResultFound:
                 raise Exception("Запись не найдена") from None
 
@@ -124,9 +150,11 @@ class CostsAndEarningsService:
             return res
 
     async def create_graphics(self, period: tuple[datetime, datetime], user_id: int):
-        records = await self.uow.records.get_list_by_date(start=period[0].replace(tzinfo=timezone.utc),
-                                                          end=period[1].replace(tzinfo=timezone.utc),
-                                                          user_id=user_id)
+        records = await self.uow.records.get_list_by_date(
+            start=period[0].replace(tzinfo=timezone.utc),
+            end=period[1].replace(tzinfo=timezone.utc),
+            user_id=user_id,
+        )
         balance = (await self.uow.users.get_one(id=user_id)).balance
         if not records:
             return None
@@ -148,9 +176,9 @@ class CostsAndEarningsService:
         _, ax = plt.subplots()
         ax.plot(x, balance_y)
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+        plt.savefig(buf, format="png", dpi=100, bbox_inches="tight")
         plt.close()
 
         buf.seek(0)
-        img_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+        img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
         return img_base64

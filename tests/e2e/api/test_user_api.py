@@ -21,13 +21,16 @@ async def test_get_me_authorized(logged_client: AsyncClient):
 
 
 @pytest.mark.asyncio(loop_scope="session")
-@pytest.mark.parametrize("changes, expected_status, expected_field", [
-    ({"username": "Новое имя"}, 200, "username"),
-    ({"balance": 10000}, 200, "balance"),
-    ({"email": "newemail@example.com"}, 200, "email"),
-    ({"goal_name": "Купить машину", "goal_value": 2000000}, 200, "goal_name"),
-    ({"email": "ms@gmail.com"}, 200, "email"),
-])
+@pytest.mark.parametrize(
+    "changes, expected_status, expected_field",
+    [
+        ({"username": "Новое имя"}, 200, "username"),
+        ({"balance": 10000}, 200, "balance"),
+        ({"email": "newemail@example.com"}, 200, "email"),
+        ({"goal_name": "Купить машину", "goal_value": 2000000}, 200, "goal_name"),
+        ({"email": "ms@gmail.com"}, 200, "email"),
+    ],
+)
 async def test_change_me(logged_client: AsyncClient, changes, expected_status, expected_field):
     resp = await logged_client.put("/user/me", data=changes)
     assert resp.status_code == expected_status
@@ -45,7 +48,7 @@ async def test_register_new_user(unlogged_client: AsyncClient):
     data = {
         "username": "NewUser",
         "email": "newuser@example.com",
-        "password": "secret"
+        "password": "secret",
     }
     resp = await unlogged_client.post("/user/register", data=data)
     assert resp.status_code == 201
@@ -57,7 +60,7 @@ async def test_register_duplicate_email(unlogged_client: AsyncClient):
     data = {
         "username": "Duplicate",
         "email": "ms@gmail.com",
-        "password": "123"
+        "password": "123",
     }
     resp = await unlogged_client.post("/user/register", data=data)
     assert resp.status_code == 400
@@ -65,12 +68,15 @@ async def test_register_duplicate_email(unlogged_client: AsyncClient):
 
 
 @pytest.mark.asyncio(loop_scope="session")
-@pytest.mark.parametrize("credentials, expected_status, expected_detail", [
-    ({"email": "ms@gmail.com", "password": "123"}, 200, None),
-    ({"email": "wrong@example.com", "password": "123"}, 400, "Пользователь не найден"),
-    ({"email": "ms@gmail.com", "password": "wrong"}, 400, "Неправильный пароль"),
-    ({"email": "", "password": ""}, 422, None),
-])
+@pytest.mark.parametrize(
+    "credentials, expected_status, expected_detail",
+    [
+        ({"email": "ms@gmail.com", "password": "123"}, 200, None),
+        ({"email": "wrong@example.com", "password": "123"}, 400, "Пользователь не найден"),
+        ({"email": "ms@gmail.com", "password": "wrong"}, 400, "Неправильный пароль"),
+        ({"email": "", "password": ""}, 422, None),
+    ],
+)
 async def test_login(unlogged_client: AsyncClient, credentials, expected_status, expected_detail):
     resp = await unlogged_client.post("/user/login", data=credentials)
     assert resp.status_code == expected_status
