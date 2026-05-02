@@ -1,0 +1,31 @@
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I",
+    "B", "C4", "RUF",
+    "FAST",
+]
+
+ignore = [
+    "B008",
+    "F405",
+    "F403",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "RUF012"
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["T201", "SLF001", "ANN", "D"]
+"__init__.py" = ["F401"]
+"conftest.py" = ["D"]
+"alembic/**" = ["ALL"]
+"app/db/models/**" = ["F821"]
+
+[tool.ruff.lint.isort]
+force-single-line = false
+known-first-party = ["app"]
