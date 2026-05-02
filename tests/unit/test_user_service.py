@@ -1,9 +1,11 @@
-import pytest
-from unittest.mock import AsyncMock, patch
-from sqlalchemy.exc import IntegrityError, NoResultFound
 from datetime import datetime
-from app.services.user_service import UserService
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from sqlalchemy.exc import NoResultFound
+
 from app.api.schemas import User
+from app.services.user_service import UserService
 
 
 @pytest.fixture
@@ -13,16 +15,20 @@ def user_service(uow_mock):
 
 @pytest.fixture(autouse=True)
 def mock_utils():
-    with patch("app.services.user_service.get_password_hash", return_value="hashed_pw"), \
-            patch("app.services.user_service.verify_password", return_value=True), \
-            patch("app.services.user_service.create_token", return_value="jwt_token"):
+    with (
+        patch("app.services.user_service.get_password_hash", return_value="hashed_pw"),
+        patch("app.services.user_service.verify_password", return_value=True),
+        patch("app.services.user_service.create_token", return_value="jwt_token"),
+    ):
         yield
 
 
 async def test_add_user_success(user_service, uow_mock):
     await user_service.add_user("testuser", "test@example.com", "plainpassword")
     uow_mock.users.add_user.assert_called_once_with(
-        username="testuser", email="test@example.com", password="hashed_pw"
+        username="testuser",
+        email="test@example.com",
+        password="hashed_pw",
     )
 
 
@@ -43,7 +49,7 @@ async def test_get_user_by_success(user_service, uow_mock):
         "email": "t@t.com",
         "password": "hash",
         "balance": 0,
-        "created_at": datetime.now()
+        "created_at": datetime.now(),
     }
     uow_mock.users.get_one.return_value = user_data
 

@@ -1,6 +1,8 @@
 import logging
 from logging.handlers import RotatingFileHandler
+
 import click
+
 from app.config import settings
 
 
@@ -32,11 +34,13 @@ def get_logger(module_name: str) -> logging.Logger:
     logging_in_file = settings.LOG_FILE
 
     if logging_in_file:
-        file_handler = RotatingFileHandler(filename=logging_in_file,
-                                           encoding="utf-8",
-                                           mode="a",
-                                           maxBytes=1024 * 1024 * 10,
-                                           backupCount=3)
+        file_handler = RotatingFileHandler(
+            filename=logging_in_file,
+            encoding="utf-8",
+            mode="a",
+            maxBytes=1024 * 1024 * 10,
+            backupCount=3,
+        )
         logger.addHandler(file_handler)
 
     return logger

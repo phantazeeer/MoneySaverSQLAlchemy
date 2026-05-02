@@ -1,12 +1,12 @@
-import pytest
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timezone, timedelta
-from sqlalchemy.exc import NoResultFound
-from unicodedata import category
 
-from app.services.costs_and_earnings_service import CostsAndEarningsService
+import pytest
+from sqlalchemy.exc import NoResultFound
+
 from app.api.schemas import Record
 from app.db.models import CostsAndEarnings
+from app.services.costs_and_earnings_service import CostsAndEarningsService
 
 
 @pytest.fixture
@@ -17,6 +17,7 @@ def service(uow_mock):
 @pytest.fixture(autouse=True)
 def mock_record_validate():
     with patch("app.services.costs_and_earnings_service.Record.model_validate") as mock:
+
         def side_effect(data):
             return MagicMock(spec=Record, **data)
 
@@ -27,14 +28,20 @@ def mock_record_validate():
 async def test_add_record_success(service, uow_mock):
     await service.add_record(user_id=1, operation_type="0", value=100, comment="test")
     uow_mock.records.add_one.assert_called_once_with(
-        user_id=1, operation_type=0, value=100, comment="test"
+        user_id=1,
+        operation_type=0,
+        value=100,
+        comment="test",
     )
 
 
 async def test_add_record_without_comment(service, uow_mock):
     await service.add_record(user_id=2, operation_type="1", value=50)
     uow_mock.records.add_one.assert_called_once_with(
-        user_id=2, operation_type=1, value=50, comment=None
+        user_id=2,
+        operation_type=1,
+        value=50,
+        comment=None,
     )
 
 
@@ -77,29 +84,35 @@ async def test_get_records_by_id_and_user_success(service, uow_mock):
 
     uow_mock.records.get_one.return_value = orm_record
 
-    expected_record = Record.model_validate({
-                            "id": 1,
-                            "user_id": 1,
-                            "operation_type": 0,
-                            "value": 100,
-                            "comment": "",
-                            "category": None,
-                            "created_at": None
-                        })
-    with patch("app.services.costs_and_earnings_service.Record.model_validate",
-               return_value=expected_record) as mock_validate:
+    expected_record = Record.model_validate(
+        {
+            "id": 1,
+            "user_id": 1,
+            "operation_type": 0,
+            "value": 100,
+            "comment": "",
+            "category": None,
+            "created_at": None,
+        },
+    )
+    with patch(
+        "app.services.costs_and_earnings_service.Record.model_validate",
+        return_value=expected_record,
+    ) as mock_validate:
         result = await service.get_records_by(id=1, user_id=1)
 
     uow_mock.records.get_one.assert_called_once_with(id=1)
-    mock_validate.assert_called_once_with({
-                            "id": 1,
-                            "user_id": 1,
-                            "operation_type": 0,
-                            "value": 100,
-                            "comment": "",
-                            "category": None,
-                            "created_at": None
-                        })
+    mock_validate.assert_called_once_with(
+        {
+            "id": 1,
+            "user_id": 1,
+            "operation_type": 0,
+            "value": 100,
+            "comment": "",
+            "category": None,
+            "created_at": None,
+        },
+    )
     assert result == expected_record
 
 
@@ -159,7 +172,12 @@ async def test_update_record_success_all_fields(service, uow_mock):
     await service.update_record(id=1, user_id=1, operation_type=1, value=200, comment="new")
 
     uow_mock.records.update_record.assert_called_once_with(
-        1, 1, operation_type=1, value=200, comment="new", category_id=None
+        1,
+        1,
+        operation_type=1,
+        value=200,
+        comment="new",
+        category_id=None,
     )
 
 
@@ -170,7 +188,12 @@ async def test_update_record_partial_fields(service, uow_mock):
     await service.update_record(id=1, user_id=1, value=500)
 
     uow_mock.records.update_record.assert_called_once_with(
-        1, 1, operation_type=0, value=500, comment="old", category_id=None
+        1,
+        1,
+        operation_type=0,
+        value=500,
+        comment="old",
+        category_id=None,
     )
 
 
@@ -214,7 +237,7 @@ async def test_create_graphics_no_records(service, uow_mock):
 
     result = await service.create_graphics(
         period=(datetime(2023, 1, 1), datetime(2023, 1, 31)),
-        user_id=1
+        user_id=1,
     )
     assert result is None
 
@@ -247,7 +270,7 @@ async def test_create_graphics_with_records_less_30_days(service, uow_mock):
                 mock_b64.return_value = b"encoded_string"
                 result = await service.create_graphics(
                     period=(datetime(2023, 1, 1), datetime(2023, 1, 31)),
-                    user_id=1
+                    user_id=1,
                 )
 
     mock_plt.subplots.assert_called_once()
@@ -277,7 +300,7 @@ async def test_create_graphics_between_30_and_360_days(service, uow_mock):
             with patch("app.services.costs_and_earnings_service.base64.b64encode", return_value=b"img"):
                 await service.create_graphics(
                     period=(datetime(2023, 1, 1), datetime(2023, 12, 31)),
-                    user_id=1
+                    user_id=1,
                 )
     args, _ = mock_plt.subplots.return_value[1].plot.call_args
     assert args[0] == ["15.06"]
@@ -299,7 +322,7 @@ async def test_create_graphics_more_than_360_days(service, uow_mock):
             with patch("app.services.costs_and_earnings_service.base64.b64encode", return_value=b"img"):
                 await service.create_graphics(
                     period=(datetime(2023, 1, 1), datetime(2025, 1, 1)),
-                    user_id=1
+                    user_id=1,
                 )
     args, _ = mock_plt.subplots.return_value[1].plot.call_args
     assert args[0] == ["01.01.2023"]

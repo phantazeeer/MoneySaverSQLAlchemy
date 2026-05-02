@@ -1,5 +1,6 @@
-from wtforms import Form, StringField, IntegerField, SubmitField
+from wtforms import Form, IntegerField, StringField, SubmitField
 from wtforms.validators import DataRequired
+
 
 class ChangeTargetForm(Form):
     goal_name = StringField("Имя цели:", validators=[DataRequired()])

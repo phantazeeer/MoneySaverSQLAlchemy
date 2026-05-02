@@ -1,14 +1,14 @@
-from typing import AsyncGenerator
-
-import pytest
 import os
-from app.db.models import *
+
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import insert
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from app import create_app
+
+from app.db.models import *  # isort:skip
 from app.utils.dependencies import get_sqlalchemy_session
-from httpx import AsyncClient, ASGITransport
 from app.utils.passwords import get_password_hash
 
 DB_PATH = "./db_for_e2e_test"
@@ -50,19 +50,23 @@ async def user_ids(create_tables):
     session = sess_gen()
     try:
         users_data = [
-            ('Максим Струнников', 'ms@gmail.com', '123'),
-            ('Николас Сенченков', 'ns@gmail.com', '123'),
-            ('Дэнис Качалин', 'dk@gmail.com', '123'),
-            ('Ivan Anufriev', 'ia@gmail.com', '123'),
-            ('John Gazon', 'jg@gmail.com', '123'),
+            ("Максим Струнников", "ms@gmail.com", "123"),
+            ("Николас Сенченков", "ns@gmail.com", "123"),
+            ("Дэнис Качалин", "dk@gmail.com", "123"),
+            ("Ivan Anufriev", "ia@gmail.com", "123"),
+            ("John Gazon", "jg@gmail.com", "123"),
         ]
         users = []
         for name, email, raw_pwd in users_data:
-            stmt = insert(User).values(
-                username=name,
-                email=email,
-                password=get_password_hash(raw_pwd)
-            ).returning(User.id)
+            stmt = (
+                insert(User)
+                .values(
+                    username=name,
+                    email=email,
+                    password=get_password_hash(raw_pwd),
+                )
+                .returning(User.id)
+            )
             result = await session.execute(stmt)
             user_id = result.scalar_one()
             users.append(user_id)
@@ -71,7 +75,6 @@ async def user_ids(create_tables):
         return users
     finally:
         await session.close()
-
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
@@ -96,7 +99,7 @@ async def fill_costs_and_earnings_table(user_ids):
                 user_id=user_id,
                 operation_type=op_type,
                 value=value,
-                comment=comment
+                comment=comment,
             )
             await session.execute(stmt)
         await session.commit()
@@ -118,8 +121,7 @@ async def unlogged_client():
 
 @pytest_asyncio.fixture(scope="session")
 async def logged_client(client):
-    users_cred = {"email": "ms@gmail.com",
-                  "password": "123"}
+    users_cred = {"email": "ms@gmail.com", "password": "123"}
     user = await client.post("/user/login", data=users_cred)
     cookie = user.cookies["Authorization"]
     client.cookies.set("Authorization", cookie)

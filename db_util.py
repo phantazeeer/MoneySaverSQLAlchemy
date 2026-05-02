@@ -1,18 +1,18 @@
 import asyncio
-from app.services.user_service import UserService
-from app.services.costs_and_earnings_service import CostsAndEarningsService
-from app.utils.uow import UnitOfWork
-from app.db.database import session_factory
 
+from app.db.database import session_factory
+from app.services.costs_and_earnings_service import CostsAndEarningsService
+from app.services.user_service import UserService
+from app.utils.uow import UnitOfWork
 
 
 async def fill_user_table():
     service = UserService(UnitOfWork(session_factory))
-    await service.add_user('Максим Струнников', 'ms@gmail.com', '123')
-    await service.add_user('Николас Сенченков', 'ns@gmail.com', '123')
-    await service.add_user('Дэнис Качалин', 'dk@gmail.com', '123')
-    await service.add_user('Ivan Anufriev', 'ia@gmail.com', '123')
-    await service.add_user('John Gazon', 'jg@gmail.com', '123')
+    await service.add_user("Максим Струнников", "ms@gmail.com", "123")
+    await service.add_user("Николас Сенченков", "ns@gmail.com", "123")
+    await service.add_user("Дэнис Качалин", "dk@gmail.com", "123")
+    await service.add_user("Ivan Anufriev", "ia@gmail.com", "123")
+    await service.add_user("John Gazon", "jg@gmail.com", "123")
 
 
 async def fill_costs_and_earnings_table():

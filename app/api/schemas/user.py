@@ -1,6 +1,8 @@
-from pydantic import BaseModel, EmailStr, model_validator, ConfigDict
-from types import NoneType
 from datetime import datetime
+from types import NoneType
+
+from pydantic import BaseModel, ConfigDict, EmailStr, model_validator
+
 
 class UserRegister(BaseModel):
     username: str
@@ -20,7 +22,7 @@ class UserChange(BaseModel):
     goal_name: str | None = None
     goal_value: int | None = None
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def clean_model(self):
         """Удаляет поля со значениями None"""
         attrs = self.__dict__.copy()

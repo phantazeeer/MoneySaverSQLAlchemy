@@ -2,6 +2,7 @@ from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     ACCESS_TOKEN_LT: int
     JWT_SECRET_KEY: str
@@ -14,5 +15,6 @@ class Settings(BaseSettings):
     @property
     def database_url(self):
         return f"sqlite+aiosqlite:///{self.DB_PATH}"
+
 
 settings = Settings()

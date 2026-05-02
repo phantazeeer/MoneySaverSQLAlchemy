@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Request
-from app.api.endpoints import *
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+
+from app.api.endpoints import *  # isort: skip
 
 
 def create_app() -> FastAPI:
@@ -26,7 +27,7 @@ def create_app() -> FastAPI:
         error = exc.errors()[0]
 
         if error["type"] == "missing" and error["loc"][0] == "cookie" and error["loc"][1] == "Authorization":
-            return RedirectResponse('/login')
+            return RedirectResponse("/login")
 
         return JSONResponse(
             status_code=422,

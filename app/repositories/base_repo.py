@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
-from app.db.models import Base
+
+from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy import insert, delete
+
+from app.db.models import Base
+
 
 class AbstractRepository(ABC):
     @abstractmethod
@@ -20,6 +22,7 @@ class AbstractRepository(ABC):
     @abstractmethod
     async def get_list_by(self, **kwargs):
         pass
+
 
 class BasicRepository(AbstractRepository):
     model = None

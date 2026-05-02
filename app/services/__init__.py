@@ -1,3 +1,3 @@
+from .category_service import CategoryService
 from .costs_and_earnings_service import CostsAndEarningsService
 from .user_service import UserService
-from .category_service import CategoryService
