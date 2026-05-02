@@ -35,8 +35,9 @@ async def main(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
     else:
         change_target_form = None
     earnings, costs = await user_service.get_sum_of_costs_and_earn(user_id)
-    categories = [i.name for i in await categ_service.get_user_categories(user_id)]
-    form = FastAddRecordForm(categories=categories)
+    categories = await categ_service.get_user_categories(user_id)
+    categories_name = [i.name for i in categories]
+    form = FastAddRecordForm(categories=categories_name)
 
     return templates.TemplateResponse(
         request=req, name="user_page.html", context={"user": user,
@@ -44,7 +45,8 @@ async def main(req: Request, user_id: Annotated[int, Depends(get_jwt_payload)],
                                                      "FastAddRecordForm": form,
                                                      "ChangeTargetForm": change_target_form,
                                                      "total_earnings": earnings,
-                                                     "total_costs": costs}
+                                                     "total_costs": costs,
+                                                     "categories": categories}
     )
 
 

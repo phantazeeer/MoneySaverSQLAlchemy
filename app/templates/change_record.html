@@ -3,7 +3,6 @@
 {% block body %}
 <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
 
-    <!-- Хлебные крошки + заголовок -->
     <div class="mb-6">
         <nav class="text-sm text-slate-500 mb-2">
             <a href="/" class="hover:text-emerald-600 transition">Главная</a>
@@ -12,8 +11,7 @@
         </nav>
         <div class="flex items-center justify-between flex-wrap gap-3">
             <h1 class="text-2xl font-bold text-slate-900">📋 Управление записями</h1>
-            <a href="/"
-               class="text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl px-4 py-2 transition">
+            <a href="/" class="text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl px-4 py-2 transition">
                 ← На главную
             </a>
         </div>
@@ -32,22 +30,20 @@
                 <div class="flex items-center justify-between py-3 px-3 rounded-xl transition
                             {% if record and record.id == item.id %}ring-2 ring-emerald-500 bg-emerald-50/30{% else %}hover:bg-slate-50{% endif %}">
                     <div class="flex items-center gap-3 min-w-0">
-                        <!-- Иконка категории вместо статичного эмодзи -->
                         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
                                     {% if item.operation_type %}bg-rose-50{% else %}bg-emerald-50{% endif %}">
-                            <span class="text-lg record-icon" data-category="{{ item.category }}">
-                                {% if item.operation_type %}💸{% else %}💵{% endif %}
-                            </span>
+                            <span class="text-lg">{% if item.operation_type %}💸{% else %}💵{% endif %}</span>
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <p class="text-sm font-medium text-slate-900 truncate">
                                     {{ item.comment or 'Без комментария' }}
                                 </p>
-                                <!-- ✅ Бейдж категории -->
                                 {% if item.category %}
                                 <span class="category-badge inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
                                       data-category="{{ item.category | lower }}">
+                                    <span class="w-1.5 h-1.5 rounded-full cat-dot-badge"
+                                          data-category="{{ item.category | lower }}"></span>
                                     {{ item.category }}
                                 </span>
                                 {% else %}
@@ -61,14 +57,12 @@
                             </p>
                         </div>
                     </div>
-
                     <div class="flex items-center gap-2 flex-shrink-0 ml-3">
                         <p class="text-sm font-semibold whitespace-nowrap
                                   {% if item.operation_type %}text-rose-600{% else %}text-emerald-600{% endif %}">
                             {% if item.operation_type %}-{% else %}+{% endif %}{{ item.value }} ₽
                         </p>
-                        <a href="/change_record?id={{ item.id }}"
-                           title="Изменить"
+                        <a href="/change_record?id={{ item.id }}" title="Изменить"
                            class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600
                                   text-slate-500 flex items-center justify-center transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
@@ -77,9 +71,7 @@
                                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
                         </a>
-                        <button type="button"
-                                onclick="deleteRecord({{ item.id }})"
-                                title="Удалить"
+                        <button type="button" onclick="deleteRecord({{ item.id }})" title="Удалить"
                                 class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-rose-100 hover:text-rose-600
                                        text-slate-500 flex items-center justify-center transition cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
@@ -97,8 +89,7 @@
                 <p class="text-5xl mb-3">📭</p>
                 <p class="text-slate-700 font-medium">Записей пока нет</p>
                 <p class="text-sm text-slate-400 mt-1">Добавьте первую на главной странице</p>
-                <a href="/"
-                   class="mt-4 inline-block bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl px-5 py-2.5 transition">
+                <a href="/" class="mt-4 inline-block bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl px-5 py-2.5 transition">
                     Добавить запись
                 </a>
             </div>
@@ -107,7 +98,7 @@
 
         <!-- ─── Форма редактирования (sticky) ─── -->
         <aside class="lg:col-span-1">
-            <div class="lg:sticky lg:top-20">
+            <div class="lg:sticky lg:top-20 space-y-4">
                 {% if form and record %}
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                     <div class="flex items-center justify-between mb-5">
@@ -117,7 +108,7 @@
                         </span>
                     </div>
 
-                    <form id="Form" method="POST" class="space-y-4">
+                    <form id="EditForm" class="space-y-4">
                         {{ form.hidden_tag }}
 
                         <!-- Тип операции -->
@@ -139,13 +130,9 @@
                                     </svg>
                                 </div>
                                 <div id="type_indicator"
-                                     class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full">
-                                </div>
+                                     class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"></div>
                             </div>
                             <p id="type_badge" class="text-xs font-medium mt-1.5"></p>
-                            {% for error in form.operation_type.errors %}
-                                <p class="text-xs text-rose-600 mt-1">{{ error }}</p>
-                            {% endfor %}
                         </div>
 
                         <!-- Сумма -->
@@ -156,8 +143,7 @@
                             <div class="relative">
                                 {{ form.value(
                                     class="w-full border border-slate-200 rounded-xl px-4 py-2.5 pr-10
-                                           focus:ring-2 focus:ring-emerald-500 focus:border-transparent
-                                           outline-none transition",
+                                           focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition",
                                     placeholder="0"
                                 ) }}
                                 <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₽</span>
@@ -167,29 +153,47 @@
                             {% endfor %}
                         </div>
 
-                        <!-- ✅ Категория — крупные чипы с иконками -->
+                        <!-- ─── Категория: динамические чипы ─── -->
                         <div>
-                            <label class="text-xs font-medium text-slate-600 block mb-2">Категория</label>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="text-xs font-medium text-slate-600">Категория</label>
+                                {% if not categories %}
+                                <a href="/" class="text-xs text-emerald-600 hover:underline">
+                                    Добавить на главной →
+                                </a>
+                                {% endif %}
+                            </div>
 
                             <!-- Скрытый select WTForms -->
                             <div class="hidden">
                                 {{ form.category(id="edit_category_select") }}
                             </div>
 
-                            <!-- Три карточки-чипа -->
-                            <div class="grid grid-cols-3 gap-2" id="edit_category_chips">
-                                {% for chip, _ in form.category.choices %}
-                                    <button type="button"
-                                            data-value="{{ chip }}"
-                                            onclick="selectEditCategory(this)"
-                                            class="category-chip flex flex-col items-center gap-1 px-2 py-3 rounded-xl text-xs font-medium border border-slate-200 bg-slate-50 text-slate-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 transition cursor-pointer">
-                                        {{ chip }}
-                                    </button>
+                            {% if categories %}
+                            <!-- Grid чипов -->
+                            <div class="grid grid-cols-2 gap-2" id="edit_category_chips">
+                                {% for cat in categories %}
+                                <button type="button"
+                                        data-value="{{ cat.name }}"
+                                        data-index="{{ loop.index0 }}"
+                                        onclick="selectEditCategory(this)"
+                                        class="edit-chip flex items-center gap-2 px-3 py-2.5 rounded-xl
+                                               text-xs font-medium border border-slate-200 bg-slate-50
+                                               text-slate-600 transition cursor-pointer text-left">
+                                    <span class="w-2 h-2 rounded-full flex-shrink-0 cat-dot"
+                                          data-index="{{ loop.index0 }}"></span>
+                                    <span class="truncate">{{ cat.name }}</span>
+                                </button>
                                 {% endfor %}
                             </div>
-
-                            <!-- Статус выбора -->
                             <p id="edit_category_hint" class="text-xs text-slate-400 mt-1.5">Не выбрана</p>
+                            {% else %}
+                            <div class="text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                <p class="text-xl mb-1">🏷</p>
+                                <p class="text-xs text-slate-500">Нет категорий</p>
+                                <a href="/" class="text-xs text-emerald-600 hover:underline">Добавить на главной</a>
+                            </div>
+                            {% endif %}
                         </div>
 
                         <!-- Комментарий -->
@@ -201,20 +205,14 @@
                                 class="w-full border border-slate-200 rounded-xl px-4 py-2.5
                                        focus:ring-2 focus:ring-emerald-500 focus:border-transparent
                                        outline-none transition resize-none",
-                                rows="3",
-                                maxlength="150",
-                                id="commentField",
+                                rows="3", maxlength="150", id="commentField",
                                 placeholder="например: продукты в пятёрочке"
                             ) }}
                             <p class="text-xs text-slate-400 mt-1 text-right">
                                 <span id="charCount">0</span>/150
                             </p>
-                            {% for error in form.comment.errors %}
-                                <p class="text-xs text-rose-600 mt-1">{{ error }}</p>
-                            {% endfor %}
                         </div>
 
-                        <!-- Действия -->
                         <div class="flex gap-2 pt-2">
                             {{ form.submit(
                                 type="submit",
@@ -227,14 +225,11 @@
                         </div>
                     </form>
                 </div>
-
                 {% else %}
                 <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 text-center">
                     <p class="text-5xl mb-3">✏️</p>
                     <p class="text-slate-700 font-medium">Выберите запись</p>
-                    <p class="text-sm text-slate-400 mt-1">
-                        Нажмите на карандаш слева, чтобы редактировать
-                    </p>
+                    <p class="text-sm text-slate-400 mt-1">Нажмите на карандаш слева</p>
                 </div>
                 {% endif %}
             </div>
@@ -243,124 +238,147 @@
 </main>
 
 <script>
-    /* ─── Конфиг категорий ─── */
-    const CATEGORY_CONFIG = {
-        'val': { active: 'border-gray-400 bg-gray-50 text-gray-700',   badge: 'bg-gray-100 text-gray-700'  },
-    };
+/* ════════════════════════════════════════════
+   ПАЛИТРА И КОНФИГ КАТЕГОРИЙ
+   ════════════════════════════════════════════ */
+const COLOR_PALETTE = [
+    { active: 'border-orange-400 bg-orange-50 text-orange-700',  badge: 'bg-orange-100 text-orange-700',  dot: 'bg-orange-400'  },
+    { active: 'border-blue-400 bg-blue-50 text-blue-700',        badge: 'bg-blue-100 text-blue-700',      dot: 'bg-blue-400'    },
+    { active: 'border-purple-400 bg-purple-50 text-purple-700',  badge: 'bg-purple-100 text-purple-700',  dot: 'bg-purple-400'  },
+    { active: 'border-pink-400 bg-pink-50 text-pink-700',        badge: 'bg-pink-100 text-pink-700',      dot: 'bg-pink-400'    },
+    { active: 'border-teal-400 bg-teal-50 text-teal-700',        badge: 'bg-teal-100 text-teal-700',      dot: 'bg-teal-400'    },
+    { active: 'border-yellow-400 bg-yellow-50 text-yellow-700',  badge: 'bg-yellow-100 text-yellow-700',  dot: 'bg-yellow-400'  },
+    { active: 'border-indigo-400 bg-indigo-50 text-indigo-700',  badge: 'bg-indigo-100 text-indigo-700',  dot: 'bg-indigo-400'  },
+    { active: 'border-rose-400 bg-rose-50 text-rose-700',        badge: 'bg-rose-100 text-rose-700',      dot: 'bg-rose-400'    },
+];
 
-    /* ─── Чипы в форме редактирования ─── */
-    const CHIP_BASE_EDIT = 'category-chip flex flex-col items-center gap-1 px-2 py-3 rounded-xl text-xs font-medium border transition cursor-pointer';
-    const CHIP_IDLE      = 'border-slate-200 bg-slate-50 text-slate-600';
+const CATEGORY_CONFIG = {};
+{% for cat in categories %}
+CATEGORY_CONFIG['{{ cat.name | lower }}'] = {
+    id:    {{ cat.id }},
+    index: {{ loop.index0 }},
+    ...COLOR_PALETTE[{{ loop.index0 }} % COLOR_PALETTE.length]
+};
+{% endfor %}
 
-    function selectEditCategory(btn) {
-        const chips  = document.querySelectorAll('#edit_category_chips .category-chip');
-        const select = document.getElementById('edit_category_select');
-        const hint   = document.getElementById('edit_category_hint');
-        const val    = btn.dataset.value;
-        const cfg    = CATEGORY_CONFIG['val'] || {};
-
-
-        chips.forEach(c => {
-            c.className = CHIP_BASE_EDIT + ' ' + CHIP_IDLE;
-            if (c != btn) {
-                c.dataset.selected = 'false';
-            };
-        });
-
-        if (btn.dataset.selected === 'true') {
-            btn.dataset.selected = 'false';
-            if (select) select.value = '';
-            hint.textContent = 'Не выбрана';
-            hint.className   = 'text-xs text-slate-400 mt-1.5';
-        } else {
-            btn.className = CHIP_BASE_EDIT + ' ' + (cfg.active || CHIP_IDLE);
-            btn.dataset.selected = 'true';
-            if (select) select.value = val;
-            hint.textContent = val.charAt(0).toUpperCase() + val.slice(1);
-            hint.className   = 'text-xs font-medium mt-1.5 text-slate-700';
-        }
-    }
-
-    /* ─── Восстановить выбранную категорию при загрузке страницы ─── */
-    const editSelect = document.getElementById('edit_category_select');
-    if (editSelect && editSelect.value) {
-        const existingChip = document.querySelector(
-            '#edit_category_chips [data-value="' + editSelect.value + '"]'
-        );
-        if (existingChip) selectEditCategory(existingChip);
-    }
-
-    /* ─── Раскраска бейджей категорий в списке ─── */
-    document.querySelectorAll('.category-badge').forEach(el => {
+/* Красим точки */
+function applyDotColors() {
+    document.querySelectorAll('.cat-dot[data-index]').forEach(el => {
+        const idx = parseInt(el.dataset.index) % COLOR_PALETTE.length;
+        el.className = 'w-2 h-2 rounded-full flex-shrink-0 ' + COLOR_PALETTE[idx].dot;
+    });
+    document.querySelectorAll('.cat-dot-badge[data-category]').forEach(el => {
         const cfg = CATEGORY_CONFIG[el.dataset.category];
-        if (cfg) el.className += ' ' + cfg.badge;
-        else     el.className += ' bg-slate-100 text-slate-600';
+        if (cfg) el.className = 'w-1.5 h-1.5 rounded-full flex-shrink-0 ' + cfg.dot;
+    });
+    document.querySelectorAll('.category-badge[data-category]').forEach(el => {
+        const cfg = CATEGORY_CONFIG[el.dataset.category];
+        if (cfg) el.classList.add(...cfg.badge.split(' '));
+        else     el.classList.add('bg-slate-100', 'text-slate-600');
+    });
+}
+applyDotColors();
+
+/* ════════════════════════════════════════════
+   ЧИПЫ КАТЕГОРИЙ В ФОРМЕ РЕДАКТИРОВАНИЯ
+   ════════════════════════════════════════════ */
+const CHIP_BASE_EDIT = 'edit-chip flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium border transition cursor-pointer text-left';
+const CHIP_IDLE      = 'border-slate-200 bg-slate-50 text-slate-600';
+
+function selectEditCategory(btn) {
+    const chips  = document.querySelectorAll('#edit_category_chips .edit-chip');
+    const select = document.getElementById('edit_category_select');
+    const hint   = document.getElementById('edit_category_hint');
+    const val    = btn.dataset.value;
+    const cfg    = CATEGORY_CONFIG[val?.toLowerCase()];
+
+    chips.forEach(c => {
+        c.className = CHIP_BASE_EDIT + ' ' + CHIP_IDLE;
+        c.dataset.selected = 'false';
+        const dot = c.querySelector('.cat-dot, span');
+        if (dot && dot.dataset.index !== undefined) {
+            const idx = parseInt(dot.dataset.index) % COLOR_PALETTE.length;
+            dot.className = 'w-2 h-2 rounded-full flex-shrink-0 ' + COLOR_PALETTE[idx].dot;
+        }
     });
 
-    /* ─── Иконки записей по категории (если есть) ─── */
-    document.querySelectorAll('.record-icon').forEach(el => {
-        const cfg = CATEGORY_CONFIG[el.dataset.category?.toLowerCase()];
-        if (cfg) el.textContent = cfg.icon;
-    });
-
-    /* ─── Счётчик символов ─── */
-    const commentField = document.getElementById('commentField');
-    const charCount    = document.getElementById('charCount');
-    if (commentField && charCount) {
-        const update = () => charCount.textContent = commentField.value.length;
-        update();
-        commentField.addEventListener('input', update);
+    if (btn.dataset.selected === 'true') {
+        btn.dataset.selected = 'false';
+        if (select) select.value = '';
+        hint.textContent = 'Не выбрана';
+        hint.className   = 'text-xs text-slate-400 mt-1.5';
+    } else {
+        btn.dataset.selected = 'true';
+        btn.className = CHIP_BASE_EDIT + ' ' + (cfg?.active || CHIP_IDLE);
+        if (select) select.value = val;
+        hint.textContent = val.charAt(0).toUpperCase() + val.slice(1);
+        hint.className   = 'text-xs font-medium mt-1.5 text-slate-700';
     }
+}
 
-    /* ─── Удаление записи ─── */
-    function deleteRecord(id) {
-        if (!confirm('Удалить эту запись? Действие нельзя отменить.')) return;
-        fetch('/records/' + id, { method: 'DELETE' })
-            .then(() => window.location.href = '/change_record')
-            .catch(err => console.error(err));
+/* Восстановить выбор при загрузке */
+const editSelect = document.getElementById('edit_category_select');
+if (editSelect?.value) {
+    const saved = document.querySelector('#edit_category_chips [data-value="' + editSelect.value + '"]');
+    if (saved) selectEditCategory(saved);
+}
+
+/* ════════════════════════════════════════════
+   ПОДСВЕТКА OPERATION TYPE SELECT
+   ════════════════════════════════════════════ */
+function updateSelectStyle(select, indicatorId, badgeId) {
+    const indicator = document.getElementById(indicatorId);
+    const badge     = document.getElementById(badgeId);
+    if (!indicator || !badge) return;
+    if (select.value === '0') {
+        select.classList.remove('border-rose-300', 'bg-rose-50/30');
+        select.classList.add('border-emerald-300', 'bg-emerald-50/30');
+        indicator.className = 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-500';
+        badge.textContent   = '💵 Доход';
+        badge.className     = 'text-xs font-medium mt-1.5 text-emerald-600';
+    } else {
+        select.classList.remove('border-emerald-300', 'bg-emerald-50/30');
+        select.classList.add('border-rose-300', 'bg-rose-50/30');
+        indicator.className = 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-rose-500';
+        badge.textContent   = '💸 Расход';
+        badge.className     = 'text-xs font-medium mt-1.5 text-rose-600';
     }
+    select.style.paddingLeft = '1.75rem';
+}
+const opSelect = document.getElementById('operation_type_select');
+if (opSelect) {
+    updateSelectStyle(opSelect, 'type_indicator', 'type_badge');
+    opSelect.addEventListener('change', function() { updateSelectStyle(this, 'type_indicator', 'type_badge'); });
+}
 
-    /* ─── Submit формы редактирования ─── */
-    {% if record %}
-    document.getElementById('Form')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        let form = new FormData(this);
-        fetch('/records/{{ record.id }}', {
-            method: 'PUT',
-            body: new URLSearchParams(form)
-        })
+/* ════════════════════════════════════════════
+   СЧЁТЧИК СИМВОЛОВ + SUBMIT + УДАЛЕНИЕ
+   ════════════════════════════════════════════ */
+const commentField = document.getElementById('commentField');
+const charCount    = document.getElementById('charCount');
+if (commentField && charCount) {
+    const update = () => charCount.textContent = commentField.value.length;
+    update();
+    commentField.addEventListener('input', update);
+}
+
+function deleteRecord(id) {
+    if (!confirm('Удалить эту запись? Действие нельзя отменить.')) return;
+    fetch('/records/' + id, { method: 'DELETE' })
         .then(() => window.location.href = '/change_record')
         .catch(err => console.error(err));
-    });
-    {% endif %}
+}
 
-    /* ─── Подсветка operation_type select ─── */
-    function updateSelectStyle(select, indicatorId, badgeId) {
-        const indicator = document.getElementById(indicatorId);
-        const badge     = document.getElementById(badgeId);
-        if (!indicator || !badge) return;
-        if (select.value === '0') {
-            select.classList.remove('border-rose-300', 'bg-rose-50/30');
-            select.classList.add('border-emerald-300', 'bg-emerald-50/30');
-            indicator.className = 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-500';
-            badge.textContent   = '💵 Доход';
-            badge.className     = 'text-xs font-medium mt-1.5 text-emerald-600';
-        } else {
-            select.classList.remove('border-emerald-300', 'bg-emerald-50/30');
-            select.classList.add('border-rose-300', 'bg-rose-50/30');
-            indicator.className = 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-rose-500';
-            badge.textContent   = '💸 Расход';
-            badge.className     = 'text-xs font-medium mt-1.5 text-rose-600';
-        }
-        select.style.paddingLeft = '1.75rem';
-    }
-
-    const opSelect = document.getElementById('operation_type_select');
-    if (opSelect) {
-        updateSelectStyle(opSelect, 'type_indicator', 'type_badge');
-        opSelect.addEventListener('change', function() {
-            updateSelectStyle(this, 'type_indicator', 'type_badge');
-        });
-    }
+{% if record %}
+document.getElementById('EditForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch('/records/{{ record.id }}', {
+        method: 'PUT',
+        body: new URLSearchParams(new FormData(this))
+    })
+    .then(() => window.location.href = '/change_record')
+    .catch(err => console.error(err));
+});
+{% endif %}
 </script>
 {% endblock %}
