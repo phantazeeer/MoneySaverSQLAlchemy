@@ -1,14 +1,11 @@
 FROM python:3.13-alpine AS build
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /application
-COPY ./requirements.txt .
-RUN python -m venv .venv
-RUN .venv/bin/pip install --no-cache-dir -r requirements.txt
+COPY ./pyproject.toml ./
+COPY ./uv.lock ./
+COPY .env.template .env
+RUN uv sync --locked
 COPY . .
-RUN .venv/bin/alembic upgrade head
-
-FROM python:3.13-alpine AS runner
-WORKDIR /application
-COPY --from=build /application ./
+RUN uv run alembic upgrade head
 EXPOSE 8000:8000
-ENV API_HOST=0.0.0.0
-CMD .venv/bin/python server.py
+CMD ["uv", "run", "server.py"]
