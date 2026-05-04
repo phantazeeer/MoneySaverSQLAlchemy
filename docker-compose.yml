@@ -12,3 +12,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  reverse-proxy:
+    container_name: nginx
+    image: nginx:latest
+    ports:
+      - "80:80"
+    restart: "always"
+    networks:
+      - default
+    depends_on:
+      - backend
+    volumes:
+      - "./nginx:/etc/nginx"
