@@ -151,11 +151,14 @@ class CostsAndEarningsService:
 
     async def create_graphics(self, period: tuple[datetime, datetime], user_id: int):
         async with self.uow:
-            records = [Record.model_validate(i) for i in await self.uow.records.get_list_by_date(
-                start=period[0].replace(tzinfo=timezone.utc),
-                end=period[1].replace(tzinfo=timezone.utc),
-                user_id=user_id,
-            )]
+            records = [
+                Record.model_validate(i)
+                for i in await self.uow.records.get_list_by_date(
+                    start=period[0].replace(tzinfo=timezone.utc),
+                    end=period[1].replace(tzinfo=timezone.utc),
+                    user_id=user_id,
+                )
+            ]
             balance = (await self.uow.users.get_one(id=user_id)).balance
             if not records:
                 return None
