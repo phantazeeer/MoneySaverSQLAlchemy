@@ -4,14 +4,13 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
     restart: "always"
     healthcheck:
-      test: "curl http://localhost:8000/healthcheck/readiness"
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthcheck/readiness"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 3s
   reverse-proxy:
     container_name: nginx
     image: nginx:latest
@@ -21,6 +20,7 @@ services:
     networks:
       - default
     depends_on:
-      - backend
+      backend:
+          condition: service_healthy
     volumes:
       - "./nginx:/etc/nginx"
