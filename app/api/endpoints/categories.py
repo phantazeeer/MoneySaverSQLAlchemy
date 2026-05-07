@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 
 from app.services import CategoryService
 from app.utils import get_jwt_payload
@@ -13,7 +13,7 @@ log = get_logger(__name__)
 
 @router.post("/", status_code=201)
 async def create_category(
-    name: str,
+    name: Annotated[str, Body()],
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[CategoryService, Depends(get_service)],
 ):

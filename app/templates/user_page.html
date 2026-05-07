@@ -475,11 +475,11 @@ function addCategory() {
 
     fetch('/categories/', {
         method: 'POST',
-        body: new URLSearchParams({ name })
+        body: name
     })
     .then(r => {
         if (!r.ok) return r.json().then(e => { throw new Error(e.detail || 'Ошибка'); });
-        return r.json();
+        return {name: `${name}`}
     })
     .then(newCat => {
         input.value = '';
