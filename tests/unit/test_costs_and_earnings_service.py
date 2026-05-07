@@ -245,16 +245,23 @@ async def test_create_graphics_no_records(service, uow_mock):
 async def test_create_graphics_with_records_less_30_days(service, uow_mock):
     # Подготовка данных
     now = datetime(2023, 2, 1, tzinfo=timezone.utc)
-    record1 = MagicMock()
-    record1.created_at = datetime(2023, 1, 15, tzinfo=timezone.utc)
-    record1.operation_type = 0  # доход
-    record1.value = 100
-    record2 = MagicMock()
-    record2.created_at = datetime(2023, 1, 20, tzinfo=timezone.utc)
-    record2.operation_type = 1  # расход
-    record2.value = 30
 
-    uow_mock.records.get_list_by_date.return_value = [record1, record2]
+    uow_mock.records.get_list_by_date.return_value = [
+        {
+            "id": 1,
+            "user_id": 1,
+            "operation_type": bool(0),
+            "value": 100,
+            "created_at": datetime(2023, 1, 15, tzinfo=timezone.utc),
+        },
+        {
+            "id": 2,
+            "user_id": 1,
+            "operation_type": bool(1),
+            "value": 30,
+            "created_at": datetime(2023, 1, 20, tzinfo=timezone.utc),
+        },
+    ]
 
     user_mock = AsyncMock(balance=1000)
     uow_mock.users.get_one.return_value = user_mock
@@ -286,11 +293,15 @@ async def test_create_graphics_with_records_less_30_days(service, uow_mock):
 
 async def test_create_graphics_between_30_and_360_days(service, uow_mock):
     now = datetime(2023, 12, 1, tzinfo=timezone.utc)
-    record = MagicMock()
-    record.created_at = datetime(2023, 6, 15, tzinfo=timezone.utc)  # ~5.5 месяцев назад
-    record.operation_type = 0
-    record.value = 50
-    uow_mock.records.get_list_by_date.return_value = [record]
+    uow_mock.records.get_list_by_date.return_value = [
+        {
+            "id": 1,
+            "user_id": 1,
+            "operation_type": bool(0),
+            "value": 50,
+            "created_at": datetime(2023, 6, 15, tzinfo=timezone.utc),
+        },
+    ]
     uow_mock.users.get_one.return_value = AsyncMock(balance=500)
 
     with patch("app.services.costs_and_earnings_service.datetime") as mock_datetime:
@@ -308,11 +319,15 @@ async def test_create_graphics_between_30_and_360_days(service, uow_mock):
 
 async def test_create_graphics_more_than_360_days(service, uow_mock):
     now = datetime(2025, 1, 1, tzinfo=timezone.utc)
-    record = MagicMock()
-    record.created_at = datetime(2023, 1, 1, tzinfo=timezone.utc)  # 2 года назад
-    record.operation_type = 1
-    record.value = 20
-    uow_mock.records.get_list_by_date.return_value = [record]
+    uow_mock.records.get_list_by_date.return_value = [
+        {
+            "id": 1,
+            "user_id": 1,
+            "operation_type": bool(1),
+            "value": 20,
+            "created_at": datetime(2023, 1, 1, tzinfo=timezone.utc),
+        },
+    ]
     uow_mock.users.get_one.return_value = AsyncMock(balance=100)
 
     with patch("app.services.costs_and_earnings_service.datetime") as mock_datetime:
