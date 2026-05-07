@@ -26,7 +26,7 @@ class CategoryService:
 
     async def get_user_categories(self, user_id: int):
         async with self.uow:
-            categories = await self.uow.categories.get_list_by(user_id=user_id)
+            categories = (await self.uow.categories.get_list_by(user_id=user_id)).all()
             return [Category.model_validate(categ) for categ in categories]
 
     async def get_categories_by(self, category: int | str, user_id: int):

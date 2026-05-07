@@ -213,8 +213,16 @@ async def test_update_record_not_found(service, uow_mock):
 
 
 async def test_user_costs_or_earnings_earnings(service, uow_mock):
-    records_list = [{"id": 1, "user_id": 1, "operation_type": 0, "value": 10}]
-    uow_mock.records.get_list_by.return_value = records_list
+    record = MagicMock()
+    record.id = 1
+    record.user_id = 1
+    record.operation_type = 0
+    record.value = 10
+    record.category_id = None
+    records_list = [record]
+    scalar_mock = MagicMock()
+    scalar_mock.all.return_value = records_list
+    uow_mock.records.get_list_by.return_value = scalar_mock
 
     result = await service.user_costs_or_earnings(user_id=1, filter="earnings")
 
@@ -224,7 +232,9 @@ async def test_user_costs_or_earnings_earnings(service, uow_mock):
 
 async def test_user_costs_or_earnings_costs(service, uow_mock):
     records_list = []
-    uow_mock.records.get_list_by.return_value = records_list
+    scalar_mock = MagicMock()
+    scalar_mock.all.return_value = records_list
+    uow_mock.records.get_list_by.return_value = scalar_mock
 
     result = await service.user_costs_or_earnings(user_id=1, filter="costs")
 

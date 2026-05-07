@@ -145,8 +145,25 @@ class CostsAndEarningsService:
     async def user_costs_or_earnings(self, user_id: int, filter: Literal["costs", "earnings"]) -> list[Record]:
         async with self.uow:
             op_type = 0 if filter == "earnings" else 1
-            records = await self.uow.records.get_list_by(user_id=user_id, operation_type=op_type)
-            res = [Record.model_validate(i) for i in records]
+            records = (await self.uow.records.get_list_by(user_id=user_id, operation_type=op_type)).all()
+            res = []
+            for record in records:
+                if record.category_id:
+                    category_name = (await self.uow.categories.get_one(id=record.category_id)).name
+                else:
+                    category_name = None
+                res.append(
+                    {
+                        "id": record.id,
+                        "user_id": record.user_id,
+                        "operation_type": record.operation_type,
+                        "value": record.value,
+                        "comment": record.comment,
+                        "category": category_name,
+                        "created_at": record.created_at,
+                    },
+                )
+            res = [Record.model_validate(i) for i in res]
             return res
 
     async def create_graphics(self, period: tuple[datetime, datetime], user_id: int):
