@@ -12,6 +12,7 @@ def create_app() -> FastAPI:
     app.include_router(user_router)
     app.include_router(costs_and_earnings_router)
     app.include_router(categories_router)
+    app.include_router(limit_router)
     app.include_router(templates_router)
     origins = ["*"]
     app.add_middleware(
