@@ -1,8 +1,8 @@
+from sqlalchemy import delete, update
 from sqlalchemy.exc import NoResultFound
 
 from app.db.models import UserLimits
 from app.utils.logger import get_logger
-from sqlalchemy import delete, update
 
 from .base_repo import BasicRepository
 
@@ -27,7 +27,12 @@ class LimitsRepository(BasicRepository):
 
     async def update_limit(self, user_id: int, period: str, value: int):
         try:
-            stmt = update(self.model).values(period=period, value=value).where(self.model.user_id == user_id).returning(self.model)
+            stmt = (
+                update(self.model)
+                .values(period=period, value=value)
+                .where(self.model.user_id == user_id)
+                .returning(self.model)
+            )
             return (await self.session.execute(stmt)).scalar_one()
         except NoResultFound:
             raise Exception("У пользователя нет лимита") from None

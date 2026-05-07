@@ -1,8 +1,9 @@
 from app.api.schemas import Limit
-from app.utils.uow import IUnitOfWork
 from app.utils.logger import get_logger
+from app.utils.uow import IUnitOfWork
 
 log = get_logger(__name__)
+
 
 class LimitService:
     def __init__(self, uow: IUnitOfWork):
@@ -34,7 +35,7 @@ class LimitService:
     async def update_limit(self, user_id: int, period: str, value: int):
         async with self.uow:
             try:
-                if not period in ("day", "week", "month"):
+                if period not in ("day", "week", "month"):
                     raise ValueError("Период должен быть день, неделя или месяц")
                 await self.uow.limits.update_limit(user_id, period, value)
             except Exception as err:
