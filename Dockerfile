@@ -8,4 +8,4 @@ COPY .env.template .env
 RUN uv sync --locked
 COPY . .
 RUN uv run alembic upgrade head
-CMD ["uv", "run", "server.py"]
+CMD ["uv", "run", "gunicorn", "-c", "gunicorn.conf.py", "server:app"]
