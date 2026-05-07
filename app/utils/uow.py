@@ -4,6 +4,7 @@ from app.db.database import AsyncSession
 from app.repositories.category_repo import CategoryRepository
 from app.repositories.costs_and_earnings_repo import CostsAndEarningsRepository
 from app.repositories.user_repo import UserRepository
+from app.repositories.limits_repo import LimitsRepository
 
 
 class IUnitOfWork(ABC):
@@ -11,6 +12,7 @@ class IUnitOfWork(ABC):
     users: UserRepository
     records: CostsAndEarningsRepository
     categories: CategoryRepository
+    limits: LimitsRepository
 
     @abstractmethod
     async def __aenter__(self):
@@ -39,6 +41,7 @@ class UnitOfWork(IUnitOfWork):
         self.users = UserRepository(self.session)
         self.records = CostsAndEarningsRepository(self.session)
         self.categories = CategoryRepository(self.session)
+        self.limits = LimitsRepository(self.session)
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         try:
