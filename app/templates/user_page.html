@@ -87,6 +87,70 @@
                 {% endif %}
             </section>
 
+            <!-- Лимит -->
+            <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <h2 class="text-lg font-semibold text-slate-900 mb-4">🎯 Ваш лимит</h2>
+                {% if user.limit %}
+                    {% set percent = [[((user.costs_in_period / user.limit.value) * 100) | round(1), 0] | max, 100] | min %}
+                    <p class="text-2xl font-bold text-slate-900">{{ user.limit.value }} ₽</p>
+                    <p class="text-sm text-slate-500 mt-1">За {{ user.limit.period }}</p>
+                    <div class="mt-4">
+                        <div class="flex justify-between text-xs text-slate-600 mb-1">
+                            <span>Потрачено</span>
+                            <span class="font-semibold text-red-600">{{ percent }}%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                            <div class="bg-gradient-to-r from-red-500 to-red-400 h-full rounded-full transition-all"
+                                 style="width: {{ percent }}%"></div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-4xl mb-2">🎯</p>
+                        <p class="text-sm text-slate-500">Добавьте лимит</p>
+                    </div>
+                {% endif %}
+
+                {% if ChangeLimitForm %}
+                <form id="ChangeLimitForm" class="mt-5 space-y-3 border-t border-slate-100 pt-4" method="POST">
+                    {{ ChangeLimitForm.hidden_tag }}
+                    <div>
+                        <label class="text-xs font-medium text-slate-600">{{ ChangeLimitForm.value.label.text }}</label>
+                        {{ ChangeLimitForm.value(class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none") }}
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-600 block mb-1">
+                            {{ ChangeLimitForm.period.label.text }}
+                        </label>
+                        <div class="relative">
+                            {{ ChangeLimitForm.period(
+                                class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-white
+                                       focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+                                       outline-none transition appearance-none cursor-pointer font-medium text-slate-700",
+                                id="limit_period_select"
+                            ) }}
+                            <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p id="limit_type_indicator" class="text-xs font-medium mt-1.5"></p>
+                    </div>
+                    <div class="flex gap-2">
+                        {{ ChangeLimitForm.submit(type="submit", class="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl py-2 cursor-pointer transition") }}
+                        <a href="/" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl py-2 px-4 transition text-center">Отмена</a>
+                    </div>
+                </form>
+                {% else %}
+                <a href="/?change_limit=1"
+                   class="mt-4 block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl py-2 transition">
+                    {% if user.limit %}Изменить лимит{% else %}Установить лимит{% endif %}
+                </a>
+                {% endif %}
+            </section>
+
             <!-- ─── Управление категориями ─── -->
             <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
 
@@ -697,10 +761,24 @@ document.getElementById('FastAddRecordForm')?.addEventListener('submit', functio
         .catch(err => console.error(err));
 });
 document.getElementById('ChangeTargetForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        fetch('/user/me', { method: 'PUT', body: new URLSearchParams(new FormData(this)) })
+    e.preventDefault();
+    fetch('/user/me', { method: 'PUT', body: new URLSearchParams(new FormData(this)) })
+        .then(r => window.location.href = '/')
+        .catch(err => console.error(err));
+});
+document.getElementById('ChangeLimitForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    console.log(formData);
+    if (formData.get('value') == 0) {
+        fetch('/limits/', { method: 'DELETE' })
             .then(r => window.location.href = '/')
             .catch(err => console.error(err));
+    } else {
+        fetch('/limits/', { method: 'PUT', body: new URLSearchParams(formData) })
+            .then(r => window.location.href = '/')
+            .catch(err => console.error(err));
+    }
 });
 </script>
 {% endblock %}

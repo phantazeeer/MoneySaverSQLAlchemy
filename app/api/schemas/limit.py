@@ -1,6 +1,6 @@
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Limit(BaseModel):
@@ -9,3 +9,8 @@ class Limit(BaseModel):
     value: int
     period: Literal["day", "week", "month"]
     user_id: int
+
+
+class ChangeLimit(BaseModel):
+    period: Literal["day", "week", "month"]
+    value: Annotated[int, Field(gt=0)]

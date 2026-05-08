@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta, timezone
+from typing import Literal
+
 from sqlalchemy.exc import NoResultFound
 
 from app.api.schemas import User
@@ -54,3 +57,13 @@ class UserService:
         async with self.uow:
             earnings, costs = await self.uow.users.get_user_costs_and_earnings(user_id)
             return earnings, costs
+
+    async def get_sum_of_costs_and_earn_in_period(self, user_id: int, period: Literal["day", "week", "month"]):
+        periods_to_datetime = {
+            "day": datetime.now(timezone.utc) - timedelta(days=1),
+            "month": datetime.now(timezone.utc) - timedelta(days=30),
+            "year": datetime.now(timezone.utc) - timedelta(days=365),
+        }
+        async with self.uow:
+            get_costs_in_period = await self.uow.users.get_costs_after_timestamp(user_id, periods_to_datetime[period])
+            return get_costs_in_period

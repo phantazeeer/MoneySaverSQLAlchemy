@@ -1,9 +1,8 @@
-from typing import Annotated, Literal
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import Field
+from fastapi import APIRouter, Depends, Form, HTTPException
 
-from app.api.schemas import Limit
+from app.api.schemas import ChangeLimit, Limit
 from app.services.limits_service import LimitService
 from app.utils import get_jwt_payload
 from app.utils.dependencies import get_limit_service as get_service
@@ -15,7 +14,8 @@ log = get_logger(__name__)
 
 @router.get("/")
 async def get_user_limit(
-    user_id: Annotated[int, Depends(get_jwt_payload)], service: Annotated[LimitService, Depends(get_service)],
+    user_id: Annotated[int, Depends(get_jwt_payload)],
+    service: Annotated[LimitService, Depends(get_service)],
 ) -> Limit | None:
     try:
         res = await service.get_limit(user_id)
@@ -30,13 +30,12 @@ async def get_user_limit(
 
 @router.put("/")
 async def create_user_limit(
-    period: Annotated[Literal["day", "week", "month"], Query()],
-    value: Annotated[int, Query(), Field(gt=0)],
+    limit: Annotated[ChangeLimit, Form()],
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[LimitService, Depends(get_service)],
 ):
     try:
-        await service.update_limit(user_id, period, value)
+        await service.update_limit(user_id, limit.period, limit.value)
         return {"detail": "ok"}
     except Exception:
         log.exception("exception in PUT /limits/", exc_info=False)
@@ -45,7 +44,8 @@ async def create_user_limit(
 
 @router.delete("/")
 async def delete_user_limit(
-    user_id: Annotated[int, Depends(get_jwt_payload)], service: Annotated[LimitService, Depends(get_service)],
+    user_id: Annotated[int, Depends(get_jwt_payload)],
+    service: Annotated[LimitService, Depends(get_service)],
 ):
     try:
         await service.delete_limit(user_id)
