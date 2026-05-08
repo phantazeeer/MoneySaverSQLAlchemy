@@ -11,6 +11,10 @@ services:
       timeout: 5s
       retries: 5
       start_period: 3s
+    environment:
+      LOG_LEVEL: INFO
+    volumes:
+      - "db:/application/app/db"
   reverse-proxy:
     container_name: nginx
     image: nginx:latest
@@ -24,3 +28,6 @@ services:
           condition: service_healthy
     volumes:
       - "./nginx:/etc/nginx"
+
+volumes:
+  db:
