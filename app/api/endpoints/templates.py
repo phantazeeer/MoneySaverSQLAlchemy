@@ -6,11 +6,20 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from app.forms import ChangeRecordForm, ChangeTargetForm, ChooseDateForm, FastAddRecordForm, LoginForm, RegisterForm
-from app.services import CategoryService, UserService
+from app.api.schemas import User
+from app.forms import (
+    ChangeLimitForm,
+    ChangeRecordForm,
+    ChangeTargetForm,
+    ChooseDateForm,
+    FastAddRecordForm,
+    LoginForm,
+    RegisterForm,
+)
+from app.services import CategoryService, LimitService, UserService
 from app.services import CostsAndEarningsService as CEService
 from app.utils import get_jwt_payload
-from app.utils.dependencies import get_categories_service, get_ce_service, get_user_service
+from app.utils.dependencies import get_categories_service, get_ce_service, get_limit_service, get_user_service
 from app.utils.logger import get_logger
 
 router = APIRouter(tags=["Working with templates"])
@@ -26,34 +35,48 @@ async def main(
     ce_service: Annotated[CEService, Depends(get_ce_service)],
     user_service: Annotated[UserService, Depends(get_user_service)],
     categ_service: Annotated[CategoryService, Depends(get_categories_service)],
+    limit_service: Annotated[LimitService, Depends(get_limit_service)],
     filter_by: Annotated[Literal["costs", "earnings"], Query()] | None = None,
     change_targ: Annotated[Literal["1"], Query()] | None = None,
+    change_limit: Annotated[Literal["1"], Query()] | None = None,
 ):
-    user = await user_service.get_user_by(id=user_id)
+    user = User.model_validate(await user_service.get_user_by(id=user_id))
     if filter_by:
         records = await ce_service.user_costs_or_earnings(user_id=user_id, filter=filter_by)
     else:
         records = await ce_service.get_records_by(user_id=user_id)
-    if change_targ:
-        change_target_form = ChangeTargetForm()
-    else:
-        change_target_form = None
+    change_target_form = ChangeTargetForm() if change_targ else None
+    change_limit_form = ChangeLimitForm() if change_limit else None
     earnings, costs = await user_service.get_sum_of_costs_and_earn(user_id)
     categories = await categ_service.get_user_categories(user_id)
     categories_name = [i.name for i in categories]
     form = FastAddRecordForm(categories=categories_name)
+    try:
+        limit = await limit_service.get_limit(user_id)
+        user_costs = await user_service.get_sum_of_costs_and_earn_in_period(user_id, limit.period)
+        user_data = user.model_dump()
+        translate_limit_period = {"day": "1 день", "month": "1 месяц", "year": "1 год"}
+        user_data["limit"] = {"value": limit.value, "period": translate_limit_period[limit.period]}
+        user_data["costs_in_period"] = user_costs
+    except Exception as err:
+        if str(err) != "У пользователя нет лимита":
+            log.exception("Exception in /templates/ while getting limit")
+            raise
+        user_data = user.model_dump()
+        user_data["limit"] = None
 
     return templates.TemplateResponse(
         request=req,
         name="user_page.html",
         context={
-            "user": user,
+            "user": user_data,
             "records": records,
             "FastAddRecordForm": form,
             "ChangeTargetForm": change_target_form,
             "total_earnings": earnings,
             "total_costs": costs,
             "categories": categories,
+            "ChangeLimitForm": change_limit_form,
         },
     )
 

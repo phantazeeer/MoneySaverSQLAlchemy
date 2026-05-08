@@ -3,6 +3,7 @@ from fastapi import Depends
 from app.db.database import session_factory
 from app.services.category_service import CategoryService
 from app.services.costs_and_earnings_service import CostsAndEarningsService
+from app.services.limits_service import LimitService
 from app.services.user_service import UserService
 from app.utils.uow import UnitOfWork
 
@@ -25,3 +26,7 @@ def get_ce_service(uow=Depends(get_uow)) -> CostsAndEarningsService:
 
 def get_categories_service(uow=Depends(get_uow)) -> CategoryService:
     return CategoryService(uow)
+
+
+def get_limit_service(uow=Depends(get_uow)) -> LimitService:
+    return LimitService(uow)

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 
@@ -38,3 +40,11 @@ class UserRepository(BasicRepository):
             CostsAndEarnings.operation_type == 1,
         )
         return (await self.session.execute(stmt_e)).scalar_one(), (await self.session.execute(stmt_c)).scalar_one()
+
+    async def get_costs_after_timestamp(self, id: int, after: datetime):
+        stmt = select(func.sum(CostsAndEarnings.value)).where(
+            CostsAndEarnings.created_at > after,
+            CostsAndEarnings.user_id == id,
+            CostsAndEarnings.operation_type == 1,
+        )
+        return (await self.session.execute(stmt)).scalar_one()
