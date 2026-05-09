@@ -1,0 +1,32 @@
+loki.write "local" {
+    endpoint {
+        url = "http://loki:3100/loki/api/v1/push"
+    }
+}
+
+discovery.docker "only_server" {
+    host = "unix:///var/run/docker.sock"
+
+    filter {
+        name = "name"
+        values = ["^/MoneySaver$"]
+    }
+}
+
+loki.source.docker "server_logs" {
+    host      = "unix:///var/run/docker.sock"
+    targets   = discovery.docker.only_server.targets
+    forward_to = [loki.process.add_labels.receiver]
+}
+
+loki.process "add_labels" {
+    forward_to = [loki.write.local.receiver]
+
+    stage.static_labels {
+        values = {
+            container_name = "server",
+            job            = "fastapi",
+            source         = "docker",
+        }
+    }
+}

@@ -28,6 +28,46 @@ services:
           condition: service_healthy
     volumes:
       - "./nginx:/etc/nginx"
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: MoneySaverLoki
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki_data:/loki
+    networks:
+      - monitoring
+  alloy:
+    image: grafana/alloy:latest
+    container_name: MoneySaverAlloy
+    privileged: true
+    volumes:
+      - ./monitoring/config/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: [ "run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy" ]
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+  grafana:
+    image: grafana/grafana:latest
+    container_name: MoneySaverGrafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana.ini:/etc/grafana/grafana.ini
+      - ./monitoring/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    networks:
+      - monitoring
+      - default
+    depends_on:
+      - loki
 
 volumes:
   db:
+  loki_data:
+  grafana_data:
+
+networks:
+  monitoring:
