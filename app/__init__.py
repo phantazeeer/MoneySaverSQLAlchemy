@@ -6,8 +6,13 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.api.endpoints import *  # isort: skip
 
+from app.utils.logger import get_logger
+
+log = get_logger(__name__)
+
 
 def create_app() -> FastAPI:
+    log.info("Starting application")
     app = FastAPI()
     app.include_router(user_router)
     app.include_router(costs_and_earnings_router)

@@ -24,7 +24,6 @@ async def get_user_limit(
         if str(err) == "У пользователя нет лимита":
             raise HTTPException(400, "У пользователя нет лимита") from None
         else:
-            log.exception("exception in GET /limits/", exc_info=False)
             raise
 
 
@@ -38,7 +37,6 @@ async def create_user_limit(
         await service.update_limit(user_id, limit.period, limit.value)
         return {"detail": "ok"}
     except Exception:
-        log.exception("exception in PUT /limits/", exc_info=False)
         raise
 
 
@@ -53,5 +51,4 @@ async def delete_user_limit(
         if str(err) == "У пользователя нет лимита":
             raise HTTPException(400, "У пользователя нет лимита") from None
         else:
-            log.exception("exception in DELETE /limits/", exc_info=False)
             raise
