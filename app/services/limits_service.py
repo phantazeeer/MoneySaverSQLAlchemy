@@ -18,7 +18,7 @@ class LimitService:
             if str(err) == "У пользователя нет лимита":
                 raise Exception("У пользователя нет лимита") from None
             else:
-                log.exception("Exception in LimitService.get_limit", exc_info=False)
+                log.exception("Exception in get_limit with user_id=%s", user_id, exc_info=False)
                 raise
 
     async def delete_limit(self, user_id: int):
@@ -29,7 +29,7 @@ class LimitService:
             if str(err) == "У пользователя нет лимита":
                 raise err from None
             else:
-                log.exception("Exception in LimitService.delete_limit", exc_info=False)
+                log.exception("Exception in delete_limit with user_id=%s", user_id, exc_info=False)
                 raise
 
     async def update_limit(self, user_id: int, period: str, value: int):
@@ -41,6 +41,9 @@ class LimitService:
             except Exception as err:
                 if str(err) == "У пользователя нет лимита":
                     await self.uow.limits.add_one(user_id=user_id, period=period, value=value)
+                if isinstance(err, ValueError) and str(err) == "Период должен быть день, неделя или месяц":
+                    raise err
                 else:
-                    log.exception("Exception in LimitService.update_limit", exc_info=False)
+                    log.exception("Exception in update_limit with "
+                                  "user_id=%s, period=%s, value=%s", user_id, period, value, exc_info=False)
                     raise
