@@ -23,14 +23,13 @@ class UserRepository(BasicRepository):
         try:
             return await super().get_one(**kwargs)
         except NoResultFound:
-            params = ", ".join(f"{i}={kwargs[i]}" for i in kwargs.keys())
-            raise Exception("Пользователь с %s не найден", params) from None
+            raise Exception("Пользователь не найден") from None
 
     async def delete_by_user(self, id: int):
         try:
             return await self.delete_by_id(id)
         except Exception:
-            raise Exception("Пользователь с id=%s не найден", id) from None
+            raise Exception("Пользователь не найден") from None
 
     async def update_user(self, id: int, **kwargs):
         elements_to_update = kwargs.keys()
