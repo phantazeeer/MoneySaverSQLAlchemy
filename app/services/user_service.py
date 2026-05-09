@@ -5,7 +5,10 @@ from sqlalchemy.exc import NoResultFound
 
 from app.api.schemas import User
 from app.utils import create_token, get_password_hash, verify_password
+from app.utils.logger import get_logger
 from app.utils.uow import IUnitOfWork
+
+log = get_logger(__name__)
 
 
 class UserService:
@@ -15,10 +18,14 @@ class UserService:
     async def add_user(self, username: str, email: str, password: str) -> None:
         try:
             async with self.uow:
+                log.debug("'add_user' is running")
                 await self.uow.users.add_user(username=username, email=email, password=get_password_hash(password))
+                log.info("user %s successfully added", email)
         except ValueError as err:
             if "Почта неуникальна" in str(err):
+                log.warning("someone tried to register with %s email", email)
                 raise Exception("Эта почта уже занята") from None
+            log.exception("Exception in add_user", exc_info=False)
             raise err
 
     async def get_user_by(self, **kwargs) -> User:
@@ -27,11 +34,25 @@ class UserService:
                 res = await self.uow.users.get_one(**kwargs)
                 return User.model_validate(res)
         except Exception as err:
-            raise err
+            msg = str(err)
+            params = ", ".join(f"{i}={kwargs[i]}" for i in kwargs.keys())
+            if "Пользователь" in msg and "не найден" in msg:
+                log.warning("User with %s not found", params)
+                raise Exception("Пользователь не найден") from None
+            log.exception("Exception in get_user_by, %s", params, exc_info=False)
+            raise
 
     async def delete_user(self, id: int) -> None:
-        async with self.uow:
-            await self.uow.users.delete_by_user(id)
+        try:
+            async with self.uow:
+                await self.uow.users.delete_by_user(id)
+        except Exception as err:
+            msg = str(err)
+            if "Пользователь" in msg and "не найден" in msg:
+                log.warning("User with id=%s not found", id)
+                raise Exception("Пользователь не найден") from None
+            log.exception("Exception in delete_user with id=%s", id, exc_info=False)
+            raise
 
     async def update_user(self, id: int, **kwargs) -> None:
         try:
@@ -40,18 +61,28 @@ class UserService:
         except ValueError as err:
             if str(err) == "email is already used":
                 raise Exception("Введите другую почту") from None
+        except Exception:
+            params = ", ".join(f"{i}={kwargs[i]}" for i in kwargs.keys())
+            log.exception("Exception in update_user with id=%s and %s", id, params, exc_info=False)
+            raise
 
     async def login(self, email: str, password: str) -> str:
-        async with self.uow:
-            try:
+        try:
+            async with self.uow:
                 user = await self.uow.users.get_one(email=email)
-            except NoResultFound:
-                raise Exception("Пользователь не найден") from None
-            if not verify_password(password, user.password):
-                raise Exception("Неправильный пароль") from None
-            else:
-                access_token = create_token(user.id)
-                return access_token
+                if not verify_password(password, user.password):
+                    raise Exception("Неправильный пароль") from None
+                else:
+                    access_token = create_token(user.id)
+                    return access_token
+        except NoResultFound:
+            raise Exception("Пользователь не найден") from None
+        except Exception as err:
+            msg = str(err)
+            if "Неправильный пароль" == msg:
+                raise
+            log.exception("Exception in login with email=%s", email, exc_info=False)
+            raise
 
     async def get_sum_of_costs_and_earn(self, user_id: int):
         async with self.uow:

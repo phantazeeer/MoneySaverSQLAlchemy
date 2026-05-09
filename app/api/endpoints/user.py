@@ -18,8 +18,13 @@ async def me(
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[UserService, Depends(get_service)],
 ) -> User:
-    res = await service.get_user_by(id=user_id)
-    return res
+    try:
+        res = await service.get_user_by(id=user_id)
+        return res
+    except Exception as err:
+        if str(err) == "Пользователь не найден":
+            raise HTTPException(400, "Пользователь не найден") from None
+        raise
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)

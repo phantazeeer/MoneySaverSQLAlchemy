@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import func, select, update
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from app.db.models import CostsAndEarnings, User
 
@@ -19,8 +19,18 @@ class UserRepository(BasicRepository):
                 raise ValueError("Почта неуникальна") from None
             raise err
 
+    async def get_one(self, **kwargs):
+        try:
+            return await super().get_one(**kwargs)
+        except NoResultFound:
+            params = ", ".join(f"{i}={kwargs[i]}" for i in kwargs.keys())
+            raise Exception("Пользователь с %s не найден", params) from None
+
     async def delete_by_user(self, id: int):
-        return await self.delete_by_id(id)
+        try:
+            return await self.delete_by_id(id)
+        except Exception:
+            raise Exception("Пользователь с id=%s не найден", id) from None
 
     async def update_user(self, id: int, **kwargs):
         elements_to_update = kwargs.keys()

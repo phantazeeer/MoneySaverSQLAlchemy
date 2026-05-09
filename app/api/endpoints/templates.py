@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from types import NoneType
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
@@ -40,7 +40,11 @@ async def main(
     change_targ: Annotated[Literal["1"], Query()] | None = None,
     change_limit: Annotated[Literal["1"], Query()] | None = None,
 ):
-    user = User.model_validate(await user_service.get_user_by(id=user_id))
+    try:
+        user = User.model_validate(await user_service.get_user_by(id=user_id))
+    except Exception as err:
+        if str(err) == "Пользователь не найден":
+            raise HTTPException(400, "Пользователь не найден") from None
     if filter_by:
         records = await ce_service.user_costs_or_earnings(user_id=user_id, filter=filter_by)
     else:
@@ -117,26 +121,44 @@ async def change_record(
 ):
     if isinstance(id, NoneType):
         records = await ce_service.get_records_by(user_id=user_id)
-        user = await user_service.get_user_by(id=user_id)
-        return templates.TemplateResponse(
-            request=req,
-            name="change_record.html",
-            context={"record": None, "user": user, "records": records, "form": None},
-        )
+        try:
+            user = await user_service.get_user_by(id=user_id)
+            return templates.TemplateResponse(
+                request=req,
+                name="change_record.html",
+                context={
+                    "record": None,
+                    "user": user,
+                    "records": records,
+                    "form": None,
+                },
+            )
+        except Exception as err:
+            if str(err) == "Пользователь не найден":
+                raise HTTPException(400, "Пользователь не найден") from None
     else:
         records = await ce_service.get_records_by(user_id=user_id)
         record = await ce_service.get_records_by(id=id, user_id=user_id)
-        user = await user_service.get_user_by(id=user_id)
-        categories = [i.name for i in await categ_service.get_user_categories(user_id)]
-        form = ChangeRecordForm(categories=categories)
-        form.value.data = record.value
-        form.operation_type.data = record.operation_type
-        form.comment.data = record.comment
-        return templates.TemplateResponse(
-            request=req,
-            name="change_record.html",
-            context={"record": record, "user": user, "records": records, "form": form},
-        )
+        try:
+            user = await user_service.get_user_by(id=user_id)
+            categories = [i.name for i in await categ_service.get_user_categories(user_id)]
+            form = ChangeRecordForm(categories=categories)
+            form.value.data = record.value
+            form.operation_type.data = record.operation_type
+            form.comment.data = record.comment
+            return templates.TemplateResponse(
+                request=req,
+                name="change_record.html",
+                context={
+                    "record": record,
+                    "user": user,
+                    "records": records,
+                    "form": form,
+                },
+            )
+        except Exception as err:
+            if str(err) == "Пользователь не найден":
+                raise HTTPException(400, "Пользователь не найден") from None
 
 
 @router.get("/statistics", name="statistics_page")
@@ -151,12 +173,16 @@ async def statistics(
             f"/statistics/choose_date?start={(datetime.now(timezone.utc) - timedelta(days=int(delta) * 30)).date()}"
             f"&end={(datetime.now(timezone.utc)).date()}",
         )
-    user = await user_service.get_user_by(id=user_id)
-    return templates.TemplateResponse(
-        request=req,
-        name="statistics.html",
-        context={"user": user, "form": None},
-    )
+    try:
+        user = await user_service.get_user_by(id=user_id)
+        return templates.TemplateResponse(
+            request=req,
+            name="statistics.html",
+            context={"user": user, "form": None},
+        )
+    except Exception as err:
+        if str(err) == "Пользователь не найден":
+            raise HTTPException(400, "Пользователь не найден") from None
 
 
 @router.get("/statistics/choose_date", name="statistics_page")
@@ -168,29 +194,48 @@ async def statistics_with_delta(
     start: Annotated[str, Query()] | None = None,
     end: Annotated[str, Query()] | None = None,
 ):
-    user = await user_service.get_user_by(id=user_id)
-    if not (isinstance(end, NoneType) or isinstance(start, NoneType)):
-        try:
-            start = datetime.strptime(start, "%Y-%m-%d")
-            end = datetime.strptime(end, "%Y-%m-%d")
-            if start >= end and datetime.now() < start:
-                raise ValueError
-            image = await ce_service.create_graphics(period=(start, end), user_id=user_id)
-            log.debug(image)
-            return templates.TemplateResponse(
-                request=req,
-                name="statistics.html",
-                context={"user": user, "form": ChooseDateForm(), "error": None, "image": image},
-            )
-        except ValueError as e:
-            print(str(e))
-            return templates.TemplateResponse(
-                request=req,
-                name="statistics.html",
-                context={"user": user, "form": ChooseDateForm(), "error": "Введите корректные данные", "image": None},
-            )
-    return templates.TemplateResponse(
-        request=req,
-        name="statistics.html",
-        context={"user": user, "form": ChooseDateForm(), "error": None, "image": None},
-    )
+    try:
+        user = await user_service.get_user_by(id=user_id)
+        if not (isinstance(end, NoneType) or isinstance(start, NoneType)):
+            try:
+                start = datetime.strptime(start, "%Y-%m-%d")
+                end = datetime.strptime(end, "%Y-%m-%d")
+                if start >= end and datetime.now() < start:
+                    raise ValueError
+                image = await ce_service.create_graphics(period=(start, end), user_id=user_id)
+                log.debug(image)
+                return templates.TemplateResponse(
+                    request=req,
+                    name="statistics.html",
+                    context={
+                        "user": user,
+                        "form": ChooseDateForm(),
+                        "error": None,
+                        "image": image,
+                    },
+                )
+            except ValueError as e:
+                print(str(e))
+                return templates.TemplateResponse(
+                    request=req,
+                    name="statistics.html",
+                    context={
+                        "user": user,
+                        "form": ChooseDateForm(),
+                        "error": "Введите корректные данные",
+                        "image": None,
+                    },
+                )
+        return templates.TemplateResponse(
+            request=req,
+            name="statistics.html",
+            context={
+                "user": user,
+                "form": ChooseDateForm(),
+                "error": None,
+                "image": None,
+            },
+        )
+    except Exception as err:
+        if str(err) == "Пользователь не найден":
+            raise HTTPException(400, "Пользователь не найден") from None
