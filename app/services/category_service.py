@@ -21,20 +21,30 @@ class CategoryService:
             if "Категория с таким именем уже существует" in str(err):
                 raise ValueError("Категория с таким именем уже существует") from None
             else:
-                log.error("Error caused in add_category", exc_info=False)
+                log.exception("Error caused in add_category with name=%s, user_id=%s", name,
+                              user_id, exc_info=False)
                 raise err
 
     async def get_user_categories(self, user_id: int):
-        async with self.uow:
-            categories = (await self.uow.categories.get_list_by(user_id=user_id)).all()
-            return [Category.model_validate(categ) for categ in categories]
+        try:
+            async with self.uow:
+                categories = (await self.uow.categories.get_list_by(user_id=user_id)).all()
+                return [Category.model_validate(categ) for categ in categories]
+        except Exception:
+            log.exception("Error caused in get_user_categories with user_id=%s", user_id, exc_info=False)
+            raise
 
     async def get_categories_by(self, category: int | str, user_id: int):
-        async with self.uow:
-            if isinstance(category, int):
-                return Category.model_validate(await self.uow.categories.get_one(id=category, user_id=user_id))
-            elif isinstance(category, str):
-                return Category.model_validate(await self.uow.categories.get_one(name=category, user_id=user_id))
+        try:
+            async with self.uow:
+                if isinstance(category, int):
+                    return Category.model_validate(await self.uow.categories.get_one(id=category, user_id=user_id))
+                elif isinstance(category, str):
+                    return Category.model_validate(await self.uow.categories.get_one(name=category, user_id=user_id))
+        except Exception:
+            log.exception("Error caused in get_categories_by with user_id=%s, category=%s",
+                          user_id, category, exc_info=False)
+            raise
 
     async def delete_category(self, user_id: int, category_id: int | str):
         try:
@@ -47,3 +57,7 @@ class CategoryService:
                     await self.uow.session.delete(category)
         except NoResultFound:
             raise ValueError("Запись не найдена") from None
+        except Exception:
+            log.exception("Error caused in delete_category with user_id=%s, category=%s",
+                          user_id, category, exc_info=False)
+            raise
