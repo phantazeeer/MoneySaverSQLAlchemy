@@ -1,4 +1,4 @@
-name: CI worker
+name: Continuous Integration
 
 on:
   push:
