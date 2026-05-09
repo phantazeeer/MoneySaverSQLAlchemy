@@ -20,7 +20,7 @@ class UserService:
             async with self.uow:
                 log.debug("'add_user' is running")
                 await self.uow.users.add_user(username=username, email=email, password=get_password_hash(password))
-                log.info("user %s successfully added", email)
+                log.debug("user %s successfully added", email)
         except ValueError as err:
             if "Почта неуникальна" in str(err):
                 log.warning("someone tried to register with %s email", email)
