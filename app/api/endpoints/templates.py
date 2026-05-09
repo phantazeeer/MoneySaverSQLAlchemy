@@ -57,7 +57,7 @@ async def main(
         user_data = user.model_dump()
         translate_limit_period = {"day": "1 день", "month": "1 месяц", "year": "1 год"}
         user_data["limit"] = {"value": limit.value, "period": translate_limit_period[limit.period]}
-        user_data["costs_in_period"] = user_costs
+        user_data["costs_in_period"] = user_costs if user_costs else 0
     except Exception as err:
         if str(err) != "У пользователя нет лимита":
             log.exception("Exception in /templates/ while getting limit")
