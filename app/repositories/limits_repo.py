@@ -1,4 +1,4 @@
-from sqlalchemy import delete, update
+from sqlalchemy import delete, select
 from sqlalchemy.exc import NoResultFound
 
 from app.db.models import UserLimits
@@ -12,27 +12,30 @@ log = get_logger(__name__)
 class LimitsRepository(BasicRepository):
     model = UserLimits
 
-    async def get_one(self, **kwargs):
+    async def get_one(self, user_id: int, **kwargs):
         try:
-            return await super().get_one(**kwargs)
+            stmt = select(UserLimits).where(UserLimits.user_id == user_id).filter_by(**kwargs)
+            return (await self.session.execute(stmt)).scalar_one()
         except NoResultFound:
-            raise Exception("У пользователя нет лимита") from None
+            raise Exception("У пользователя нет этого лимита") from None
+
+    async def get_list_by(self, user_id: int, **kwargs):
+        try:
+            stmt = select(UserLimits).where(UserLimits.user_id == user_id).filter_by(**kwargs)
+            return (await self.session.execute(stmt)).scalars().all()
+        except NoResultFound:
+            raise Exception("У пользователя нет лимитов") from None
 
     async def delete_by_user(self, user_id: int):
         try:
             stmt = delete(self.model).where(self.model.user_id == user_id).returning(self.model.id)
-            return (await self.session.execute(stmt)).scalar_one()
+            return (await self.session.execute(stmt)).scalars().all()
         except NoResultFound:
-            raise Exception("У пользователя нет лимита") from None
+            raise Exception("У пользователя нет лимитов") from None
 
-    async def update_limit(self, user_id: int, period: str, value: int):
+    async def delete_by_id(self, id: int):
         try:
-            stmt = (
-                update(self.model)
-                .values(period=period, value=value)
-                .where(self.model.user_id == user_id)
-                .returning(self.model)
-            )
-            return (await self.session.execute(stmt)).scalar_one()
+            stmt = delete(self.model).where(self.model.id == id).returning(self.model.id)
+            return (await self.session.execute(stmt)).scalars().all()
         except NoResultFound:
-            raise Exception("У пользователя нет лимита") from None
+            raise Exception("Такого лимита не существует") from None

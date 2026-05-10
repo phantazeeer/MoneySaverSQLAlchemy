@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, HTTPException
 
-from app.api.schemas import ChangeLimit, Limit
+from app.api.schemas import CreateLimit, Limit
 from app.services.limits_service import LimitService
 from app.utils import get_jwt_payload
 from app.utils.dependencies import get_limit_service as get_service
@@ -27,14 +27,14 @@ async def get_user_limit(
             raise
 
 
-@router.put("/")
+@router.post("/", status_code=201)
 async def create_user_limit(
-    limit: Annotated[ChangeLimit, Form()],
+    limit: Annotated[CreateLimit, Form()],
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[LimitService, Depends(get_service)],
 ):
     try:
-        await service.update_limit(user_id, limit.period, limit.value)
+        await service.create_limit(user_id, limit.period, limit.value)
         return {"detail": "ok"}
     except Exception:
         raise
