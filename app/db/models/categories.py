@@ -13,3 +13,8 @@ class Category(Base):
     __table_args__ = (UniqueConstraint("user_id", "name", name="ix_category_user_name"),)
 
     costs_and_earnings: Mapped["CostsAndEarnings"] = relationship(back_populates="category")
+    categlimits: Mapped[list["CategoriesLimits"]] = relationship(
+        back_populates="category",
+        lazy="selectin",
+        uselist=True,
+    )
