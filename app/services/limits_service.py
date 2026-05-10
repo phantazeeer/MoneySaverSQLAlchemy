@@ -59,7 +59,7 @@ class LimitService:
                 deleted = await self.uow.limits.delete_by_user(user_id)
                 log.debug("Deleted limits with id: %s", "; ".join(deleted))
         except Exception as err:
-            if str(err) == "У пользователя нет лимитов":  # TODO: переписать ошибку в usages
+            if str(err) == "У пользователя нет лимитов":
                 raise err from None
             else:
                 log.exception("Exception in delete_all_user_limits with user_id=%s", user_id, exc_info=False)
