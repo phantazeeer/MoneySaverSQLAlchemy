@@ -5,10 +5,11 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Response, status
 from app.api.endpoints.costs_and_earnings import CEService, Record
 from app.api.endpoints.costs_and_earnings import get_service as get_ce_service
 from app.api.schemas import User, UserChange, UserLogin, UserRegister
-from app.services import CategoryService, UserService
+from app.services import CategoryService, UserService, LimitService
 from app.utils import get_jwt_payload
 from app.utils.dependencies import get_categories_service
 from app.utils.dependencies import get_user_service as get_service
+from app.utils.dependencies import get_limit_service
 
 router = APIRouter(prefix="/user", tags=["Working with user"])
 
@@ -100,4 +101,31 @@ async def get_categories(
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[CategoryService, Depends(get_categories_service)],
 ):
-    return await service.get_user_categories(user_id)
+    try:
+        return await service.get_user_categories(user_id)
+    except Exception:
+        raise
+
+@router.get("/me/limits")
+async def get_limits(
+        user_id: Annotated[int, Depends(get_jwt_payload)],
+        service: Annotated[LimitService, Depends(get_limit_service)],
+):
+    try:
+        return await service.get_list_of_limits(user_id)
+    except Exception as err:
+        if str(err) == "У пользователя нет лимитов":
+            raise HTTPException(404, "У пользователя не найдены лимиты") from None
+        raise
+
+@router.delete("/me/limits")
+async def get_limits(
+        user_id: Annotated[int, Depends(get_jwt_payload)],
+        service: Annotated[LimitService, Depends(get_limit_service)],
+):
+    try:
+        await service.delete_all_user_limits(user_id)
+    except Exception as err:
+        if str(err) == "У пользователя нет лимитов":
+            raise HTTPException(404, "У пользователя не найдены лимиты") from None
+        raise
