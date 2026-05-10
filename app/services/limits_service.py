@@ -7,9 +7,6 @@ from app.utils.uow import IUnitOfWork
 log = get_logger(__name__)
 
 
-# TODO: Дописать в except блоках логирование
-
-
 class LimitService:
     def __init__(self, uow: IUnitOfWork):
         self.uow = uow
@@ -34,7 +31,8 @@ class LimitService:
             if str(err) == "У пользователя нет лимита":
                 raise Exception("У пользователя нет лимита") from None
             else:
-                log.exception("Exception in get_limit with user_id=%s", user_id, exc_info=False)
+                params = ", ".join(f"{i}={kwargs[i]}" for i in kwargs.keys())
+                log.exception("Exception in get_limit with user_id=%s, %s", user_id, params, exc_info=False)
                 raise
 
     async def get_list_of_limits(self, user_id: int, **kwargs) -> list[Limit]:
@@ -50,7 +48,8 @@ class LimitService:
             if str(err) == "У пользователя нет лимитов":
                 raise Exception("У пользователя нет лимитов") from None
             else:
-                log.exception("Exception in get_list_of_limits with user_id=%s", user_id, exc_info=False)
+                params = ", ".join(f"{i}={kwargs[i]}" for i in kwargs.keys())
+                log.exception("Exception in get_list_of_limits with user_id=%s, %s", user_id, params, exc_info=False)
                 raise
 
     async def delete_all_user_limits(self, user_id: int):
@@ -75,16 +74,18 @@ class LimitService:
         except Exception as err:
             if str(err) == "Такого лимита не существует":
                 raise
-            raise  # TODO: дописать лог
+            log.exception("Exception in delete_limit_by_id with user_id=%s, limit_id=%s",
+                          user_id, limit_id, exc_info=False)
+            raise
 
-    async def create_limit(self, limit: CreateLimit):
+    async def create_limit(self, user_id: int, limit: CreateLimit):
         async with self.uow:
             try:
                 if limit.period not in ("day", "week", "month", None):
                     raise ValueError("Период должен быть день, неделя или месяц")
                 await self.uow.limits.add_one(
                     name=limit.name,
-                    user_id=limit.user_id,
+                    user_id=user_id,
                     period=limit.period,
                     value=limit.value,
                     start=limit.start,
