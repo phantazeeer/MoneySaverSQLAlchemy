@@ -21,8 +21,7 @@ class CategoryService:
             if "Категория с таким именем уже существует" in str(err):
                 raise ValueError("Категория с таким именем уже существует") from None
             else:
-                log.exception("Error caused in add_category with name=%s, user_id=%s", name,
-                              user_id, exc_info=False)
+                log.exception("Error caused in add_category with name=%s, user_id=%s", name, user_id, exc_info=False)
                 raise err
 
     async def get_user_categories(self, user_id: int):
@@ -42,8 +41,12 @@ class CategoryService:
                 elif isinstance(category, str):
                     return Category.model_validate(await self.uow.categories.get_one(name=category, user_id=user_id))
         except Exception:
-            log.exception("Error caused in get_categories_by with user_id=%s, category=%s",
-                          user_id, category, exc_info=False)
+            log.exception(
+                "Error caused in get_categories_by with user_id=%s, category=%s",
+                user_id,
+                category,
+                exc_info=False,
+            )
             raise
 
     async def delete_category(self, user_id: int, category_id: int | str):
@@ -58,6 +61,10 @@ class CategoryService:
         except NoResultFound:
             raise ValueError("Запись не найдена") from None
         except Exception:
-            log.exception("Error caused in delete_category with user_id=%s, category=%s",
-                          user_id, category, exc_info=False)
+            log.exception(
+                "Error caused in delete_category with user_id=%s, category=%s",
+                user_id,
+                category,
+                exc_info=False,
+            )
             raise

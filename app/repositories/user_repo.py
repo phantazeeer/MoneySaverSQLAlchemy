@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 
 from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
@@ -50,10 +50,16 @@ class UserRepository(BasicRepository):
         )
         return (await self.session.execute(stmt_e)).scalar_one(), (await self.session.execute(stmt_c)).scalar_one()
 
-    async def get_costs_after_timestamp(self, id: int, after: datetime):
-        stmt = select(func.sum(CostsAndEarnings.value)).where(
-            CostsAndEarnings.created_at > after,
-            CostsAndEarnings.user_id == id,
-            CostsAndEarnings.operation_type == 1,
-        )
-        return (await self.session.execute(stmt)).scalar_one()
+    async def get_costs_in_limit(self, id: int, dates: tuple[date, date], categ_id: int):
+        try:
+            stmt = select(func.sum(CostsAndEarnings.value)).where(
+                CostsAndEarnings.created_at >= dates[0],
+                CostsAndEarnings.created_at < dates[1],
+                CostsAndEarnings.user_id == id,
+                CostsAndEarnings.operation_type == 1,
+                CostsAndEarnings.category_id == categ_id,
+            )
+            print(dates[0], dates[1])
+            return (await self.session.execute(stmt)).scalar_one()
+        except NoResultFound:
+            raise Exception("У пользователя нет трат за этот период") from None

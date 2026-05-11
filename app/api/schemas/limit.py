@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import date, datetime
+from enum import Enum
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -31,10 +32,17 @@ class Limit(BaseModel):
         )
 
 
+class AvailablePeriods(str, Enum):
+    day = "day"
+    week = "week"
+    month = "month"
+    once = "once"
+
+
 class CreateLimit(BaseModel):
     name: str
     value: Annotated[int, Field(gt=0)]
-    period: Literal["day", "week", "month"] | None = None
-    start: datetime
-    end: datetime
-    categories: list[Category]
+    period: AvailablePeriods
+    start: date
+    end: date
+    categories: list[str]

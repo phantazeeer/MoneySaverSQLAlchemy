@@ -19,12 +19,12 @@ class CostsAndEarningsService:
         self.uow = uow
 
     async def add_record(
-            self,
-            user_id: int,
-            operation_type: str,
-            value: int,
-            comment: str | None = None,
-            category: str | None = None,
+        self,
+        user_id: int,
+        operation_type: str,
+        value: int,
+        comment: str | None = None,
+        category: str | None = None,
     ) -> None:
         try:
             async with self.uow:
@@ -44,9 +44,15 @@ class CostsAndEarningsService:
             if category:
                 await self.update_record(id=record_id, user_id=user_id, category=db_category)
         except Exception:
-            log.exception("Exception in add_record with user_id=%s, "
-                          "operation_type=%s, value=%s, comment=%s, category=%s", user_id,
-                          operation_type, value, comment, category, exc_info=False)
+            log.exception(
+                "Exception in add_record with user_id=%s, operation_type=%s, value=%s, comment=%s, category=%s",
+                user_id,
+                operation_type,
+                value,
+                comment,
+                category,
+                exc_info=False,
+            )
             raise
 
     async def delete_record(self, id: int, user_id: int) -> None:
@@ -92,8 +98,7 @@ class CostsAndEarningsService:
                     if str(err) == "Пользователь не является владельцем записи":
                         raise
                     else:
-                        log.exception("Exception in get_records_by with id=%s, user_id=%s",
-                                      id, user_id, exc_info=False)
+                        log.exception("Exception in get_records_by with id=%s, user_id=%s", id, user_id, exc_info=False)
                         raise
         elif not isinstance(user_id, NoneType):
             async with self.uow:
@@ -127,13 +132,13 @@ class CostsAndEarningsService:
         return res
 
     async def update_record(
-            self,
-            id: int,
-            user_id: int,
-            operation_type=None,
-            value: int | None = None,
-            comment: str | None = None,
-            category: str | None = None,
+        self,
+        id: int,
+        user_id: int,
+        operation_type=None,
+        value: int | None = None,
+        comment: str | None = None,
+        category: str | None = None,
     ) -> None:
         async with self.uow:
             try:
@@ -166,9 +171,17 @@ class CostsAndEarningsService:
             except Exception as err:
                 if str(err) == "Пользователь не является владельцем записи":
                     raise
-                log.exception("Exception in get_records_by with "
-                              "id=%s, user_id=%s, operation_type=%s, value=%s, comment=%s, category=%s",
-                              id, user_id, operation_type, value, comment, category, exc_info=False)
+                log.exception(
+                    "Exception in get_records_by with "
+                    "id=%s, user_id=%s, operation_type=%s, value=%s, comment=%s, category=%s",
+                    id,
+                    user_id,
+                    operation_type,
+                    value,
+                    comment,
+                    category,
+                    exc_info=False,
+                )
                 raise
 
     async def user_costs_or_earnings(self, user_id: int, filter: Literal["costs", "earnings"]) -> list[Record]:
@@ -196,8 +209,12 @@ class CostsAndEarningsService:
                 res = [Record.model_validate(i) for i in res]
                 return res
         except Exception:
-            log.exception("Exception in user_costs_or_earnings with user_id=%s, filter=%s", user_id, filter,
-                          exc_info=False)
+            log.exception(
+                "Exception in user_costs_or_earnings with user_id=%s, filter=%s",
+                user_id,
+                filter,
+                exc_info=False,
+            )
             raise
 
     async def create_graphics(self, period: tuple[datetime, datetime], user_id: int):
@@ -239,6 +256,5 @@ class CostsAndEarningsService:
             img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
             return img_base64
         except Exception:
-            log.exception("Exception in create_graphics with user_id=%s, period=%s", user_id, period,
-                          exc_info=False)
+            log.exception("Exception in create_graphics with user_id=%s, period=%s", user_id, period, exc_info=False)
             raise

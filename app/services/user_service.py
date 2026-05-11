@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta, timezone
-from typing import Literal
+from datetime import date
 
 from sqlalchemy.exc import NoResultFound
 
-from app.api.schemas import User
+from app.api.schemas import Category, User
 from app.utils import create_token, get_password_hash, verify_password
 from app.utils.logger import get_logger
 from app.utils.uow import IUnitOfWork
@@ -89,12 +88,26 @@ class UserService:
             earnings, costs = await self.uow.users.get_user_costs_and_earnings(user_id)
             return earnings, costs
 
-    async def get_sum_of_costs_and_earn_in_period(self, user_id: int, period: Literal["day", "week", "month"]):
-        periods_to_datetime = {
-            "day": datetime.now(timezone.utc) - timedelta(days=1),
-            "month": datetime.now(timezone.utc) - timedelta(days=30),
-            "year": datetime.now(timezone.utc) - timedelta(days=365),
-        }
-        async with self.uow:
-            get_costs_in_period = await self.uow.users.get_costs_after_timestamp(user_id, periods_to_datetime[period])
-            return get_costs_in_period
+    async def get_sum_of_costs_and_earn_in_limit(
+        self,
+        user_id: int,
+        period: tuple[date, date],
+        categories: list[Category],
+    ):
+        try:
+            async with self.uow:
+                sum_costs = 0
+                for i in categories:
+                    costs = await self.uow.users.get_costs_in_limit(user_id, period, i.id)
+                    sum_costs += costs if costs else 0
+                return sum_costs
+        except Exception as err:
+            if str(err) == "У пользователя нет трат за этот период":
+                raise
+            log.exception(
+                "Exception in get_sum_of_costs_and_earn_in_limit user_id=%s, period=%s",
+                user_id,
+                period,
+                exc_info=False,
+            )
+            raise

@@ -8,10 +8,10 @@ from fastapi.templating import Jinja2Templates
 
 from app.api.schemas import User
 from app.forms import (
-    ChangeLimitForm,
     ChangeRecordForm,
     ChangeTargetForm,
     ChooseDateForm,
+    CreateLimitForm,
     FastAddRecordForm,
     LoginForm,
     RegisterForm,
@@ -50,25 +50,43 @@ async def main(
     else:
         records = await ce_service.get_records_by(user_id=user_id)
     change_target_form = ChangeTargetForm() if change_targ else None
-    change_limit_form = ChangeLimitForm() if change_limit else None
+    change_limit_form = CreateLimitForm() if change_limit else None
     earnings, costs = await user_service.get_sum_of_costs_and_earn(user_id)
     categories = await categ_service.get_user_categories(user_id)
     categories_name = [i.name for i in categories]
     form = FastAddRecordForm(categories=categories_name)
     try:
-        limit = await limit_service.get_limit(user_id)
-        user_costs = await user_service.get_sum_of_costs_and_earn_in_period(user_id, limit.period)
+        user_limits = await limit_service.get_list_of_limits(user_id)
+        limits = []
+        for limit in user_limits:
+            data_to_render = {}
+            data_to_render["id"] = limit.id
+            data_to_render["value"] = limit.value
+            data_to_render["name"] = limit.name
+            data_to_render["period"] = True if limit.period else False
+            try:
+                log.debug(limit.categories)
+                data_to_render["spent"] = await user_service.get_sum_of_costs_and_earn_in_limit(
+                    user_id,
+                    (limit.start, limit.end),
+                    limit.categories,
+                )
+            except Exception as err:
+                if str(err) == "У пользователя нет трат за этот период":
+                    data_to_render["spent"] = 0
+                else:
+                    raise
+            limits.append(data_to_render)
         user_data = user.model_dump()
-        translate_limit_period = {"day": "1 день", "month": "1 месяц", "year": "1 год"}
-        user_data["limit"] = {"value": limit.value, "period": translate_limit_period[limit.period]}
-        user_data["costs_in_period"] = user_costs if user_costs else 0
+        user_data["limit"] = limits
     except Exception as err:
         if str(err) != "У пользователя нет лимита":
-            log.exception("Exception in /templates/ while getting limit")
-            raise
-        user_data = user.model_dump()
-        user_data["limit"] = None
+            user_data = user.model_dump()
+            user_data["limit"] = None
+        log.exception("Exception in /templates/ while getting limit")
+        raise
 
+    log.debug(user_data["limit"])
     return templates.TemplateResponse(
         request=req,
         name="user_page.html",
@@ -239,3 +257,48 @@ async def statistics_with_delta(
     except Exception as err:
         if str(err) == "Пользователь не найден":
             raise HTTPException(400, "Пользователь не найден") from None
+
+
+@router.get("/control_limits")
+async def control_limits(
+    req: Request,
+    user_service: Annotated[UserService, Depends(get_user_service)],
+    limit_service: Annotated[LimitService, Depends(get_limit_service)],
+    user_id: Annotated[int, Depends(get_jwt_payload)],
+    categ_service: Annotated[CategoryService, Depends(get_categories_service)],
+):
+    try:
+        user = await user_service.get_user_by(id=user_id)
+        user_limits = await limit_service.get_list_of_limits(user_id)
+        limits = []
+        for limit in user_limits:
+            data_to_render = {}
+            data_to_render["id"] = limit.id
+            data_to_render["value"] = limit.value
+            data_to_render["name"] = limit.name
+            data_to_render["period"] = True if limit.period else False
+            try:
+                log.debug(limit.categories)
+                data_to_render["spent"] = await user_service.get_sum_of_costs_and_earn_in_limit(
+                    user_id,
+                    (limit.start, limit.end),
+                    limit.categories,
+                )
+            except Exception as err:
+                if str(err) == "У пользователя нет трат за этот период":
+                    data_to_render["spent"] = 0
+                else:
+                    raise
+            limits.append(data_to_render)
+    except Exception as err:
+        if str(err) != "У пользователя нет лимита":
+            limits = None
+        log.exception("Exception in /templates/ while getting limit")
+        raise
+    categories = [i.name for i in await categ_service.get_user_categories(user_id)]
+    log.debug(limits)
+    return templates.TemplateResponse(
+        request=req,
+        name="control_limits.html",
+        context={"user": user, "limits": limits, "form": CreateLimitForm(), "categories": categories},
+    )

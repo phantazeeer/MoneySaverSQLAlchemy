@@ -18,7 +18,10 @@ class UserLimits(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
 
     categlimits: Mapped[list["CategoriesLimits"]] = relationship(
-        back_populates="limit", lazy="selectin", uselist=True, passive_deletes=True
+        back_populates="limit",
+        lazy="selectin",
+        uselist=True,
+        passive_deletes=True,
     )
 
 

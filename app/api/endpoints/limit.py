@@ -12,14 +12,19 @@ router = APIRouter(prefix="/limits", tags=["Working with limits"])
 log = get_logger(__name__)
 
 
-@router.get("/{id}")
+@router.get("/{limit}")
 async def get_user_limit(
-    limit_id: Annotated[int, Path()],
+    limit: Annotated[int | str, Path()],
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[LimitService, Depends(get_service)],
 ) -> Limit | None:
     try:
-        res = await service.get_limit(user_id, id=limit_id)
+        if isinstance(limit, int):
+            res = await service.get_limit(user_id, id=limit)
+        elif isinstance(limit, str):
+            res = await service.get_limit(user_id, name=limit)
+        else:
+            raise HTTPException(400, "Limit should be str or int") from None
         return res
     except Exception as err:
         if str(err) == "У пользователя нет лимита":
@@ -37,18 +42,20 @@ async def create_user_limit(
     try:
         await service.create_limit(user_id, limit)
         return {"detail": "ok"}
-    except Exception:
+    except Exception as err:
+        if str(err) == "У пользователя нет этой категории":
+            raise HTTPException(400, "У вас нет этой категории") from None
         raise
 
 
-@router.delete("/{id}")
+@router.delete("/{limit}")
 async def delete_user_limit(
-    limit_id: Annotated[int, Path()],
+    limit: Annotated[int | str, Path()],
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[LimitService, Depends(get_service)],
 ):
     try:
-        await service.delete_limit_by_id(user_id, limit_id)
+        await service.delete_limit_by_id(user_id, limit)
     except Exception as err:
         if str(err) == "Такого лимита не существует":
             raise HTTPException(400, "Такого лимита не существует") from None

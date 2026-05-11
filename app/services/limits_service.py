@@ -1,4 +1,6 @@
-from datetime import datetime, time, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+
+from sqlalchemy.exc import NoResultFound
 
 from app.api.schemas import CreateLimit, Limit
 from app.utils.logger import get_logger
@@ -12,11 +14,11 @@ class LimitService:
         self.uow = uow
 
     @staticmethod
-    def update_start_end_limit(limit, now: datetime):
+    def update_start_end_limit(limit, now: date):
         if limit.period is not None:
             if limit.end < now:
-                start = datetime.combine(now - timedelta(days=now.weekday()), time(second=0))
-                limit.end = datetime.combine(start + timedelta(days=6), time(hour=23, minute=59, second=59))
+                start = now - timedelta(days=now.weekday())
+                limit.end = start + timedelta(days=6)
                 limit.start = start
 
     async def get_limit(self, user_id: int, **kwargs) -> Limit:
@@ -25,7 +27,6 @@ class LimitService:
                 now = datetime.now(timezone.utc)
                 limit = await self.uow.limits.get_one(user_id, **kwargs)
                 self.update_start_end_limit(limit, now)
-                await self.uow.session.commit()
                 return Limit.get_from_orm(limit)
         except Exception as err:
             if str(err) == "У пользователя нет лимита":
@@ -38,11 +39,10 @@ class LimitService:
     async def get_list_of_limits(self, user_id: int, **kwargs) -> list[Limit]:
         try:
             async with self.uow:
-                now = datetime.now(timezone.utc)
+                now = datetime.now(timezone.utc).date()
                 limits = await self.uow.limits.get_list_by(user_id, **kwargs)
                 for limit in limits:
                     self.update_start_end_limit(limit, now)
-                await self.uow.session.commit()
                 return [Limit.get_from_orm(limit) for limit in limits]
         except Exception as err:
             if str(err) == "У пользователя нет лимитов":
@@ -57,7 +57,7 @@ class LimitService:
             async with self.uow:
                 log.debug("Deleting user_id's=%s limits", user_id)
                 deleted = await self.uow.limits.delete_by_user(user_id)
-                log.debug("Deleted limits with id: %s", "; ".join(deleted))
+                log.debug("Deleted limits with id: %s", "; ".join([str(i) for i in deleted]))
         except Exception as err:
             if str(err) == "У пользователя нет лимитов":
                 raise err from None
@@ -65,32 +65,50 @@ class LimitService:
                 log.exception("Exception in delete_all_user_limits with user_id=%s", user_id, exc_info=False)
                 raise
 
-    async def delete_limit_by_id(self, user_id: int, limit_id: int):
+    async def delete_limit_by_id(self, user_id: int, limit: int | str):
         try:
             async with self.uow:
-                log.debug("Deleting user_id's=%s limit with id=%s", user_id, limit_id)
-                limit = await self.uow.limits.get_one(user_id, id=limit_id)
-                await self.uow.session.delete(limit)
+                log.debug("Deleting user_id's=%s limit with id=%s", user_id, limit)
+                if isinstance(limit, int) or limit.isnumeric():
+                    try:
+                        limit = await self.uow.limits.delete_by_id(int(limit))
+                    except Exception as err:
+                        if str(err) == "Такого лимита не существует":
+                            limit = await self.uow.limits.delete_by_name_and_user(user_id, name=limit)
+                        raise
+                elif isinstance(limit, str):
+                    limit = await self.uow.limits.delete_by_name_and_user(user_id, name=limit)
+                else:
+                    raise ValueError("Limit should be int or str")
         except Exception as err:
             if str(err) == "Такого лимита не существует":
                 raise
-            log.exception("Exception in delete_limit_by_id with user_id=%s, limit_id=%s",
-                          user_id, limit_id, exc_info=False)
+            log.exception("Exception in delete_limit_by_id with user_id=%s, limit=%s", user_id, limit, exc_info=False)
             raise
 
     async def create_limit(self, user_id: int, limit: CreateLimit):
         async with self.uow:
             try:
-                if limit.period not in ("day", "week", "month", None):
+                if limit.period not in ("day", "week", "month", "once", None):
                     raise ValueError("Период должен быть день, неделя или месяц")
+                period = limit.period if limit.period in ("day", "week", "month") else None
+                categories = []
+                for name in limit.categories:
+                    try:
+                        category = await self.uow.categories.get_one(user_id=user_id, name=name)
+                        categories.append(category.id)
+                    except NoResultFound:
+                        raise Exception("У пользователя нет этой категории") from None
                 await self.uow.limits.add_one(
                     name=limit.name,
                     user_id=user_id,
-                    period=limit.period,
+                    period=period,
                     value=limit.value,
                     start=limit.start,
                     end=limit.end,
+                    categories=categories,
                 )
+
             except Exception as err:
                 if isinstance(err, ValueError) and str(err) == "Период должен быть день, неделя или месяц":
                     raise err
