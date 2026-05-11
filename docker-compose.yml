@@ -1,6 +1,24 @@
 services:
+  database:
+    container_name: MoneySaverDatabase
+    image: postgres:18
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+    networks:
+      - default
+    ports:
+      - "5429:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql
   backend:
-    container_name: MoneySaver
+    container_name: MoneySaverBackend
     build:
       context: ./
       dockerfile: Dockerfile
@@ -16,7 +34,7 @@ services:
     volumes:
       - "db:/application/app/db"
   reverse-proxy:
-    container_name: nginx
+    container_name: MoneySaverNginx
     image: nginx:latest
     ports:
       - "80:80"
@@ -68,6 +86,7 @@ volumes:
   db:
   loki_data:
   grafana_data:
+  postgres_data:
 
 networks:
   monitoring:

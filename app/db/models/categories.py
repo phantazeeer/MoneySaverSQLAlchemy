@@ -17,4 +17,5 @@ class Category(Base):
         back_populates="category",
         lazy="selectin",
         uselist=True,
+        passive_deletes=True,
     )
