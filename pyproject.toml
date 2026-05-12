@@ -11,7 +11,7 @@ dependencies = [
     "fastapi[all]>=0.136.1",
     "gunicorn>=26.0.0",
     "matplotlib>=3.10.9",
-    "psycopg2>=2.9.12",
+    "psycopg2-binary>=2.9.12",
     "pwdlib[argon2]>=0.3.0",
     "pyjwt>=2.12.1",
     "pytest>=9.0.3",
@@ -58,3 +58,8 @@ known-first-party = ["app"]
 quote-style = "double"
 skip-magic-trailing-comma = false
 indent-style = "space"
+
+[dependency-groups]
+dev = [
+    "psycopg2>=2.9.12",
+]
