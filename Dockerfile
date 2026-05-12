@@ -5,6 +5,6 @@ RUN apk add curl
 COPY ./pyproject.toml ./
 COPY ./uv.lock ./
 COPY .env.template .env
-RUN uv sync --locked --no-dev
+RUN uv sync --extra docker
 COPY . .
 CMD ["uv", "run", "gunicorn", "-c", "gunicorn.conf.py", "--capture-output", "server:app"]

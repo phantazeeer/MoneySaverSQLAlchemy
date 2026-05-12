@@ -879,7 +879,6 @@ dependencies = [
     { name = "fastapi", extra = ["all"] },
     { name = "gunicorn" },
     { name = "matplotlib" },
-    { name = "psycopg2-binary" },
     { name = "pwdlib", extra = ["argon2"] },
     { name = "pyjwt" },
     { name = "pytest" },
@@ -890,9 +889,12 @@ dependencies = [
     { name = "wtforms" },
 ]
 
-[package.dev-dependencies]
+[package.optional-dependencies]
 dev = [
     { name = "psycopg2" },
+]
+docker = [
+    { name = "psycopg2-binary" },
 ]
 
 [package.metadata]
@@ -903,7 +905,8 @@ requires-dist = [
     { name = "fastapi", extras = ["all"], specifier = ">=0.136.1" },
     { name = "gunicorn", specifier = ">=26.0.0" },
     { name = "matplotlib", specifier = ">=3.10.9" },
-    { name = "psycopg2-binary", specifier = ">=2.9.12" },
+    { name = "psycopg2", marker = "extra == 'dev'", specifier = "==2.9.12" },
+    { name = "psycopg2-binary", marker = "extra == 'docker'", specifier = "==2.9.12" },
     { name = "pwdlib", extras = ["argon2"], specifier = ">=0.3.0" },
     { name = "pyjwt", specifier = ">=2.12.1" },
     { name = "pytest", specifier = ">=9.0.3" },
@@ -913,9 +916,7 @@ requires-dist = [
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.49" },
     { name = "wtforms", specifier = ">=3.2.1" },
 ]
-
-[package.metadata.requires-dev]
-dev = [{ name = "psycopg2", specifier = ">=2.9.12" }]
+provides-extras = ["dev", "docker"]
 
 [[package]]
 name = "numpy"

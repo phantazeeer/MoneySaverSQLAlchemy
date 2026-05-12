@@ -27,5 +27,4 @@ jobs:
             export DB_PASS="${{ secrets.DB_PASS }}"
             export DB_NAME="${{ secrets.DB_NAME }}"
             export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
-            JWT_SECRET_KEY={{ secrets.JWT_SECRET_KEY }}
             docker compose down && docker compose build && docker compose up -d
