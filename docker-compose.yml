@@ -22,7 +22,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    command: alembic upgrade head
+    command: uv run alembic upgrade head
     depends_on:
       database:
         condition: service_healthy
