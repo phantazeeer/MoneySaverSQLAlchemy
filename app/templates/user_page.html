@@ -41,42 +41,48 @@
             <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                 <h2 class="text-lg font-semibold text-slate-900 mb-4">🎯 Ваша цель</h2>
                 {% if user.goal_value %}
-                    {% set percent = [[((user.balance / user.goal_value) * 100) | round(1), 0] | max, 100] | min %}
-                    <p class="text-2xl font-bold text-slate-900">{{ user.goal_value }} ₽</p>
-                    {% if user.goal_name %}
-                        <p class="text-sm text-slate-500 mt-1">На «{{ user.goal_name }}»</p>
-                    {% endif %}
-                    <div class="mt-4">
-                        <div class="flex justify-between text-xs text-slate-600 mb-1">
-                            <span>Прогресс</span>
-                            <span class="font-semibold text-emerald-600">{{ percent }}%</span>
-                        </div>
-                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                            <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full transition-all"
-                                 style="width: {{ percent }}%"></div>
-                        </div>
+                {% set percent = [[((user.balance / user.goal_value) * 100) | round(1), 0] | max, 100] | min %}
+                <p class="text-2xl font-bold text-slate-900">{{ user.goal_value }} ₽</p>
+                {% if user.goal_name %}
+                <p class="text-sm text-slate-500 mt-1">На «{{ user.goal_name }}»</p>
+                {% endif %}
+                <div class="mt-4">
+                    <div class="flex justify-between text-xs text-slate-600 mb-1">
+                        <span>Прогресс</span>
+                        <span class="font-semibold text-emerald-600">{{ percent }}%</span>
                     </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div class="bg-gradient-to-r from-emerald-500 to-emerald-400 h-full rounded-full transition-all"
+                             style="width: {{ percent }}%"></div>
+                    </div>
+                </div>
                 {% else %}
-                    <div class="text-center py-4">
-                        <p class="text-4xl mb-2">🎯</p>
-                        <p class="text-sm text-slate-500">У вас пока нет цели</p>
-                    </div>
+                <div class="text-center py-4">
+                    <p class="text-4xl mb-2">🎯</p>
+                    <p class="text-sm text-slate-500">У вас пока нет цели</p>
+                </div>
                 {% endif %}
 
                 {% if ChangeTargetForm %}
                 <form id="ChangeTargetForm" class="mt-5 space-y-3 border-t border-slate-100 pt-4" method="POST">
                     {{ ChangeTargetForm.hidden_tag }}
                     <div>
-                        <label class="text-xs font-medium text-slate-600">{{ ChangeTargetForm.goal_name.label.text }}</label>
-                        {{ ChangeTargetForm.goal_name(class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none") }}
+                        <label class="text-xs font-medium text-slate-600">{{ ChangeTargetForm.goal_name.label.text
+                            }}</label>
+                        {{ ChangeTargetForm.goal_name(class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2
+                        text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none") }}
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-slate-600">{{ ChangeTargetForm.goal_value.label.text }}</label>
-                        {{ ChangeTargetForm.goal_value(class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none") }}
+                        <label class="text-xs font-medium text-slate-600">{{ ChangeTargetForm.goal_value.label.text
+                            }}</label>
+                        {{ ChangeTargetForm.goal_value(class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2
+                        text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none") }}
                     </div>
                     <div class="flex gap-2">
-                        {{ ChangeTargetForm.submit(type="submit", class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl py-2 cursor-pointer transition") }}
-                        <a href="/" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl py-2 px-4 transition text-center">Отмена</a>
+                        {{ ChangeTargetForm.submit(type="submit", class="flex-1 bg-emerald-600 hover:bg-emerald-700
+                        text-white text-sm font-medium rounded-xl py-2 cursor-pointer transition") }}
+                        <a href="/"
+                           class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl py-2 px-4 transition text-center">Отмена</a>
                     </div>
                 </form>
                 {% else %}
@@ -87,69 +93,191 @@
                 {% endif %}
             </section>
 
-            <!-- Лимит -->
-            <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                <h2 class="text-lg font-semibold text-slate-900 mb-4">🎯 Ваш лимит</h2>
-                {% if user.limit %}
-                    {% set percent = [[((user.costs_in_period / user.limit.value) * 100) | round(1), 0] | max, 100] | min %}
-                    <p class="text-2xl font-bold text-slate-900">{{ user.limit.value }} ₽</p>
-                    <p class="text-sm text-slate-500 mt-1">За {{ user.limit.period }}</p>
-                    <div class="mt-4">
-                        <div class="flex justify-between text-xs text-slate-600 mb-1">
-                            <span>Потрачено</span>
-                            <span class="font-semibold text-red-600">{{ percent }}%</span>
-                        </div>
-                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                            <div class="bg-gradient-to-r from-red-500 to-red-400 h-full rounded-full transition-all"
-                                 style="width: {{ percent }}%"></div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="text-center py-4">
-                        <p class="text-4xl mb-2">🎯</p>
-                        <p class="text-sm text-slate-500">Добавьте лимит</p>
-                    </div>
-                {% endif %}
+            <!-- ─── Антицели (лимиты расходов) ─── -->
+            <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
 
-                {% if ChangeLimitForm %}
-                <form id="ChangeLimitForm" class="mt-5 space-y-3 border-t border-slate-100 pt-4" method="POST">
-                    {{ ChangeLimitForm.hidden_tag }}
-                    <div>
-                        <label class="text-xs font-medium text-slate-600">{{ ChangeLimitForm.value.label.text }}</label>
-                        {{ ChangeLimitForm.value(class="w-full mt-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none") }}
+                <!-- Шапка — аккордеон -->
+                <button type="button"
+                        onclick="toggleLimitsPanel()"
+                        class="w-full flex items-center justify-between p-6
+                   hover:bg-slate-50 transition cursor-pointer">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-semibold text-slate-900">🚫 Антицели</h2>
+                        <span id="limits_count_badge"
+                              class="text-xs font-semibold bg-rose-100 text-rose-700
+                         rounded-full px-2 py-0.5">
+                {{ user.limit | length if user.limit else 0 }}
+            </span>
                     </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-600 block mb-1">
-                            {{ ChangeLimitForm.period.label.text }}
-                        </label>
-                        <div class="relative">
-                            {{ ChangeLimitForm.period(
-                                class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-white
-                                       focus:ring-2 focus:ring-emerald-500 focus:border-transparent
-                                       outline-none transition appearance-none cursor-pointer font-medium text-slate-700",
-                                id="limit_period_select"
-                            ) }}
-                            <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                                </svg>
+                    <svg id="limits_chevron"
+                         xmlns="http://www.w3.org/2000/svg"
+                         class="w-5 h-5 text-slate-400 transition-transform duration-200"
+                         fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <!-- Тело панели -->
+                <div id="limits_panel" class="hidden border-t border-slate-100">
+                    <div class="p-6 space-y-5">
+
+                        <!-- ── Список существующих лимитов ── -->
+                        <div id="limits_list" class="space-y-3">
+
+                            {% if user.limit %}
+                            {% for lim in user.limit %}
+
+                            {% set lim_percent = [[((lim.spent / lim.value) * 100) | round(1), 0] | max, 100] | min %}
+                            {% set lim_left = lim.value - lim.spent %}
+                            {% set is_exceeded = lim.spent > lim.value %}
+
+                            <div class="limit-item rounded-xl border p-4 transition
+                                {% if is_exceeded %}
+                                    border-rose-200 bg-rose-50
+                                {% elif lim_percent >= 80 %}
+                                    border-orange-200 bg-orange-50
+                                {% else %}
+                                    border-slate-100 bg-slate-50
+                                {% endif %}"
+                                 data-id="{{ loop.index0 }}"
+                                 data-name="{{ lim.name }}"
+                                 data-value="{{ lim.value }}"
+                                 data-period="{{ lim.period }}">
+
+                                <!-- Верхняя строка: имя + бейдж типа + кнопка удаления -->
+                                <div class="flex items-start justify-between gap-2 mb-3">
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <p class="text-sm font-semibold text-slate-800 truncate">
+                                                {{ lim.name or 'Лимит расходов' }}
+                                            </p>
+                                            <!-- Бейдж: повторяющийся / одноразовый -->
+                                            <span class="text-xs font-medium px-2 py-0.5 rounded-full
+                                                 {% if lim.period %}
+                                                     bg-blue-100 text-blue-700
+                                                 {% else %}
+                                                     bg-slate-200 text-slate-600
+                                                 {% endif %}">
+                                        {% if lim.period %}🔁 Ежемесячный{% else %}1️⃣ Разовый{% endif %}
+                                    </span>
+                                        </div>
+
+                                        <!-- Статус превышения -->
+                                        {% if is_exceeded %}
+                                        <p class="text-xs font-medium text-rose-600 mt-0.5">
+                                            ⚠️ Лимит превышен на {{ (lim.spent - lim.value) | int }} ₽
+                                        </p>
+                                        {% elif lim_percent >= 80 %}
+                                        <p class="text-xs font-medium text-orange-600 mt-0.5">
+                                            ⚡ Осталось {{ lim_left | int }} ₽ ({{ 100 - lim_percent }}%)
+                                        </p>
+                                        {% else %}
+                                        <p class="text-xs text-slate-500 mt-0.5">
+                                            Осталось {{ lim_left | int }} ₽
+                                        </p>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Кнопка удалить (inline-confirm) -->
+                                    <div class="flex-shrink-0 flex items-center gap-1">
+                                        <button type="button"
+                                                onclick="askDeleteLimit(this)"
+                                                class="limit-delete-ask w-7 h-7 rounded-lg
+                                               text-slate-400 hover:bg-rose-100
+                                               hover:text-rose-500 flex items-center
+                                               justify-center transition cursor-pointer">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 class="w-3.5 h-3.5" fill="none"
+                                                 viewBox="0 0 24 24" stroke="currentColor"
+                                                 stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21
+                                                 H7.862a2 2 0 01-1.995-1.858L5 7m5
+                                                 4v6m4-6v6M1 7h22M9 7V4a2 2 0
+                                                 012-2h2a2 2 0 012 2v3"/>
+                                            </svg>
+                                        </button>
+                                        <div class="limit-delete-confirm hidden flex items-center gap-1">
+                                    <span class="text-xs text-rose-600 font-medium
+                                                 whitespace-nowrap">Удалить?</span>
+                                            <button type="button"
+                                                    onclick="confirmDeleteLimit(this)"
+                                                    class="text-xs font-semibold bg-rose-500
+                                                   hover:bg-rose-600 text-white
+                                                   rounded-lg px-2 py-1 transition
+                                                   cursor-pointer">Да
+                                            </button>
+                                            <button type="button"
+                                                    onclick="cancelDeleteLimit(this)"
+                                                    class="text-xs font-semibold bg-slate-200
+                                                   hover:bg-slate-300 text-slate-600
+                                                   rounded-lg px-2 py-1 transition
+                                                   cursor-pointer">Нет
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Прогресс-бар -->
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                <span class="text-slate-500">
+                                    {{ lim.spent | int }} ₽ из {{ lim.value | int }} ₽
+                                </span>
+                                        <span class="font-semibold
+                                             {% if is_exceeded %}text-rose-600
+                                             {% elif lim_percent >= 80 %}text-orange-500
+                                             {% else %}text-slate-600{% endif %}">
+                                    {{ lim_percent }}%
+                                </span>
+                                    </div>
+                                    <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                        <div class="h-full rounded-full transition-all
+                                            {% if is_exceeded %}
+                                                bg-gradient-to-r from-rose-500 to-rose-400
+                                            {% elif lim_percent >= 80 %}
+                                                bg-gradient-to-r from-orange-400 to-yellow-400
+                                            {% else %}
+                                                bg-gradient-to-r from-blue-500 to-blue-400
+                                            {% endif %}"
+                                             style="width: {{ lim_percent }}%">
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
+                            {% endfor %}
+                            {% else %}
+                            <!-- Пустой стейт -->
+                            <div id="limits_empty_state" class="text-center py-4">
+                                <p class="text-2xl mb-1">🚫</p>
+                                <p class="text-xs text-slate-400">Лимитов пока нет</p>
+                            </div>
+                            {% endif %}
+
                         </div>
-                        <p id="limit_type_indicator" class="text-xs font-medium mt-1.5"></p>
+
+                        <!-- ── Форма добавления нового лимита ── -->
+                        <div class="border-t border-slate-100 pt-4">
+                            <a href="/control_limits"><button type="button"
+                                    id="add_limit_toggle_btn"
+                                    class="w-full flex items-center justify-center gap-2
+                               bg-slate-100 hover:bg-slate-200 text-slate-700
+                               text-sm font-medium rounded-xl py-2 transition
+                               cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Добавить лимит
+                            </button></a>
+                        </div>
                     </div>
-                    <div class="flex gap-2">
-                        {{ ChangeLimitForm.submit(type="submit", class="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl py-2 cursor-pointer transition") }}
-                        <a href="/" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl py-2 px-4 transition text-center">Отмена</a>
-                    </div>
-                </form>
-                {% else %}
-                <a href="/?change_limit=1"
-                   class="mt-4 block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl py-2 transition">
-                    {% if user.limit %}Изменить лимит{% else %}Установить лимит{% endif %}
-                </a>
-                {% endif %}
+                </div>
             </section>
+
 
             <!-- ─── Управление категориями ─── -->
             <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -166,7 +294,8 @@
                         </span>
                     </div>
                     <svg id="cat_chevron"
-                         xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-slate-400 transition-transform duration-200"
+                         xmlns="http://www.w3.org/2000/svg"
+                         class="w-5 h-5 text-slate-400 transition-transform duration-200"
                          fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                     </svg>
@@ -209,58 +338,58 @@
                             <p class="text-xs font-medium text-slate-500 mb-2">Существующие категории</p>
                             <div id="category_list" class="space-y-2">
                                 {% if categories %}
-                                    {% for cat in categories %}
-                                    <div class="category-list-item flex items-center justify-between
+                                {% for cat in categories %}
+                                <div class="category-list-item flex items-center justify-between
                                                 rounded-xl px-3 py-2.5 border border-slate-100 bg-slate-50
                                                 hover:border-slate-200 transition group"
-                                         data-id="{{ cat.id }}"
-                                         data-name="{{ cat.name }}">
+                                     data-id="{{ cat.id }}"
+                                     data-name="{{ cat.name }}">
 
-                                        <div class="flex items-center gap-2 min-w-0">
-                                            <!-- Цветная точка из палитры -->
-                                            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 cat-dot"
-                                                  data-index="{{ loop.index0 }}"></span>
-                                            <span class="text-sm font-medium text-slate-700 truncate">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <!-- Цветная точка из палитры -->
+                                        <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 cat-dot"
+                                              data-index="{{ loop.index0 }}"></span>
+                                        <span class="text-sm font-medium text-slate-700 truncate">
                                                 {{ cat.name }}
                                             </span>
-                                        </div>
+                                    </div>
 
-                                        <!-- Кнопка удаления с inline-подтверждением -->
-                                        <div class="flex items-center gap-1 flex-shrink-0">
-                                            <!-- Шаг 1: Иконка корзины -->
-                                            <button type="button"
-                                                    onclick="askDeleteCategory(this)"
-                                                    title="Удалить категорию"
-                                                    class="delete-btn-ask w-7 h-7 rounded-lg text-slate-400
+                                    <!-- Кнопка удаления с inline-подтверждением -->
+                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                        <!-- Шаг 1: Иконка корзины -->
+                                        <button type="button"
+                                                onclick="askDeleteCategory(this)"
+                                                title="Удалить категорию"
+                                                class="delete-btn-ask w-7 h-7 rounded-lg text-slate-400
                                                            hover:bg-rose-100 hover:text-rose-500
                                                            flex items-center justify-center transition
                                                            opacity-0 group-hover:opacity-100 cursor-pointer">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5"
-                                                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/>
-                                                </svg>
-                                            </button>
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5"
+                                                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/>
+                                            </svg>
+                                        </button>
 
-                                            <!-- Шаг 2: Inline-подтверждение (скрыто) -->
-                                            <div class="delete-confirm hidden flex items-center gap-1">
-                                                <span class="text-xs text-rose-600 font-medium whitespace-nowrap">Удалить?</span>
-                                                <button type="button"
-                                                        onclick="confirmDeleteCategory(this)"
-                                                        class="text-xs font-semibold bg-rose-500 hover:bg-rose-600
+                                        <!-- Шаг 2: Inline-подтверждение (скрыто) -->
+                                        <div class="delete-confirm hidden flex items-center gap-1">
+                                            <span class="text-xs text-rose-600 font-medium whitespace-nowrap">Удалить?</span>
+                                            <button type="button"
+                                                    onclick="confirmDeleteCategory(this)"
+                                                    class="text-xs font-semibold bg-rose-500 hover:bg-rose-600
                                                                text-white rounded-lg px-2 py-1 transition cursor-pointer">
-                                                    Да
-                                                </button>
-                                                <button type="button"
-                                                        onclick="cancelDeleteCategory(this)"
-                                                        class="text-xs font-semibold bg-slate-200 hover:bg-slate-300
+                                                Да
+                                            </button>
+                                            <button type="button"
+                                                    onclick="cancelDeleteCategory(this)"
+                                                    class="text-xs font-semibold bg-slate-200 hover:bg-slate-300
                                                                text-slate-600 rounded-lg px-2 py-1 transition cursor-pointer">
-                                                    Нет
-                                                </button>
-                                            </div>
+                                                Нет
+                                            </button>
                                         </div>
                                     </div>
-                                    {% endfor %}
+                                </div>
+                                {% endfor %}
                                 {% else %}
                                 <div class="text-center py-4" id="cat_empty_state">
                                     <p class="text-2xl mb-1">🏷</p>
@@ -287,14 +416,14 @@
                         </label>
                         <div class="relative">
                             {{ FastAddRecordForm.value(
-                                class="w-full border border-slate-200 rounded-xl px-4 py-2.5 pr-10
-                                       focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition",
-                                placeholder="0"
+                            class="w-full border border-slate-200 rounded-xl px-4 py-2.5 pr-10
+                            focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition",
+                            placeholder="0"
                             ) }}
                             <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₽</span>
                         </div>
                         {% for error in FastAddRecordForm.value.errors %}
-                            <p class="text-xs text-rose-600 mt-1">{{ error }}</p>
+                        <p class="text-xs text-rose-600 mt-1">{{ error }}</p>
                         {% endfor %}
                     </div>
 
@@ -305,10 +434,10 @@
                         </label>
                         <div class="relative">
                             {{ FastAddRecordForm.operation_type(
-                                class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-white
-                                       focus:ring-2 focus:ring-emerald-500 focus:border-transparent
-                                       outline-none transition appearance-none cursor-pointer font-medium text-slate-700",
-                                id="fast_operation_type"
+                            class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-white
+                            focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+                            outline-none transition appearance-none cursor-pointer font-medium text-slate-700",
+                            id="fast_operation_type"
                             ) }}
                             <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
@@ -355,15 +484,16 @@
                             {{ FastAddRecordForm.comment.label.text }}
                         </label>
                         {{ FastAddRecordForm.comment(
-                            class="w-full border border-slate-200 rounded-xl px-4 py-2.5
-                                   focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition",
-                            placeholder="например: продукты"
+                        class="w-full border border-slate-200 rounded-xl px-4 py-2.5
+                        focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition",
+                        placeholder="например: продукты"
                         ) }}
                     </div>
 
                     {{ FastAddRecordForm.submit(
-                        type="submit",
-                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl py-2.5 cursor-pointer transition"
+                    type="submit",
+                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl py-2.5
+                    cursor-pointer transition"
                     ) }}
                 </form>
             </section>
@@ -375,9 +505,12 @@
                 <h2 class="text-lg font-semibold text-slate-900">📋 Записи</h2>
                 <div class="flex gap-2 text-sm">
                     {% set f = request.query_params.get('filter_by') %}
-                    <a href="/" class="px-3 py-1.5 rounded-lg transition {% if not f %}bg-slate-900 text-white{% else %}bg-slate-100 hover:bg-slate-200 text-slate-700{% endif %}">Все</a>
-                    <a href="/?filter_by=earnings" class="px-3 py-1.5 rounded-lg transition {% if f == 'earnings' %}bg-emerald-600 text-white{% else %}bg-slate-100 hover:bg-slate-200 text-slate-700{% endif %}">Доходы</a>
-                    <a href="/?filter_by=costs" class="px-3 py-1.5 rounded-lg transition {% if f == 'costs' %}bg-rose-600 text-white{% else %}bg-slate-100 hover:bg-slate-200 text-slate-700{% endif %}">Расходы</a>
+                    <a href="/"
+                       class="px-3 py-1.5 rounded-lg transition {% if not f %}bg-slate-900 text-white{% else %}bg-slate-100 hover:bg-slate-200 text-slate-700{% endif %}">Все</a>
+                    <a href="/?filter_by=earnings"
+                       class="px-3 py-1.5 rounded-lg transition {% if f == 'earnings' %}bg-emerald-600 text-white{% else %}bg-slate-100 hover:bg-slate-200 text-slate-700{% endif %}">Доходы</a>
+                    <a href="/?filter_by=costs"
+                       class="px-3 py-1.5 rounded-lg transition {% if f == 'costs' %}bg-rose-600 text-white{% else %}bg-slate-100 hover:bg-slate-200 text-slate-700{% endif %}">Расходы</a>
                 </div>
             </div>
 
@@ -406,7 +539,8 @@
                                 {% endif %}
                             </div>
                             <p class="text-xs text-slate-500">
-                                {{ item.created_at.strftime('%d.%m.%Y %H:%M') if item.created_at.strftime else item.created_at }}
+                                {{ item.created_at.strftime('%d.%m.%Y %H:%M') if item.created_at.strftime else
+                                item.created_at }}
                             </p>
                         </div>
                     </div>
@@ -417,7 +551,8 @@
                 </div>
                 {% endfor %}
             </div>
-            <a href="/change_record" class="mt-5 inline-block text-sm font-medium text-emerald-600 hover:text-emerald-700">
+            <a href="/change_record"
+               class="mt-5 inline-block text-sm font-medium text-emerald-600 hover:text-emerald-700">
                 Управлять записями →
             </a>
             {% else %}
@@ -441,344 +576,443 @@
 </div>
 
 <script>
-/* ════════════════════════════════════════════
-   ПАЛИТРА И КОНФИГ КАТЕГОРИЙ
-   ════════════════════════════════════════════ */
-const COLOR_PALETTE = [
-    { active: 'border-orange-400 bg-orange-50 text-orange-700',  badge: 'bg-orange-100 text-orange-700',  dot: 'bg-orange-400'  },
-    { active: 'border-blue-400 bg-blue-50 text-blue-700',        badge: 'bg-blue-100 text-blue-700',      dot: 'bg-blue-400'    },
-    { active: 'border-purple-400 bg-purple-50 text-purple-700',  badge: 'bg-purple-100 text-purple-700',  dot: 'bg-purple-400'  },
-    { active: 'border-pink-400 bg-pink-50 text-pink-700',        badge: 'bg-pink-100 text-pink-700',      dot: 'bg-pink-400'    },
-    { active: 'border-teal-400 bg-teal-50 text-teal-700',        badge: 'bg-teal-100 text-teal-700',      dot: 'bg-teal-400'    },
-    { active: 'border-yellow-400 bg-yellow-50 text-yellow-700',  badge: 'bg-yellow-100 text-yellow-700',  dot: 'bg-yellow-400'  },
-    { active: 'border-indigo-400 bg-indigo-50 text-indigo-700',  badge: 'bg-indigo-100 text-indigo-700',  dot: 'bg-indigo-400'  },
-    { active: 'border-rose-400 bg-rose-50 text-rose-700',        badge: 'bg-rose-100 text-rose-700',      dot: 'bg-rose-400'    },
-];
+    /* ════════════════════════════════════════════
+       ПАЛИТРА И КОНФИГ КАТЕГОРИЙ
+       ════════════════════════════════════════════ */
+    const COLOR_PALETTE = [
+        { active: 'border-orange-400 bg-orange-50 text-orange-700',  badge: 'bg-orange-100 text-orange-700',  dot: 'bg-orange-400'  },
+        { active: 'border-blue-400 bg-blue-50 text-blue-700',        badge: 'bg-blue-100 text-blue-700',      dot: 'bg-blue-400'    },
+        { active: 'border-purple-400 bg-purple-50 text-purple-700',  badge: 'bg-purple-100 text-purple-700',  dot: 'bg-purple-400'  },
+        { active: 'border-pink-400 bg-pink-50 text-pink-700',        badge: 'bg-pink-100 text-pink-700',      dot: 'bg-pink-400'    },
+        { active: 'border-teal-400 bg-teal-50 text-teal-700',        badge: 'bg-teal-100 text-teal-700',      dot: 'bg-teal-400'    },
+        { active: 'border-yellow-400 bg-yellow-50 text-yellow-700',  badge: 'bg-yellow-100 text-yellow-700',  dot: 'bg-yellow-400'  },
+        { active: 'border-indigo-400 bg-indigo-50 text-indigo-700',  badge: 'bg-indigo-100 text-indigo-700',  dot: 'bg-indigo-400'  },
+        { active: 'border-rose-400 bg-rose-50 text-rose-700',        badge: 'bg-rose-100 text-rose-700',      dot: 'bg-rose-400'    },
+    ];
 
-/* Строим CATEGORY_CONFIG из Jinja2-контекста */
-const CATEGORY_CONFIG = {};
-{% for cat in categories %}
-CATEGORY_CONFIG['{{ cat.name | lower }}'] = {
-    id: {{ cat.id }},
-    index:  {{ loop.index0 }},
-    ...COLOR_PALETTE[{{ loop.index0 }} % COLOR_PALETTE.length]
-};
-{% endfor %}
+    /* Строим CATEGORY_CONFIG из Jinja2-контекста */
+    const CATEGORY_CONFIG = {};
+    {% for cat in categories %}
+    CATEGORY_CONFIG['{{ cat.name | lower }}'] = {
+        id: {{ cat.id }},
+        index:  {{ loop.index0 }},
+        ...COLOR_PALETTE[{{ loop.index0 }} % COLOR_PALETTE.length]
+    };
+    {% endfor %}
 
-/* ════════════════════════════════════════════
-   УТИЛИТЫ
-   ════════════════════════════════════════════ */
-function showToast(msg, ok = true) {
-    const t    = document.getElementById('toast');
-    const icon = document.getElementById('toast_icon');
-    const text = document.getElementById('toast_text');
-    icon.textContent = ok ? '✓' : '✕';
-    text.textContent = msg;
-    t.classList.toggle('bg-slate-900', ok);
-    t.classList.toggle('bg-rose-600',  !ok);
-    t.classList.remove('translate-y-24', 'opacity-0');
-    t.classList.add('translate-y-0', 'opacity-100');
-    setTimeout(() => {
-        t.classList.add('translate-y-24', 'opacity-0');
-        t.classList.remove('translate-y-0', 'opacity-100');
-    }, 2800);
-}
-
-/* Красим все .cat-dot по data-index */
-function applyDotColors() {
-    document.querySelectorAll('.cat-dot[data-index]').forEach(el => {
-        const idx = parseInt(el.dataset.index) % COLOR_PALETTE.length;
-        el.className = 'w-1.5 h-1.5 rounded-full flex-shrink-0 ' + COLOR_PALETTE[idx].dot;
-    });
-    /* Бейджи в списке записей */
-    document.querySelectorAll('.cat-dot-badge[data-category]').forEach(el => {
-        const cfg = CATEGORY_CONFIG[el.dataset.category];
-        if (cfg) el.className = 'w-1.5 h-1.5 rounded-full flex-shrink-0 ' + cfg.dot;
-    });
-    document.querySelectorAll('.category-badge[data-category]').forEach(el => {
-        const cfg = CATEGORY_CONFIG[el.dataset.category];
-        if (cfg) el.classList.add(...cfg.badge.split(' '));
-        else     el.classList.add('bg-slate-100', 'text-slate-600');
-    });
-}
-applyDotColors();
-
-/* ════════════════════════════════════════════
-   АККОРДЕОН КАТЕГОРИЙ
-   ════════════════════════════════════════════ */
-function toggleCategoryPanel() {
-    const panel   = document.getElementById('category_panel');
-    const chevron = document.getElementById('cat_chevron');
-    const isOpen  = !panel.classList.contains('hidden');
-    panel.classList.toggle('hidden', isOpen);
-    chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
-}
-
-/* ════════════════════════════════════════════
-   ДОБАВЛЕНИЕ КАТЕГОРИИ
-   ════════════════════════════════════════════ */
-function addCategory() {
-    const input = document.getElementById('new_cat_input');
-    const error = document.getElementById('cat_add_error');
-    const name  = input.value.trim();
-
-    error.classList.add('hidden');
-    error.textContent = '';
-
-    if (!name) {
-        error.textContent = 'Введите название категории';
-        error.classList.remove('hidden');
-        input.focus();
-        return;
-    }
-    if (CATEGORY_CONFIG[name.toLowerCase()]) {
-        error.textContent = 'Такая категория уже существует';
-        error.classList.remove('hidden');
-        return;
-    }
-
-    fetch('/categories/', {
-        method: 'POST',
-        body: name
-    })
-    .then(r => {
-        if (!r.ok) return r.json().then(e => { throw new Error(e.detail || 'Ошибка'); });
-        return {name: `${name}`}
-    })
-    .then(newCat => {
-        input.value = '';
-        addCategoryToDOM(newCat);
-        showToast('Категория «' + newCat.name + '» добавлена');
-    })
-    .catch(e => {
-        error.textContent = e.message;
-        error.classList.remove('hidden');
-    });
-}
-
-/* Добавляем категорию в DOM без перезагрузки */
-function addCategoryToDOM(cat) {
-    const allCats   = Object.keys(CATEGORY_CONFIG).length;
-    const newIndex  = allCats;
-    const palette   = COLOR_PALETTE[newIndex % COLOR_PALETTE.length];
-
-    /* Обновляем CATEGORY_CONFIG */
-    CATEGORY_CONFIG[cat.name.toLowerCase()] = { id: cat.id, index: newIndex, ...palette };
-
-    /* Счётчик в шапке */
-    const badge = document.getElementById('cat_count_badge');
-    badge.textContent = parseInt(badge.textContent) + 1;
-
-    /* Убираем пустой стейт */
-    document.getElementById('cat_empty_state')?.remove();
-    document.getElementById('fast_no_cats')?.remove();
-
-    /* Строка в списке категорий */
-    const list = document.getElementById('category_list');
-    const item = document.createElement('div');
-    item.className = 'category-list-item flex items-center justify-between rounded-xl px-3 py-2.5 border border-slate-100 bg-slate-50 hover:border-slate-200 transition group';
-    item.dataset.id   = cat.id;
-    item.dataset.name = cat.name;
-    item.innerHTML = `
-        <div class="flex items-center gap-2 min-w-0">
-            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 ${palette.dot}"></span>
-            <span class="text-sm font-medium text-slate-700 truncate">${cat.name}</span>
-        </div>
-        <div class="flex items-center gap-1 flex-shrink-0">
-            <button type="button" onclick="askDeleteCategory(this)" title="Удалить категорию"
-                    class="delete-btn-ask w-7 h-7 rounded-lg text-slate-400 hover:bg-rose-100
-                           hover:text-rose-500 flex items-center justify-center transition
-                           opacity-0 group-hover:opacity-100 cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none"
-                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/>
-                </svg>
-            </button>
-            <div class="delete-confirm hidden flex items-center gap-1">
-                <span class="text-xs text-rose-600 font-medium whitespace-nowrap">Удалить?</span>
-                <button type="button" onclick="confirmDeleteCategory(this)"
-                        class="text-xs font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-lg px-2 py-1 transition cursor-pointer">Да</button>
-                <button type="button" onclick="cancelDeleteCategory(this)"
-                        class="text-xs font-semibold bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-lg px-2 py-1 transition cursor-pointer">Нет</button>
-            </div>
-        </div>`;
-    list.appendChild(item);
-
-    /* Чип в быстрой форме */
-    const chipsContainer = document.getElementById('fast_category_chips');
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.dataset.value = cat.name;
-    chip.dataset.index = newIndex;
-    chip.onclick = function() { selectFastCategory(this); };
-    chip.className = 'fast-chip flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-slate-200 bg-slate-50 text-slate-600 transition cursor-pointer';
-    chip.innerHTML = `<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${palette.dot}"></span>${cat.name}`;
-    chipsContainer.appendChild(chip);
-
-    /* Обновляем <select> WTForms */
-    const select = document.getElementById('fast_category_select');
-    if (select) {
-        const opt = document.createElement('option');
-        opt.value = cat.name;
-        opt.textContent = cat.name;
-        select.appendChild(opt);
-    }
-}
-
-/* ════════════════════════════════════════════
-   УДАЛЕНИЕ КАТЕГОРИИ (inline-confirm)
-   ════════════════════════════════════════════ */
-function askDeleteCategory(btn) {
-    const item = btn.closest('.category-list-item');
-    btn.classList.add('hidden');
-    item.querySelector('.delete-confirm').classList.remove('hidden');
-}
-function cancelDeleteCategory(btn) {
-    const item = btn.closest('.category-list-item');
-    item.querySelector('.delete-confirm').classList.add('hidden');
-    item.querySelector('.delete-btn-ask').classList.remove('hidden');
-}
-function confirmDeleteCategory(btn) {
-    const item  = btn.closest('.category-list-item');
-    const catId = item.dataset.id;
-    const name  = item.dataset.name;
-
-    btn.textContent = '...';
-    btn.disabled    = true;
-
-    fetch('/categories/' + name, { method: 'DELETE' })
-    .then(r => {
-        if (!r.ok) return r.json().then(e => { throw new Error(e.detail || 'Ошибка'); });
-
-        /* Удаляем из DOM */
-        item.classList.add('opacity-0', 'scale-95');
+    /* ════════════════════════════════════════════
+       УТИЛИТЫ
+       ════════════════════════════════════════════ */
+    function showToast(msg, ok = true) {
+        const t    = document.getElementById('toast');
+        const icon = document.getElementById('toast_icon');
+        const text = document.getElementById('toast_text');
+        icon.textContent = ok ? '✓' : '✕';
+        text.textContent = msg;
+        t.classList.toggle('bg-slate-900', ok);
+        t.classList.toggle('bg-rose-600',  !ok);
+        t.classList.remove('translate-y-24', 'opacity-0');
+        t.classList.add('translate-y-0', 'opacity-100');
         setTimeout(() => {
-            item.remove();
-            /* Счётчик */
-            const badge = document.getElementById('cat_count_badge');
-            const count = parseInt(badge.textContent) - 1;
-            badge.textContent = count;
-            /* Пустой стейт если 0 */
-            if (count === 0) {
-                document.getElementById('category_list').innerHTML =
-                    '<div class="text-center py-4" id="cat_empty_state"><p class="text-2xl mb-1">🏷</p><p class="text-xs text-slate-400">Категорий пока нет</p></div>';
-            }
-        }, 200);
+            t.classList.add('translate-y-24', 'opacity-0');
+            t.classList.remove('translate-y-0', 'opacity-100');
+        }, 2800);
+    }
 
-        /* Удаляем чип из быстрой формы */
-        document.querySelectorAll('#fast_category_chips .fast-chip').forEach(c => {
-            if (c.dataset.value === name) c.remove();
+    /* Красим все .cat-dot по data-index */
+    function applyDotColors() {
+        document.querySelectorAll('.cat-dot[data-index]').forEach(el => {
+            const idx = parseInt(el.dataset.index) % COLOR_PALETTE.length;
+            el.className = 'w-1.5 h-1.5 rounded-full flex-shrink-0 ' + COLOR_PALETTE[idx].dot;
         });
-        /* Убираем из CATEGORY_CONFIG */
-        delete CATEGORY_CONFIG[name.toLowerCase()];
-        /* Убираем из <select> */
-        const select = document.getElementById('fast_category_select');
-        if (select) {
-            [...select.options].forEach(o => { if (o.value === name) o.remove(); });
+        /* Бейджи в списке записей */
+        document.querySelectorAll('.cat-dot-badge[data-category]').forEach(el => {
+            const cfg = CATEGORY_CONFIG[el.dataset.category];
+            if (cfg) el.className = 'w-1.5 h-1.5 rounded-full flex-shrink-0 ' + cfg.dot;
+        });
+        document.querySelectorAll('.category-badge[data-category]').forEach(el => {
+            const cfg = CATEGORY_CONFIG[el.dataset.category];
+            if (cfg) el.classList.add(...cfg.badge.split(' '));
+            else     el.classList.add('bg-slate-100', 'text-slate-600');
+        });
+    }
+    applyDotColors();
+
+    /* ════════════════════════════════════════════
+       АККОРДЕОН КАТЕГОРИЙ
+       ════════════════════════════════════════════ */
+    function toggleCategoryPanel() {
+        const panel   = document.getElementById('category_panel');
+        const chevron = document.getElementById('cat_chevron');
+        const isOpen  = !panel.classList.contains('hidden');
+        panel.classList.toggle('hidden', isOpen);
+        chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+    }
+
+    /* ════════════════════════════════════════════
+       ДОБАВЛЕНИЕ КАТЕГОРИИ
+       ════════════════════════════════════════════ */
+    function addCategory() {
+        const input = document.getElementById('new_cat_input');
+        const error = document.getElementById('cat_add_error');
+        const name  = input.value.trim();
+
+        error.classList.add('hidden');
+        error.textContent = '';
+
+        if (!name) {
+            error.textContent = 'Введите название категории';
+            error.classList.remove('hidden');
+            input.focus();
+            return;
+        }
+        if (CATEGORY_CONFIG[name.toLowerCase()]) {
+            error.textContent = 'Такая категория уже существует';
+            error.classList.remove('hidden');
+            return;
         }
 
-        showToast('Категория «' + name + '» удалена');
-    })
-    .catch(e => {
-        showToast(e.message, false);
-        cancelDeleteCategory(btn);
-    });
-}
-
-/* ════════════════════════════════════════════
-   ЧИПЫ КАТЕГОРИЙ В БЫСТРОЙ ФОРМЕ
-   ════════════════════════════════════════════ */
-const CHIP_BASE = 'fast-chip flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer';
-const CHIP_IDLE = 'border-slate-200 bg-slate-50 text-slate-600';
-
-function selectFastCategory(btn) {
-    const chips  = document.querySelectorAll('#fast_category_chips .fast-chip');
-    const select = document.getElementById('fast_category_select');
-    const hint   = document.getElementById('fast_category_hint');
-    const val    = btn.dataset.value;
-    const cfg    = CATEGORY_CONFIG[val?.toLowerCase()];
-    const dotCls = cfg ? cfg.dot : 'bg-slate-400';
-
-    /* Сброс всех */
-    chips.forEach(c => {
-        c.className = CHIP_BASE + ' ' + CHIP_IDLE;
-        c.dataset.selected = 'false';
-        const dot = c.querySelector('span');
-        if (dot) dot.className = 'w-1.5 h-1.5 rounded-full flex-shrink-0 ' + (CATEGORY_CONFIG[c.dataset.value?.toLowerCase()]?.dot || 'bg-slate-400');
-    });
-
-    if (btn.dataset.selected === 'true') {
-        /* Toggle off */
-        btn.dataset.selected = 'false';
-        if (select) select.value = '';
-        hint.textContent = 'Не выбрана';
-        hint.className   = 'text-xs text-slate-400 mt-1.5';
-    } else {
-        btn.dataset.selected = 'true';
-        btn.className = CHIP_BASE + ' ' + (cfg?.active || CHIP_IDLE);
-        if (select) select.value = val;
-        hint.textContent = val.charAt(0).toUpperCase() + val.slice(1);
-        hint.className   = 'text-xs font-medium mt-1.5 text-slate-700';
+        fetch('/categories/', {
+            method: 'POST',
+            body: name
+        })
+        .then(r => {
+            if (!r.ok) return r.json().then(e => { throw new Error(e.detail || 'Ошибка'); });
+            return {name: `${name}`}
+        })
+        .then(newCat => {
+            input.value = '';
+            addCategoryToDOM(newCat);
+            showToast('Категория «' + newCat.name + '» добавлена');
+        })
+        .catch(e => {
+            error.textContent = e.message;
+            error.classList.remove('hidden');
+        });
     }
-}
 
-/* ════════════════════════════════════════════
-   ПОДСВЕТКА OPERATION TYPE SELECT
-   ════════════════════════════════════════════ */
-function updateFastSelectStyle(select) {
-    const indicator = document.getElementById('fast_type_indicator');
-    const badge     = document.getElementById('fast_type_badge');
-    if (!indicator || !badge) return;
-    if (select.value === '0') {
-        select.classList.remove('border-rose-300', 'bg-rose-50/30');
-        select.classList.add('border-emerald-300', 'bg-emerald-50/30');
-        indicator.className = 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-500';
-        badge.textContent   = '💵 Доход';
-        badge.className     = 'text-xs font-medium mt-1.5 text-emerald-600';
-    } else {
-        select.classList.remove('border-emerald-300', 'bg-emerald-50/30');
-        select.classList.add('border-rose-300', 'bg-rose-50/30');
-        indicator.className = 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-rose-500';
-        badge.textContent   = '💸 Расход';
-        badge.className     = 'text-xs font-medium mt-1.5 text-rose-600';
+    /* Добавляем категорию в DOM без перезагрузки */
+    function addCategoryToDOM(cat) {
+        const allCats   = Object.keys(CATEGORY_CONFIG).length;
+        const newIndex  = allCats;
+        const palette   = COLOR_PALETTE[newIndex % COLOR_PALETTE.length];
+
+        /* Обновляем CATEGORY_CONFIG */
+        CATEGORY_CONFIG[cat.name.toLowerCase()] = { id: cat.id, index: newIndex, ...palette };
+
+        /* Счётчик в шапке */
+        const badge = document.getElementById('cat_count_badge');
+        badge.textContent = parseInt(badge.textContent) + 1;
+
+        /* Убираем пустой стейт */
+        document.getElementById('cat_empty_state')?.remove();
+        document.getElementById('fast_no_cats')?.remove();
+
+        /* Строка в списке категорий */
+        const list = document.getElementById('category_list');
+        const item = document.createElement('div');
+        item.className = 'category-list-item flex items-center justify-between rounded-xl px-3 py-2.5 border border-slate-100 bg-slate-50 hover:border-slate-200 transition group';
+        item.dataset.id   = cat.id;
+        item.dataset.name = cat.name;
+        item.innerHTML = `
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 ${palette.dot}"></span>
+                <span class="text-sm font-medium text-slate-700 truncate">${cat.name}</span>
+            </div>
+            <div class="flex items-center gap-1 flex-shrink-0">
+                <button type="button" onclick="askDeleteCategory(this)" title="Удалить категорию"
+                        class="delete-btn-ask w-7 h-7 rounded-lg text-slate-400 hover:bg-rose-100
+                               hover:text-rose-500 flex items-center justify-center transition
+                               opacity-0 group-hover:opacity-100 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none"
+                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/>
+                    </svg>
+                </button>
+                <div class="delete-confirm hidden flex items-center gap-1">
+                    <span class="text-xs text-rose-600 font-medium whitespace-nowrap">Удалить?</span>
+                    <button type="button" onclick="confirmDeleteCategory(this)"
+                            class="text-xs font-semibold bg-rose-500 hover:bg-rose-600 text-white rounded-lg px-2 py-1 transition cursor-pointer">Да</button>
+                    <button type="button" onclick="cancelDeleteCategory(this)"
+                            class="text-xs font-semibold bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-lg px-2 py-1 transition cursor-pointer">Нет</button>
+                </div>
+            </div>`;
+        list.appendChild(item);
+
+        /* Чип в быстрой форме */
+        const chipsContainer = document.getElementById('fast_category_chips');
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.dataset.value = cat.name;
+        chip.dataset.index = newIndex;
+        chip.onclick = function() { selectFastCategory(this); };
+        chip.className = 'fast-chip flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-slate-200 bg-slate-50 text-slate-600 transition cursor-pointer';
+        chip.innerHTML = `<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${palette.dot}"></span>${cat.name}`;
+        chipsContainer.appendChild(chip);
+
+        /* Обновляем <select> WTForms */
+        const select = document.getElementById('fast_category_select');
+        if (select) {
+            const opt = document.createElement('option');
+            opt.value = cat.name;
+            opt.textContent = cat.name;
+            select.appendChild(opt);
+        }
     }
-    select.style.paddingLeft = '1.75rem';
-}
-const fastOpSelect = document.getElementById('fast_operation_type');
-if (fastOpSelect) {
-    updateFastSelectStyle(fastOpSelect);
-    fastOpSelect.addEventListener('change', function() { updateFastSelectStyle(this); });
-}
 
-/* ════════════════════════════════════════════
-   SUBMIT ФОРМЫ
-   ════════════════════════════════════════════ */
-document.getElementById('FastAddRecordForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    fetch('/records/', { method: 'POST', body: new FormData(this) })
-        .then(() => window.location.href = '/')
-        .catch(err => console.error(err));
-});
-document.getElementById('ChangeTargetForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    fetch('/user/me', { method: 'PUT', body: new URLSearchParams(new FormData(this)) })
-        .then(r => window.location.href = '/')
-        .catch(err => console.error(err));
-});
-document.getElementById('ChangeLimitForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    console.log(formData);
-    if (formData.get('value') == 0) {
-        fetch('/limits/', { method: 'DELETE' })
+    /* ════════════════════════════════════════════
+       УДАЛЕНИЕ КАТЕГОРИИ (inline-confirm)
+       ════════════════════════════════════════════ */
+    function askDeleteCategory(btn) {
+        const item = btn.closest('.category-list-item');
+        btn.classList.add('hidden');
+        item.querySelector('.delete-confirm').classList.remove('hidden');
+    }
+    function cancelDeleteCategory(btn) {
+        const item = btn.closest('.category-list-item');
+        item.querySelector('.delete-confirm').classList.add('hidden');
+        item.querySelector('.delete-btn-ask').classList.remove('hidden');
+    }
+    function confirmDeleteCategory(btn) {
+        const item  = btn.closest('.category-list-item');
+        const catId = item.dataset.id;
+        const name  = item.dataset.name;
+
+        btn.textContent = '...';
+        btn.disabled    = true;
+
+        fetch('/categories/' + name, { method: 'DELETE' })
+        .then(r => {
+            if (!r.ok) return r.json().then(e => { throw new Error(e.detail || 'Ошибка'); });
+
+            /* Удаляем из DOM */
+            item.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                item.remove();
+                /* Счётчик */
+                const badge = document.getElementById('cat_count_badge');
+                const count = parseInt(badge.textContent) - 1;
+                badge.textContent = count;
+                /* Пустой стейт если 0 */
+                if (count === 0) {
+                    document.getElementById('category_list').innerHTML =
+                        '<div class="text-center py-4" id="cat_empty_state"><p class="text-2xl mb-1">🏷</p><p class="text-xs text-slate-400">Категорий пока нет</p></div>';
+                }
+            }, 200);
+
+            /* Удаляем чип из быстрой формы */
+            document.querySelectorAll('#fast_category_chips .fast-chip').forEach(c => {
+                if (c.dataset.value === name) c.remove();
+            });
+            /* Убираем из CATEGORY_CONFIG */
+            delete CATEGORY_CONFIG[name.toLowerCase()];
+            /* Убираем из <select> */
+            const select = document.getElementById('fast_category_select');
+            if (select) {
+                [...select.options].forEach(o => { if (o.value === name) o.remove(); });
+            }
+
+            showToast('Категория «' + name + '» удалена');
+        })
+        .catch(e => {
+            showToast(e.message, false);
+            cancelDeleteCategory(btn);
+        });
+    }
+
+    /* ════════════════════════════════════════════
+       ЧИПЫ КАТЕГОРИЙ В БЫСТРОЙ ФОРМЕ
+       ════════════════════════════════════════════ */
+    const CHIP_BASE = 'fast-chip flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer';
+    const CHIP_IDLE = 'border-slate-200 bg-slate-50 text-slate-600';
+
+    function selectFastCategory(btn) {
+        const chips  = document.querySelectorAll('#fast_category_chips .fast-chip');
+        const select = document.getElementById('fast_category_select');
+        const hint   = document.getElementById('fast_category_hint');
+        const val    = btn.dataset.value;
+        const cfg    = CATEGORY_CONFIG[val?.toLowerCase()];
+        const dotCls = cfg ? cfg.dot : 'bg-slate-400';
+
+        /* Сброс всех */
+        chips.forEach(c => {
+            c.className = CHIP_BASE + ' ' + CHIP_IDLE;
+            c.dataset.selected = 'false';
+            const dot = c.querySelector('span');
+            if (dot) dot.className = 'w-1.5 h-1.5 rounded-full flex-shrink-0 ' + (CATEGORY_CONFIG[c.dataset.value?.toLowerCase()]?.dot || 'bg-slate-400');
+        });
+
+        if (btn.dataset.selected === 'true') {
+            /* Toggle off */
+            btn.dataset.selected = 'false';
+            if (select) select.value = '';
+            hint.textContent = 'Не выбрана';
+            hint.className   = 'text-xs text-slate-400 mt-1.5';
+        } else {
+            btn.dataset.selected = 'true';
+            btn.className = CHIP_BASE + ' ' + (cfg?.active || CHIP_IDLE);
+            if (select) select.value = val;
+            hint.textContent = val.charAt(0).toUpperCase() + val.slice(1);
+            hint.className   = 'text-xs font-medium mt-1.5 text-slate-700';
+        }
+    }
+
+    /* ════════════════════════════════════════════
+       ПОДСВЕТКА OPERATION TYPE SELECT
+       ════════════════════════════════════════════ */
+    function updateFastSelectStyle(select) {
+        const indicator = document.getElementById('fast_type_indicator');
+        const badge     = document.getElementById('fast_type_badge');
+        if (!indicator || !badge) return;
+        if (select.value === '0') {
+            select.classList.remove('border-rose-300', 'bg-rose-50/30');
+            select.classList.add('border-emerald-300', 'bg-emerald-50/30');
+            indicator.className = 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-500';
+            badge.textContent   = '💵 Доход';
+            badge.className     = 'text-xs font-medium mt-1.5 text-emerald-600';
+        } else {
+            select.classList.remove('border-emerald-300', 'bg-emerald-50/30');
+            select.classList.add('border-rose-300', 'bg-rose-50/30');
+            indicator.className = 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-rose-500';
+            badge.textContent   = '💸 Расход';
+            badge.className     = 'text-xs font-medium mt-1.5 text-rose-600';
+        }
+        select.style.paddingLeft = '1.75rem';
+    }
+    const fastOpSelect = document.getElementById('fast_operation_type');
+    if (fastOpSelect) {
+        updateFastSelectStyle(fastOpSelect);
+        fastOpSelect.addEventListener('change', function() { updateFastSelectStyle(this); });
+    }
+
+
+    /* ════════════════════════════════════════════
+       АНТИЦЕЛИ
+       ════════════════════════════════════════════ */
+    /* ── Аккордеон ── */
+    function toggleLimitsPanel() {
+        const panel   = document.getElementById('limits_panel');
+        const chevron = document.getElementById('limits_chevron');
+        const isOpen  = !panel.classList.contains('hidden');
+        panel.classList.toggle('hidden', isOpen);
+        chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+    }
+
+    /* ── Переключатель периода ── */
+    function setLimitPeriod(isRepeat, btn) {
+        document.querySelectorAll('.limit-period-btn').forEach(b => {
+            b.classList.remove('active', 'bg-white', 'shadow-sm', 'text-slate-800');
+            b.classList.add('text-slate-500');
+        });
+        btn.classList.add('active', 'bg-white', 'shadow-sm', 'text-slate-800');
+        btn.classList.remove('text-slate-500');
+        document.getElementById('limit_period_value').value = isRepeat ? 'true' : 'false';
+    }
+
+    /* ── Инлайн-подтверждение удаления ── */
+    function askDeleteLimit(btn) {
+        btn.classList.add('hidden');
+        btn.closest('.limit-item')
+           .querySelector('.limit-delete-confirm')
+           .classList.remove('hidden');
+    }
+    function cancelDeleteLimit(btn) {
+        const item = btn.closest('.limit-item');
+        item.querySelector('.limit-delete-confirm').classList.add('hidden');
+        item.querySelector('.limit-delete-ask').classList.remove('hidden');
+    }
+    function confirmDeleteLimit(btn) {
+        const item = btn.closest('.limit-item');
+        const name = item.dataset.name;
+
+        btn.textContent = '...';
+        btn.disabled    = true;
+
+        fetch('/limits/' + encodeURIComponent(name), { method: 'DELETE' })
+        .then(r => {
+            if (!r.ok) return r.json().then(e => { throw new Error(e.detail || 'Ошибка'); });
+
+            /* Анимация исчезновения */
+            item.style.transition = 'opacity 0.2s, transform 0.2s';
+            item.style.opacity    = '0';
+            item.style.transform  = 'scale(0.98)';
+            setTimeout(() => {
+                item.remove();
+
+                /* Обновляем счётчик */
+                const badge = document.getElementById('limits_count_badge');
+                const count = Math.max(0, parseInt(badge.textContent) - 1);
+                badge.textContent = count;
+
+                /* Пустой стейт если 0 */
+                if (count === 0) {
+                    document.getElementById('limits_list').innerHTML = `
+                        <div id="limits_empty_state" class="text-center py-4">
+                            <p class="text-2xl mb-1">🚫</p>
+                            <p class="text-xs text-slate-400">Лимитов пока нет</p>
+                        </div>`;
+                }
+            }, 200);
+
+            showToast('Лимит «' + name + '» удалён');
+        })
+        .catch(e => showToast(e.message, false));
+    }
+    /* ════════════════════════════════════════════
+       SUBMIT ФОРМЫ
+       ════════════════════════════════════════════ */
+    document.getElementById('FastAddRecordForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch('/records/', { method: 'POST', body: new FormData(this) })
+            .then(() => window.location.href = '/')
+            .catch(err => console.error(err));
+    });
+    document.getElementById('ChangeTargetForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch('/user/me', { method: 'PUT', body: new URLSearchParams(new FormData(this)) })
             .then(r => window.location.href = '/')
             .catch(err => console.error(err));
-    } else {
-        fetch('/limits/', { method: 'PUT', body: new URLSearchParams(formData) })
-            .then(r => window.location.href = '/')
-            .catch(err => console.error(err));
-    }
-});
+    });
+    document.getElementById('SpendingLimitForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        /* Валидация на клиенте */
+        const name    = document.getElementById('limit_name');
+        const value   = document.getElementById('limit_value');
+        const nameErr = document.getElementById('limit_name_error');
+        const valErr  = document.getElementById('limit_value_error');
+        let   valid   = true;
+
+        [nameErr, valErr].forEach(el => el.classList.add('hidden'));
+
+        if (!name.value.trim()) {
+            nameErr.textContent = 'Введите название лимита';
+            nameErr.classList.remove('hidden');
+            valid = false;
+        }
+        if (!value.value || parseInt(value.value) < 1) {
+            valErr.textContent = 'Сумма должна быть больше 0';
+            valErr.classList.remove('hidden');
+            valid = false;
+        }
+        if (!valid) return;
+
+        fetch('/limits/', {
+            method: 'POST',
+            body: new URLSearchParams(new FormData(this))
+        })
+        .then(r => {
+            if (!r.ok) return r.json().then(e => { throw new Error(e.detail || 'Ошибка'); });
+            return r.json();
+        })
+        .then(() => {
+            showToast('Лимит «' + name.value.trim() + '» добавлен ✅');
+            /* Перезагрузка для обновления spent из бэкенда */
+            setTimeout(() => window.location.reload(), 800);
+        })
+        .catch(e => showToast(e.message, false));
+    });
+
 </script>
 {% endblock %}

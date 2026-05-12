@@ -7,5 +7,4 @@ COPY ./uv.lock ./
 COPY .env.template .env
 RUN uv sync --locked
 COPY . .
-RUN uv run alembic upgrade head
 CMD ["uv", "run", "gunicorn", "-c", "gunicorn.conf.py", "--capture-output", "server:app"]

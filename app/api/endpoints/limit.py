@@ -1,8 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Form, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException, Path
 
-from app.api.schemas import ChangeLimit, Limit
+from app.api.schemas import CreateLimit, Limit
 from app.services.limits_service import LimitService
 from app.utils import get_jwt_payload
 from app.utils.dependencies import get_limit_service as get_service
@@ -12,13 +12,19 @@ router = APIRouter(prefix="/limits", tags=["Working with limits"])
 log = get_logger(__name__)
 
 
-@router.get("/")
+@router.get("/{limit}")
 async def get_user_limit(
+    limit: Annotated[int | str, Path()],
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[LimitService, Depends(get_service)],
 ) -> Limit | None:
     try:
-        res = await service.get_limit(user_id)
+        if isinstance(limit, int):
+            res = await service.get_limit(user_id, id=limit)
+        elif isinstance(limit, str):
+            res = await service.get_limit(user_id, name=limit)
+        else:
+            raise HTTPException(400, "Limit should be str or int") from None
         return res
     except Exception as err:
         if str(err) == "У пользователя нет лимита":
@@ -27,28 +33,31 @@ async def get_user_limit(
             raise
 
 
-@router.put("/")
+@router.post("/", status_code=201)
 async def create_user_limit(
-    limit: Annotated[ChangeLimit, Form()],
+    limit: Annotated[CreateLimit, Form()],
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[LimitService, Depends(get_service)],
 ):
     try:
-        await service.update_limit(user_id, limit.period, limit.value)
+        await service.create_limit(user_id, limit)
         return {"detail": "ok"}
-    except Exception:
+    except Exception as err:
+        if str(err) == "У пользователя нет этой категории":
+            raise HTTPException(400, "У вас нет этой категории") from None
         raise
 
 
-@router.delete("/")
+@router.delete("/{limit}")
 async def delete_user_limit(
+    limit: Annotated[int | str, Path()],
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[LimitService, Depends(get_service)],
 ):
     try:
-        await service.delete_limit(user_id)
+        await service.delete_limit_by_id(user_id, limit)
     except Exception as err:
-        if str(err) == "У пользователя нет лимита":
-            raise HTTPException(400, "У пользователя нет лимита") from None
+        if str(err) == "Такого лимита не существует":
+            raise HTTPException(400, "Такого лимита не существует") from None
         else:
             raise
