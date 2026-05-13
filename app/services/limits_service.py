@@ -1,4 +1,6 @@
+from calendar import month
 from datetime import date, datetime, timedelta, timezone
+import calendar
 
 from sqlalchemy.exc import NoResultFound
 
@@ -16,10 +18,18 @@ class LimitService:
     @staticmethod
     def update_start_end_limit(limit, now: date):
         if limit.period is not None:
-            if limit.end < now:
+            if limit.end <= now and limit.period == "month":
+                previous_month = calendar.monthrange(now.year, (now.month - 1))[1]
+                this_month = calendar.monthrange(now.year, now.month)[1]
+                limit.start += timedelta(days=previous_month)
+                limit.end += timedelta(days=this_month)
+            if limit.end <= now and limit.period == "week":
                 start = now - timedelta(days=now.weekday())
-                limit.end = start + timedelta(days=6)
+                limit.end = start + timedelta(days=7)
                 limit.start = start
+            elif limit.end <= now and limit.period == "day":
+                limit.end = now + timedelta(days=1)
+                limit.start = now
 
     async def get_limit(self, user_id: int, **kwargs) -> Limit:
         try:
@@ -74,8 +84,11 @@ class LimitService:
                         limit = await self.uow.limits.delete_by_id(int(limit))
                     except Exception as err:
                         if str(err) == "Такого лимита не существует":
+                            log.debug("checking as string")
                             limit = await self.uow.limits.delete_by_name_and_user(user_id, name=limit)
-                        raise
+                            await self.uow.commit()
+                        else:
+                            raise
                 elif isinstance(limit, str):
                     limit = await self.uow.limits.delete_by_name_and_user(user_id, name=limit)
                 else:
