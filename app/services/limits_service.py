@@ -1,6 +1,5 @@
-from calendar import month
-from datetime import date, datetime, timedelta, timezone
 import calendar
+from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy.exc import NoResultFound
 

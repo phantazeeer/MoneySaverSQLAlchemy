@@ -17,7 +17,6 @@ class UserLimits(Base):
     end: Mapped[date] = mapped_column(nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
 
-
     __table_args__ = (UniqueConstraint("user_id", "name", name="ix_limit_user_name"),)
 
     categlimits: Mapped[list["CategoriesLimits"]] = relationship(
