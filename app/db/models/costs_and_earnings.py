@@ -14,7 +14,7 @@ class CostsAndEarnings(Base):
     value: Mapped[int] = mapped_column(nullable=False)
     comment: Mapped[str] = mapped_column(nullable=True, default="")
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.now(tz=timezone.utc).replace(tzinfo=None))
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(tz=timezone.utc).replace(tzinfo=None))
 
     user: Mapped["User"] = relationship(back_populates="costs_and_earnings")
     category: Mapped["Category"] = relationship(back_populates="costs_and_earnings")
