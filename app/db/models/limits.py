@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import CheckConstraint, ForeignKey
+from sqlalchemy import CheckConstraint, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -16,6 +16,8 @@ class UserLimits(Base):
     start: Mapped[date] = mapped_column(nullable=False)
     end: Mapped[date] = mapped_column(nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
+
+    __table_args__ = (UniqueConstraint("user_id", "name", name="ix_limit_user_name"),)
 
     categlimits: Mapped[list["CategoriesLimits"]] = relationship(
         back_populates="limit",

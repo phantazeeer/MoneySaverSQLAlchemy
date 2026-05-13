@@ -1011,7 +1011,7 @@ if (selectedCats.size === 0) {
         item.style.transform  = 'scale(0.97)';
 
         try {
-            const resp = await fetch(`/limits/${id}`, { method: 'DELETE' });
+            const resp = await fetch(`/limits/${name}`, { method: 'DELETE' });
 
             if (resp.ok) {
                 setTimeout(() => {

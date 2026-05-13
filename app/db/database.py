@@ -9,7 +9,7 @@ from app.utils.logger import get_logger
 log = get_logger(__name__)
 
 engine = create_async_engine(settings.database_url)
-log.info("Connecting '%s'", settings.database_url)
+log.info("Connecting to database")
 session_factory = async_sessionmaker(engine, class_=AsyncSession)
 
 
