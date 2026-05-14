@@ -80,12 +80,13 @@ class LimitService:
                 log.debug("Deleting user_id's=%s limit with id=%s", user_id, limit)
                 if isinstance(limit, int) or limit.isnumeric():
                     try:
-                        limit = await self.uow.limits.delete_by_id(int(limit))
+                        limit = await self.uow.limits.get_one(
+                            user_id, id=int(limit),
+                        )  # проверка, что запись вообще есть
+                        await self.uow.limits.delete_by_id(id=int(limit))
                     except Exception as err:
-                        if str(err) == "Такого лимита не существует":
-                            log.debug("checking as string")
+                        if str(err) == "У пользователя нет этого лимита":
                             limit = await self.uow.limits.delete_by_name_and_user(user_id, name=limit)
-                            await self.uow.commit()
                         else:
                             raise
                 elif isinstance(limit, str):

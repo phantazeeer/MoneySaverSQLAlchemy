@@ -71,6 +71,10 @@ async def delete(
     except ValueError as err:
         if str(err) == "Пользователь не является владельцем записи":
             raise HTTPException(403, "Пользователь не является владельцем записи") from None
+        else:
+            raise
     except Exception as err:
         if str(err) == "Запись не найдена":
             raise HTTPException(404, "Запись не найдена") from None
+        else:
+            raise

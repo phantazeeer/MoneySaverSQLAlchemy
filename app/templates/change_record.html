@@ -1,8 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}Записи — MoneySaver{% endblock %}
+
 {% block body %}
 <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
 
+    <!-- Хлебные крошки + заголовок -->
     <div class="mb-6">
         <nav class="text-sm text-slate-500 mb-2">
             <a href="/" class="hover:text-emerald-600 transition">Главная</a>
@@ -17,18 +19,120 @@
         </div>
     </div>
 
+    <!-- ══════════════════════════════════════════════════
+         ПАНЕЛЬ ФИЛЬТРОВ + ЭКСПОРТ
+         ══════════════════════════════════════════════════ -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6">
+        <div class="flex flex-wrap items-end gap-3">
+
+            <!-- Тип операции -->
+            <div class="flex-shrink-0">
+                <label class="text-xs font-medium text-slate-500 block mb-1.5">Тип</label>
+                <div class="flex bg-slate-100 rounded-xl p-1 gap-1">
+                    <button type="button" onclick="setTypeFilter('all', this)"
+                            class="type-btn active text-xs font-semibold px-3 py-1.5 rounded-lg bg-white shadow-sm text-slate-800 cursor-pointer transition">
+                        Все
+                    </button>
+                    <button type="button" onclick="setTypeFilter('income', this)"
+                            class="type-btn text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-500 cursor-pointer hover:text-slate-800 transition">
+                        💵 Доходы
+                    </button>
+                    <button type="button" onclick="setTypeFilter('expense', this)"
+                            class="type-btn text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-500 cursor-pointer hover:text-slate-800 transition">
+                        💸 Расходы
+                    </button>
+                </div>
+            </div>
+
+            <!-- Фильтр по категориям -->
+            <div class="flex-1 min-w-48">
+                <label class="text-xs font-medium text-slate-500 block mb-1.5">Категории</label>
+                <div class="flex flex-wrap gap-1.5" id="cat_filter_chips">
+                    <button type="button" onclick="toggleCatFilter('all', this)"
+                            class="cat-filter active text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-white cursor-pointer transition"
+                            data-value="all">
+                        Все категории
+                    </button>
+
+                    {% for cat in categories %}
+                    <button type="button" onclick="toggleCatFilter('{{ cat.name }}', this)"
+                            class="cat-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 cursor-pointer transition hover:bg-slate-100"
+                            data-value="{{ cat.name }}">
+                        <span class="cat-dot-filter w-1.5 h-1.5 rounded-full" data-category="{{ cat.name | lower }}"></span>
+                        {{ cat.name }}
+                    </button>
+                    {% endfor %}
+
+                    <button type="button" onclick="toggleCatFilter('none', this)"
+                            class="cat-filter text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer hover:border-slate-400 hover:bg-slate-100 transition"
+                            data-value="none">
+                        Без категории
+                    </button>
+                </div>
+            </div>
+
+            <div class="hidden lg:block w-px h-10 bg-slate-100 flex-shrink-0"></div>
+
+            <!-- Сброс фильтров -->
+            <button type="button" onclick="resetFilters()" id="reset_btn"
+                    class="hidden text-xs font-medium text-slate-500 hover:text-slate-700 flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-slate-100 transition cursor-pointer flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Сбросить
+            </button>
+
+            <div class="flex-1 hidden lg:block"></div>
+
+            <!-- Кнопка экспорта -->
+            <button type="button" onclick="exportToExcel(this)" id="export_btn"
+                    class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl px-4 py-2.5 transition cursor-pointer flex-shrink-0">
+                <svg id="export_icon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                <!-- Спиннер загрузки (скрыт по умолчанию) -->
+                <svg id="export_spinner" class="animate-spin w-4 h-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span id="export_label">Экспорт в Excel</span>
+            </button>
+        </div>
+
+        <!-- Итоги -->
+        <div id="filter_summary" class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-4">
+            <span class="text-xs text-slate-500">Показано: <span id="summary_count" class="font-semibold text-slate-700">0</span> записей</span>
+            <span class="text-xs text-slate-500">Доходы: <span id="summary_income" class="font-semibold text-emerald-600">0 ₽</span></span>
+            <span class="text-xs text-slate-500">Расходы: <span id="summary_expense" class="font-semibold text-rose-600">0 ₽</span></span>
+            <span class="text-xs text-slate-500">Итого: <span id="summary_total" class="font-semibold text-slate-800">0 ₽</span></span>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         ОСНОВНОЙ ГРИД: СПИСОК + ФОРМА
+         ══════════════════════════════════════════════════ -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- ─── Список записей ─── -->
         <section class="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100">
+
+            <div id="empty_filter_state" class="hidden text-center py-12">
+                <p class="text-4xl mb-3">🔍</p>
+                <p class="text-slate-700 font-medium">Ничего не найдено</p>
+                <p class="text-sm text-slate-400 mt-1">Попробуйте изменить фильтры</p>
+                <button type="button" onclick="resetFilters()" class="mt-4 text-sm font-medium text-emerald-600 hover:underline cursor-pointer">
+                    Сбросить фильтры
+                </button>
+            </div>
+
             {% if records %}
-            <p class="text-sm text-slate-500 mb-3 px-2">
-                Всего записей: <span class="font-semibold text-slate-700">{{ records|length }}</span>
-            </p>
-            <div class="divide-y divide-slate-100">
+            <div id="records_list" class="divide-y divide-slate-100">
                 {% for item in records %}
-                <div class="flex items-center justify-between py-3 px-3 rounded-xl transition
-                            {% if record and record.id == item.id %}ring-2 ring-emerald-500 bg-emerald-50/30{% else %}hover:bg-slate-50{% endif %}">
+                <div class="record-row flex items-center justify-between py-3 px-3 rounded-xl transition
+                            {% if record and record.id == item.id %}ring-2 ring-emerald-500 bg-emerald-50/30{% else %}hover:bg-slate-50{% endif %}"
+                     data-type="{% if item.operation_type %}expense{% else %}income{% endif %}"
+                     data-category="{{ item.category or '' }}">
+
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
                                     {% if item.operation_type %}bg-rose-50{% else %}bg-emerald-50{% endif %}">
@@ -42,12 +146,11 @@
                                 {% if item.category %}
                                 <span class="category-badge inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full"
                                       data-category="{{ item.category | lower }}">
+                                    <span class="cat-dot-badge w-1.5 h-1.5 rounded-full" data-category="{{ item.category | lower }}"></span>
                                     {{ item.category }}
                                 </span>
                                 {% else %}
-                                <span class="text-xs text-slate-400 px-2 py-0.5 bg-slate-100 rounded-full">
-                                    без категории
-                                </span>
+                                <span class="text-xs text-slate-400 px-2 py-0.5 bg-slate-100 rounded-full">без категории</span>
                                 {% endif %}
                             </div>
                             <p class="text-xs text-slate-500">
@@ -55,27 +158,21 @@
                             </p>
                         </div>
                     </div>
+
                     <div class="flex items-center gap-2 flex-shrink-0 ml-3">
-                        <p class="text-sm font-semibold whitespace-nowrap
-                                  {% if item.operation_type %}text-rose-600{% else %}text-emerald-600{% endif %}">
+                        <p class="record-amount text-sm font-semibold whitespace-nowrap {% if item.operation_type %}text-rose-600{% else %}text-emerald-600{% endif %}">
                             {% if item.operation_type %}-{% else %}+{% endif %}{{ item.value }} ₽
                         </p>
                         <a href="/change_record?id={{ item.id }}" title="Изменить"
-                           class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600
-                                  text-slate-500 flex items-center justify-center transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                           class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600 text-slate-500 flex items-center justify-center transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
                         </a>
-                        <button type="button" onclick="deleteRecord({{ item.id }})" title="Удалить"
-                                class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-rose-100 hover:text-rose-600
-                                       text-slate-500 flex items-center justify-center transition cursor-pointer">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/>
+                        <button type="button" onclick="deleteRecord({{ item.id }}, this)" title="Удалить"
+                                class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-rose-100 hover:text-rose-600 text-slate-500 flex items-center justify-center transition cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/>
                             </svg>
                         </button>
                     </div>
@@ -111,37 +208,28 @@
 
                         <!-- Тип операции -->
                         <div>
-                            <label class="text-xs font-medium text-slate-600 block mb-1">
-                                {{ form.operation_type.label.text }}
-                            </label>
+                            <label class="text-xs font-medium text-slate-600 block mb-1">{{ form.operation_type.label.text }}</label>
                             <div class="relative">
                                 {{ form.operation_type(
-                                    class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-white
-                                           focus:ring-2 focus:ring-emerald-500 focus:border-transparent
-                                           outline-none transition appearance-none cursor-pointer font-medium text-slate-700",
+                                    class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition appearance-none cursor-pointer font-medium text-slate-700",
                                     id="operation_type_select"
                                 ) }}
                                 <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                                     </svg>
                                 </div>
-                                <div id="type_indicator"
-                                     class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"></div>
+                                <div id="type_indicator" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"></div>
                             </div>
                             <p id="type_badge" class="text-xs font-medium mt-1.5"></p>
                         </div>
 
                         <!-- Сумма -->
                         <div>
-                            <label class="text-xs font-medium text-slate-600 block mb-1">
-                                {{ form.value.label.text }}
-                            </label>
+                            <label class="text-xs font-medium text-slate-600 block mb-1">{{ form.value.label.text }}</label>
                             <div class="relative">
                                 {{ form.value(
-                                    class="w-full border border-slate-200 rounded-xl px-4 py-2.5 pr-10
-                                           focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition",
+                                    class="w-full border border-slate-200 rounded-xl px-4 py-2.5 pr-10 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition",
                                     placeholder="0"
                                 ) }}
                                 <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">₽</span>
@@ -151,35 +239,26 @@
                             {% endfor %}
                         </div>
 
-                        <!-- ─── Категория: динамические чипы ─── -->
+                        <!-- Категория -->
                         <div>
                             <div class="flex items-center justify-between mb-2">
                                 <label class="text-xs font-medium text-slate-600">Категория</label>
                                 {% if not categories %}
-                                <a href="/" class="text-xs text-emerald-600 hover:underline">
-                                    Добавить на главной →
-                                </a>
+                                <a href="/" class="text-xs text-emerald-600 hover:underline">Добавить на главной →</a>
                                 {% endif %}
                             </div>
 
-                            <!-- Скрытый select WTForms -->
                             <div class="hidden">
                                 {{ form.category(id="edit_category_select") }}
                             </div>
 
                             {% if categories %}
-                            <!-- Grid чипов -->
                             <div class="grid grid-cols-2 gap-2" id="edit_category_chips">
                                 {% for cat in categories %}
-                                <button type="button"
-                                        data-value="{{ cat.name }}"
-                                        data-index="{{ loop.index0 }}"
+                                <button type="button" data-value="{{ cat.name }}" data-index="{{ loop.index0 }}"
                                         onclick="selectEditCategory(this)"
-                                        class="edit-chip flex items-center gap-2 px-3 py-2.5 rounded-xl
-                                               text-xs font-medium border border-slate-200 bg-slate-50
-                                               text-slate-600 transition cursor-pointer text-left">
-                                    <span class="w-2 h-2 rounded-full flex-shrink-0 cat-dot"
-                                          data-index="{{ loop.index0 }}"></span>
+                                        class="edit-chip flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium border border-slate-200 bg-slate-50 text-slate-600 transition cursor-pointer text-left">
+                                    <span class="cat-dot w-2 h-2 rounded-full flex-shrink-0" data-index="{{ loop.index0 }}"></span>
                                     <span class="truncate">{{ cat.name }}</span>
                                 </button>
                                 {% endfor %}
@@ -196,28 +275,17 @@
 
                         <!-- Комментарий -->
                         <div>
-                            <label class="text-xs font-medium text-slate-600 block mb-1">
-                                {{ form.comment.label.text }}
-                            </label>
+                            <label class="text-xs font-medium text-slate-600 block mb-1">{{ form.comment.label.text }}</label>
                             {{ form.comment(
-                                class="w-full border border-slate-200 rounded-xl px-4 py-2.5
-                                       focus:ring-2 focus:ring-emerald-500 focus:border-transparent
-                                       outline-none transition resize-none",
-                                rows="3", maxlength="150", id="commentField",
-                                placeholder="например: продукты в пятёрочке"
+                                class="w-full border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition resize-none",
+                                rows="3", maxlength="150", id="commentField", placeholder="например: продукты в пятёрочке"
                             ) }}
-                            <p class="text-xs text-slate-400 mt-1 text-right">
-                                <span id="charCount">0</span>/150
-                            </p>
+                            <p class="text-xs text-slate-400 mt-1 text-right"><span id="charCount">0</span>/150</p>
                         </div>
 
                         <div class="flex gap-2 pt-2">
-                            {{ form.submit(
-                                type="submit",
-                                class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl py-2.5 cursor-pointer transition"
-                            ) }}
-                            <a href="/change_record"
-                               class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl py-2.5 px-4 transition flex items-center">
+                            {{ form.submit(type="submit", class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl py-2.5 cursor-pointer transition") }}
+                            <a href="/change_record" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-xl py-2.5 px-4 transition flex items-center">
                                 Отмена
                             </a>
                         </div>
@@ -234,6 +302,12 @@
         </aside>
     </div>
 </main>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 translate-y-24 opacity-0 bg-slate-900 text-white text-sm font-medium rounded-2xl px-5 py-3 shadow-xl transition-all duration-300 z-50 flex items-center gap-2 pointer-events-none">
+    <span id="toast_icon"></span>
+    <span id="toast_text"></span>
+</div>
 
 <script>
 /* ════════════════════════════════════════════
@@ -253,42 +327,236 @@ const COLOR_PALETTE = [
 const CATEGORY_CONFIG = {};
 {% for cat in categories %}
 CATEGORY_CONFIG['{{ cat.name | lower }}'] = {
-    id:    {{ cat.id }},
     index: {{ loop.index0 }},
     ...COLOR_PALETTE[{{ loop.index0 }} % COLOR_PALETTE.length]
 };
 {% endfor %}
 
-/* Красим точки */
 function applyDotColors() {
+    // Точки в чипах редактирования
     document.querySelectorAll('.cat-dot[data-index]').forEach(el => {
         const idx = parseInt(el.dataset.index) % COLOR_PALETTE.length;
         el.className = 'w-2 h-2 rounded-full flex-shrink-0 ' + COLOR_PALETTE[idx].dot;
     });
-    document.querySelectorAll('.cat-dot-badge[data-category]').forEach(el => {
+    // Бейджи и точки в списке записей
+    document.querySelectorAll('.cat-dot-badge[data-category], .cat-dot-filter[data-category]').forEach(el => {
         const cfg = CATEGORY_CONFIG[el.dataset.category];
-        if (cfg) el.className = 'w-1.5 h-1.5 rounded-full flex-shrink-0 ' + cfg.dot;
+        if (cfg) el.className = (el.classList.contains('cat-dot-filter') ? 'cat-dot-filter w-1.5 h-1.5 rounded-full flex-shrink-0 ' : 'cat-dot-badge w-1.5 h-1.5 rounded-full flex-shrink-0 ') + cfg.dot;
     });
     document.querySelectorAll('.category-badge[data-category]').forEach(el => {
         const cfg = CATEGORY_CONFIG[el.dataset.category];
         if (cfg) el.classList.add(...cfg.badge.split(' '));
-        else     el.classList.add('bg-slate-100', 'text-slate-600');
+        else el.classList.add('bg-slate-100', 'text-slate-600');
     });
 }
 applyDotColors();
 
 /* ════════════════════════════════════════════
-   ЧИПЫ КАТЕГОРИЙ В ФОРМЕ РЕДАКТИРОВАНИЯ
+   СОСТОЯНИЕ И УТИЛИТЫ ФИЛЬТРАЦИИ
+   ════════════════════════════════════════════ */
+let currentType = 'all';
+let currentCats = new Set();
+let isFiltered = false;
+
+function showToast(msg, ok = true) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast_icon').textContent = ok ? '✓' : '✕';
+    document.getElementById('toast_text').textContent = msg;
+    t.classList.toggle('bg-slate-900', ok);
+    t.classList.toggle('bg-rose-600', !ok);
+    t.classList.remove('translate-y-24', 'opacity-0');
+    t.classList.add('translate-y-0', 'opacity-100');
+    setTimeout(() => {
+        t.classList.add('translate-y-24', 'opacity-0');
+        t.classList.remove('translate-y-0', 'opacity-100');
+    }, 2800);
+}
+
+function fmt(n) {
+    return n.toLocaleString('ru-RU');
+}
+
+function applyFilters() {
+    const rows = document.querySelectorAll('.record-row');
+    let visible = 0, totIncome = 0, totExpense = 0;
+
+    rows.forEach(row => {
+        const type = row.dataset.type;
+        const cat = row.dataset.category;
+
+        const typeOk = currentType === 'all' || currentType === type;
+        const catOk = currentCats.size === 0 || currentCats.has(cat) || (currentCats.has('none') && cat === '');
+
+        if (typeOk && catOk) {
+            row.style.display = '';
+            visible++;
+            const amtEl = row.querySelector('.record-amount');
+            if (amtEl) {
+                const raw = amtEl.textContent.replace(/[^\d]/g,'');
+                const val = parseInt(raw) || 0;
+                if (type === 'income') totIncome += val;
+                if (type === 'expense') totExpense += val;
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    document.getElementById('summary_count').textContent = visible;
+    document.getElementById('summary_income').textContent = '+' + fmt(totIncome) + ' ₽';
+    document.getElementById('summary_expense').textContent = '-' + fmt(totExpense) + ' ₽';
+
+    const total = totIncome - totExpense;
+    const totalEl = document.getElementById('summary_total');
+    totalEl.textContent = (total > 0 ? '+' : '') + fmt(total) + ' ₽';
+    totalEl.className = 'font-semibold ' + (total > 0 ? 'text-emerald-600' : (total < 0 ? 'text-rose-600' : 'text-slate-800'));
+
+    const emptyState = document.getElementById('empty_filter_state');
+    const recordsList = document.getElementById('records_list');
+
+    if (emptyState) emptyState.classList.toggle('hidden', visible > 0);
+    if (recordsList) recordsList.style.display = visible > 0 ? '' : 'none';
+
+    isFiltered = currentType !== 'all' || currentCats.size > 0;
+    document.getElementById('reset_btn').classList.toggle('hidden', !isFiltered);
+}
+
+function setTypeFilter(type, btn) {
+    currentType = type;
+    document.querySelectorAll('.type-btn').forEach(b => {
+        b.classList.remove('active', 'bg-white', 'shadow-sm', 'text-slate-800');
+        b.classList.add('text-slate-500');
+    });
+    btn.classList.add('active', 'bg-white', 'shadow-sm', 'text-slate-800');
+    btn.classList.remove('text-slate-500');
+    applyFilters();
+}
+
+function toggleCatFilter(val, btn) {
+    if (val === 'all') {
+        currentCats.clear();
+        document.querySelectorAll('.cat-filter').forEach(b => {
+            if (b.dataset.value === 'all') {
+                b.className = 'cat-filter active text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-white cursor-pointer transition';
+            } else {
+                b.className = 'cat-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 cursor-pointer hover:bg-slate-100 transition';
+            }
+        });
+    } else {
+        const allBtn = document.querySelector('.cat-filter[data-value="all"]');
+        allBtn.className = 'cat-filter text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer hover:bg-slate-100 transition';
+
+        if (currentCats.has(val)) {
+            currentCats.delete(val);
+            btn.className = 'cat-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 cursor-pointer hover:bg-slate-100 transition';
+        } else {
+            currentCats.add(val);
+            const cfg = CATEGORY_CONFIG[val.toLowerCase()];
+            const activeCls = cfg ? cfg.active : 'border-slate-400 bg-slate-100 text-slate-700';
+            btn.className = `cat-filter active flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border ${activeCls} cursor-pointer transition`;
+        }
+
+        if (currentCats.size === 0) {
+            allBtn.className = 'cat-filter active text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-white cursor-pointer transition';
+        }
+    }
+    applyFilters();
+}
+
+function resetFilters() {
+    currentType = 'all';
+    currentCats.clear();
+
+    document.querySelectorAll('.type-btn').forEach((b, i) => {
+        if (i === 0) {
+            b.classList.add('active', 'bg-white', 'shadow-sm', 'text-slate-800');
+            b.classList.remove('text-slate-500');
+        } else {
+            b.classList.remove('active', 'bg-white', 'shadow-sm', 'text-slate-800');
+            b.classList.add('text-slate-500');
+        }
+    });
+
+    document.querySelectorAll('.cat-filter').forEach(b => {
+        if (b.dataset.value === 'all') {
+            b.className = 'cat-filter active text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-white cursor-pointer transition';
+        } else {
+            b.className = 'cat-filter flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 cursor-pointer hover:bg-slate-100 transition';
+        }
+    });
+
+    applyFilters();
+    showToast('Фильтры сброшены');
+}
+
+/* ════════════════════════════════════════════
+   ЛОГИКА ЭКСПОРТА (Fetch API)
+   ════════════════════════════════════════════ */
+async function exportToExcel(btn) {
+    const icon = document.getElementById('export_icon');
+    const spinner = document.getElementById('export_spinner');
+    const label = document.getElementById('export_label');
+
+    // UI Loading state
+    btn.disabled = true;
+    icon.classList.add('hidden');
+    spinner.classList.remove('hidden');
+    label.textContent = 'Подготовка...';
+
+    try {
+        const response = await fetch(`/user/me/records/excel`, {
+            method: 'GET',
+        });
+
+        if (!response.ok) throw new Error('Network response was not ok');
+
+        // Создаем Blob (файл) из ответа и скачиваем его без перезагрузки
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+
+        // Читаем имя файла из заголовков или задаем дефолтное
+        const disposition = response.headers.get('Content-Disposition');
+        let filename = 'moneysaver_export.xlsx';
+        if (disposition && disposition.indexOf('attachment') !== -1) {
+            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            const matches = filenameRegex.exec(disposition);
+            if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
+        }
+
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+
+        showToast('Экспорт успешно завершен!');
+    } catch (error) {
+        console.error('Export error:', error);
+        showToast('Ошибка при экспорте', false);
+    } finally {
+        // Возвращаем UI в норму
+        btn.disabled = false;
+        icon.classList.remove('hidden');
+        spinner.classList.add('hidden');
+        label.textContent = 'Экспорт в Excel';
+    }
+}
+
+/* ════════════════════════════════════════════
+   РЕДАКТИРОВАНИЕ, УДАЛЕНИЕ И ФОРМЫ
    ════════════════════════════════════════════ */
 const CHIP_BASE_EDIT = 'edit-chip flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium border transition cursor-pointer text-left';
-const CHIP_IDLE      = 'border-slate-200 bg-slate-50 text-slate-600';
+const CHIP_IDLE = 'border-slate-200 bg-slate-50 text-slate-600';
 
 function selectEditCategory(btn) {
-    const chips  = document.querySelectorAll('#edit_category_chips .edit-chip');
+    const chips = document.querySelectorAll('#edit_category_chips .edit-chip');
     const select = document.getElementById('edit_category_select');
-    const hint   = document.getElementById('edit_category_hint');
-    const val    = btn.dataset.value;
-    const cfg    = CATEGORY_CONFIG[val?.toLowerCase()];
+    const hint = document.getElementById('edit_category_hint');
+    const val = btn.dataset.value;
+    const cfg = CATEGORY_CONFIG[val?.toLowerCase()];
+    const wasSelected = btn.dataset.selected === 'true';
 
     chips.forEach(c => {
         c.className = CHIP_BASE_EDIT + ' ' + CHIP_IDLE;
@@ -296,74 +564,82 @@ function selectEditCategory(btn) {
         const dot = c.querySelector('.cat-dot, span');
         if (dot && dot.dataset.index !== undefined) {
             const idx = parseInt(dot.dataset.index) % COLOR_PALETTE.length;
-            dot.className = 'w-2 h-2 rounded-full flex-shrink-0 ' + COLOR_PALETTE[idx].dot;
+            dot.className = 'cat-dot w-2 h-2 rounded-full flex-shrink-0 ' + COLOR_PALETTE[idx].dot;
         }
     });
 
-    if (btn.dataset.selected === 'true') {
+    if (wasSelected) {
         btn.dataset.selected = 'false';
         if (select) select.value = '';
         hint.textContent = 'Не выбрана';
-        hint.className   = 'text-xs text-slate-400 mt-1.5';
+        hint.className = 'text-xs text-slate-400 mt-1.5';
     } else {
         btn.dataset.selected = 'true';
         btn.className = CHIP_BASE_EDIT + ' ' + (cfg?.active || CHIP_IDLE);
         if (select) select.value = val;
         hint.textContent = val.charAt(0).toUpperCase() + val.slice(1);
-        hint.className   = 'text-xs font-medium mt-1.5 text-slate-700';
+        hint.className = 'text-xs font-medium mt-1.5 text-slate-700';
     }
 }
 
-/* Восстановить выбор при загрузке */
 const editSelect = document.getElementById('edit_category_select');
 if (editSelect?.value) {
     const saved = document.querySelector('#edit_category_chips [data-value="' + editSelect.value + '"]');
     if (saved) selectEditCategory(saved);
 }
 
-/* ════════════════════════════════════════════
-   ПОДСВЕТКА OPERATION TYPE SELECT
-   ════════════════════════════════════════════ */
 function updateSelectStyle(select, indicatorId, badgeId) {
     const indicator = document.getElementById(indicatorId);
-    const badge     = document.getElementById(badgeId);
+    const badge = document.getElementById(badgeId);
     if (!indicator || !badge) return;
     if (select.value === '0') {
         select.classList.remove('border-rose-300', 'bg-rose-50/30');
         select.classList.add('border-emerald-300', 'bg-emerald-50/30');
         indicator.className = 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-500';
-        badge.textContent   = '💵 Доход';
-        badge.className     = 'text-xs font-medium mt-1.5 text-emerald-600';
+        badge.textContent = '💵 Доход';
+        badge.className = 'text-xs font-medium mt-1.5 text-emerald-600';
     } else {
         select.classList.remove('border-emerald-300', 'bg-emerald-50/30');
         select.classList.add('border-rose-300', 'bg-rose-50/30');
         indicator.className = 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-rose-500';
-        badge.textContent   = '💸 Расход';
-        badge.className     = 'text-xs font-medium mt-1.5 text-rose-600';
+        badge.textContent = '💸 Расход';
+        badge.className = 'text-xs font-medium mt-1.5 text-rose-600';
     }
     select.style.paddingLeft = '1.75rem';
 }
+
 const opSelect = document.getElementById('operation_type_select');
 if (opSelect) {
     updateSelectStyle(opSelect, 'type_indicator', 'type_badge');
     opSelect.addEventListener('change', function() { updateSelectStyle(this, 'type_indicator', 'type_badge'); });
 }
 
-/* ════════════════════════════════════════════
-   СЧЁТЧИК СИМВОЛОВ + SUBMIT + УДАЛЕНИЕ
-   ════════════════════════════════════════════ */
 const commentField = document.getElementById('commentField');
-const charCount    = document.getElementById('charCount');
+const charCount = document.getElementById('charCount');
 if (commentField && charCount) {
     const update = () => charCount.textContent = commentField.value.length;
     update();
     commentField.addEventListener('input', update);
 }
 
-function deleteRecord(id) {
+function deleteRecord(id, btn) {
     if (!confirm('Удалить эту запись? Действие нельзя отменить.')) return;
     fetch('/records/' + id, { method: 'DELETE' })
-        .then(() => window.location.href = '/change_record')
+        .then(res => {
+            if (res.ok) {
+                const row = btn.closest('.record-row');
+                row.style.transition = 'opacity 0.2s, transform 0.2s';
+                row.style.opacity = '0';
+                row.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    row.remove();
+                    applyFilters();
+                    showToast('Запись удалена');
+                }, 200);
+            } else {
+                showToast('Ошибка при удалении', false);
+            }
+        })
         .catch(err => console.error(err));
 }
 
@@ -374,9 +650,15 @@ document.getElementById('EditForm')?.addEventListener('submit', function(e) {
         method: 'PUT',
         body: new URLSearchParams(new FormData(this))
     })
-    .then(() => window.location.href = '/change_record')
+    .then(res => {
+        if (res.ok) window.location.href = '/change_record';
+        else showToast('Ошибка при сохранении', false);
+    })
     .catch(err => console.error(err));
 });
 {% endif %}
+
+// Запуск инициализации фильтров при загрузке
+document.addEventListener('DOMContentLoaded', applyFilters);
 </script>
 {% endblock %}

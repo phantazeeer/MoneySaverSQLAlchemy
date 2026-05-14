@@ -52,14 +52,16 @@ class CategoryService:
     async def delete_category(self, user_id: int, category_id: int | str):
         try:
             async with self.uow:
-                if isinstance(category_id, str):
-                    category = await self.uow.categories.get_one(user_id=user_id, name=category_id)
-                    await self.uow.session.delete(category)
-                elif isinstance(category_id, int):
-                    category = await self.uow.categories.get_one(user_id=user_id, id=category_id)
-                    await self.uow.session.delete(category)
-        except NoResultFound:
-            raise ValueError("Запись не найдена") from None
+                if isinstance(category_id, int) or category_id.isnumeric():
+                    try:
+                        category = await self.uow.categories.get_one(user_id=user_id, id=int(category_id))
+                        await self.uow.categories.delete_by_id(id=int(category_id))
+                    except NoResultFound:
+                        await self.uow.categories.delete_by_name_and_user(user_id=user_id, name=str(category_id))
+                elif isinstance(category_id, str):
+                    await self.uow.categories.delete_by_name_and_user(user_id=user_id, name=category_id)
+                else:
+                    raise ValueError("Category should be int or str")
         except Exception:
             log.exception(
                 "Error caused in delete_category with user_id=%s, category=%s",

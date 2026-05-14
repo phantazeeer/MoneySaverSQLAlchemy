@@ -137,6 +137,7 @@ async def change_record(
     categ_service: Annotated[CategoryService, Depends(get_categories_service)],
     id: Annotated[int | None, Query()] = None,
 ):
+    categories = await categ_service.get_user_categories(user_id)
     if isinstance(id, NoneType):
         records = await ce_service.get_records_by(user_id=user_id)
         try:
@@ -149,6 +150,7 @@ async def change_record(
                     "user": user,
                     "records": records,
                     "form": None,
+                    "categories": categories,
                 },
             )
         except Exception as err:
@@ -159,8 +161,7 @@ async def change_record(
         record = await ce_service.get_records_by(id=id, user_id=user_id)
         try:
             user = await user_service.get_user_by(id=user_id)
-            categories = [i.name for i in await categ_service.get_user_categories(user_id)]
-            form = ChangeRecordForm(categories=categories)
+            form = ChangeRecordForm(categories=[i.name for i in categories])
             form.value.data = record.value
             form.operation_type.data = record.operation_type
             form.comment.data = record.comment
@@ -172,11 +173,13 @@ async def change_record(
                     "user": user,
                     "records": records,
                     "form": form,
+                    "categories": categories,
                 },
             )
         except Exception as err:
             if str(err) == "Пользователь не найден":
                 raise HTTPException(400, "Пользователь не найден") from None
+            raise
 
 
 @router.get("/statistics", name="statistics_page")

@@ -17,4 +17,4 @@ class CostsAndEarnings(Base):
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(tz=timezone.utc).replace(tzinfo=None))
 
     user: Mapped["User"] = relationship(back_populates="costs_and_earnings")
-    category: Mapped["Category"] = relationship(back_populates="costs_and_earnings")
+    category: Mapped["Category"] = relationship(back_populates="costs_and_earnings", lazy="selectin")
