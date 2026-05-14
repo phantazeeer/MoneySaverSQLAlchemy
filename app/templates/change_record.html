@@ -503,16 +503,8 @@ async function exportToExcel(btn) {
     spinner.classList.remove('hidden');
     label.textContent = 'Подготовка...';
 
-    // Собираем параметры фильтров для бэкенда
-    const params = new URLSearchParams();
-    if (currentType !== 'all') params.append('type', currentType);
-    if (currentCats.size > 0) {
-        currentCats.forEach(cat => params.append('category', cat));
-    }
-
     try {
-        // Замени '/api/export' на твой реальный роут в FastAPI
-        const response = await fetch(`/api/export?${params.toString()}`, {
+        const response = await fetch(`/user/me/records/excel`, {
             method: 'GET',
         });
 
@@ -591,12 +583,10 @@ function selectEditCategory(btn) {
 }
 
 const editSelect = document.getElementById('edit_category_select');
-console.log("1", editSelect?.value);
 if (editSelect?.value) {
     const saved = document.querySelector('#edit_category_chips [data-value="' + editSelect.value + '"]');
     if (saved) selectEditCategory(saved);
 }
-console.log("2", editSelect?.value);
 
 function updateSelectStyle(select, indicatorId, badgeId) {
     const indicator = document.getElementById(indicatorId);
