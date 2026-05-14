@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Response, status
+from fastapi.responses import StreamingResponse
 
 from app.api.endpoints.costs_and_earnings import CEService, Record
 from app.api.endpoints.costs_and_earnings import get_service as get_ce_service
@@ -129,4 +130,20 @@ async def delete_limits(
     except Exception as err:
         if str(err) == "У пользователя нет лимитов":
             raise HTTPException(404, "У пользователя не найдены лимиты") from None
+        raise
+
+
+@router.get("/me/records/excel", response_class=StreamingResponse)
+async def export(
+    user_id: Annotated[int, Depends(get_jwt_payload)],
+    service: Annotated[UserService, Depends(get_service)],
+) -> StreamingResponse:
+    try:
+        table = await service.export_to_excel(user_id)
+        return StreamingResponse(
+            table,
+            media_type="application/vnd.ms-excel",
+            headers={"Content-Disposition": "attachment; filename=records.xlsx"},
+        )
+    except Exception:
         raise

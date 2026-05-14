@@ -1,5 +1,7 @@
 from datetime import date
+from io import BytesIO
 
+from openpyxl import Workbook
 from sqlalchemy.exc import NoResultFound
 
 from app.api.schemas import Category, User
@@ -111,3 +113,29 @@ class UserService:
                 exc_info=False,
             )
             raise
+
+    async def export_to_excel(self, user_id: int):
+        try:
+            async with self.uow:
+                buffer = BytesIO()
+                table = Workbook()
+                ws = table.active
+                ws.append(["№", "Дата", "Время", "Тип операции", "Сумма", "Категория", "Комментарий"])
+                db_records = (await self.uow.records.get_list_by(user_id=user_id)).all()
+                for idx, el in enumerate(db_records):
+                    ws.append(
+                        [
+                            idx + 1,
+                            el.created_at.date().strftime("%d.%m.%Y"),
+                            el.created_at.time().strftime("%H:%M"),
+                            "Расход" if el.operation_type else "Доход",
+                            el.value,
+                            el.category.name if el.category else None,
+                            el.comment,
+                        ],
+                    )
+                table.save(buffer)
+                buffer.seek(0)
+                return buffer
+        except NoResultFound:
+            raise Exception("У пользователя нет записей") from None
