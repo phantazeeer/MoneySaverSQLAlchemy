@@ -56,11 +56,8 @@ class CategoryService:
                     try:
                         category = await self.uow.categories.get_one(user_id=user_id, id=int(category_id))
                         await self.uow.categories.delete_by_id(id=int(category_id))
-                    except Exception as err:
-                        if str(err) == "Такого лимита не существует":
-                            await self.uow.categories.delete_by_name_and_user(user_id=user_id, name=category_id)
-                        else:
-                            raise
+                    except NoResultFound:
+                        await self.uow.categories.delete_by_name_and_user(user_id=user_id, name=str(category_id))
                 elif isinstance(category_id, str):
                     await self.uow.categories.delete_by_name_and_user(user_id=user_id, name=category_id)
                 else:

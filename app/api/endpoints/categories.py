@@ -44,8 +44,6 @@ async def delete_category(
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[CategoryService, Depends(get_service)],
 ):
-    if category.isdigit():
-        category = int(category)
     try:
         return await service.delete_category(category_id=category, user_id=user_id)
     except ValueError as err:
