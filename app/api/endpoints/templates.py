@@ -150,7 +150,7 @@ async def change_record(
                     "user": user,
                     "records": records,
                     "form": None,
-                    "categories": categories
+                    "categories": categories,
                 },
             )
         except Exception as err:

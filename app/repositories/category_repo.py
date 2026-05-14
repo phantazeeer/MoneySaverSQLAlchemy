@@ -1,5 +1,5 @@
-from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy import delete
+from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from app.db.models import Category
 from app.utils.logger import get_logger
