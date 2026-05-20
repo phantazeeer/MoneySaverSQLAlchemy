@@ -163,8 +163,9 @@ async def change_record(
             user = await user_service.get_user_by(id=user_id)
             form = ChangeRecordForm(categories=[i.name for i in categories])
             form.value.data = record.value
-            form.operation_type.data = record.operation_type
+            form.operation_type.data = "1" if record.operation_type else "0"
             form.comment.data = record.comment
+            form.category.data = record.category
             return templates.TemplateResponse(
                 request=req,
                 name="change_record.html",

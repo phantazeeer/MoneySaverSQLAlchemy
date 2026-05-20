@@ -47,6 +47,7 @@ async def update(
 ) -> str:
     try:
         op_type = int(changes.operation_type) if changes.operation_type else None
+        changes.category = None if changes.category == "" else changes.category
         await service.update_record(id, user_id, op_type, changes.value, changes.comment, changes.category)
         return "OK"
     except ValueError as err:
