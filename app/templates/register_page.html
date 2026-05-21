@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Регистрация — MoneySaver{% endblock %}
+{% block body %}
+<main class="min-h-[calc(100vh-65px)] flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 sm:p-10">
+            <div class="text-center mb-8">
+                <p class="text-4xl mb-3">🚀</p>
+                <h1 class="text-2xl font-bold text-slate-900">Создайте аккаунт</h1>
+                <p class="text-sm text-slate-500 mt-1">Начните контролировать финансы за 30 секунд</p>
+            </div>
+
+            <form id="RegisterForm" method="POST" class="space-y-4">
+                {{ form.hidden_tag }}
+
+                <div>
+                    <label class="text-sm font-medium text-slate-700">{{ form.username.label.text }}</label>
+                    {{ form.username(class="w-full mt-1 border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition", placeholder="Иван") }}
+                    {% for e in form.username.errors %}
+                        <p class="text-xs text-rose-600 mt-1">{{ e }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-slate-700">{{ form.email.label.text }}</label>
+                    {{ form.email(class="w-full mt-1 border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition", placeholder="you@example.com") }}
+                    {% for e in form.email.errors %}
+                        <p class="text-xs text-rose-600 mt-1">{{ e }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-slate-700">{{ form.password.label.text }}</label>
+                    <div class="relative mt-1">
+                        {{ form.password(class="w-full border border-slate-200 rounded-xl px-4 py-2.5 pr-11 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition", placeholder="••••••••", id="pwd") }}
+                        <button type="button"
+                                onclick="const i=document.getElementById('pwd');i.type=i.type==='password'?'text':'password';"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">
+                            👁
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">Минимум 6 символов</p>
+                    {% for e in form.password.errors %}
+                        <p class="text-xs text-rose-600 mt-1">{{ e }}</p>
+                    {% endfor %}
+                </div>
+
+                <div id="error-box" class="hidden bg-rose-50 border border-rose-200 text-rose-700 rounded-xl p-3 text-sm"></div>
+
+                {{ form.submit(type="submit", class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl py-3 transition cursor-pointer") }}
+            </form>
+
+            <p class="text-center text-sm text-slate-500 mt-6">
+                Уже есть аккаунт?
+                <a href="/login" class="text-emerald-600 font-medium hover:underline">Войти</a>
+            </p>
+        </div>
+
+        <p class="text-center text-xs text-slate-400 mt-6">
+            Регистрируясь, вы соглашаетесь хранить свои финансы в безопасности 🔒
+        </p>
+    </div>
+</main>
+
+<script>
+    function showError(msg) {
+        const box = document.getElementById('error-box');
+        box.textContent = msg;
+        box.classList.remove('hidden');
+    }
+
+    document.getElementById('RegisterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button[type="submit"], input[type="submit"]');
+        const originalValue = btn.value || btn.textContent;
+        if (btn.tagName === 'INPUT') btn.value = 'Создаём...'; else btn.textContent = 'Создаём...';
+        btn.disabled = true;
+
+        fetch('/user/register', {
+            method: 'POST',
+            body: new FormData(this)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.detail); });
+            }
+            window.location.href = '/login';
+        })
+        .catch(error => {
+            showError(error.message || 'Ошибка регистрации');
+            if (btn.tagName === 'INPUT') btn.value = originalValue; else btn.textContent = originalValue;
+            btn.disabled = false;
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Вход — MoneySaver{% endblock %}
+{% block body %}
+<main class="min-h-[calc(100vh-65px)] flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 sm:p-10">
+            <div class="text-center mb-8">
+                <p class="text-4xl mb-3">💰</p>
+                <h1 class="text-2xl font-bold text-slate-900">С возвращением!</h1>
+                <p class="text-sm text-slate-500 mt-1">Войдите, чтобы управлять финансами</p>
+            </div>
+
+            <form id="LoginForm" method="POST" action="/user/login" class="space-y-4">
+                {{ form.hidden_tag }}
+                <div>
+                    <label class="text-sm font-medium text-slate-700">{{ form.email.label.text }}</label>
+                    {{ form.email(class="w-full mt-1 border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition", placeholder="you@example.com") }}
+                    {% for e in form.email.errors %}<p class="text-xs text-rose-600 mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-slate-700">{{ form.password.label.text }}</label>
+                    <div class="relative mt-1">
+                        {{ form.password(class="w-full border border-slate-200 rounded-xl px-4 py-2.5 pr-11 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition", placeholder="••••••••", id="pwd") }}
+                        <button type="button" onclick="const i=document.getElementById('pwd');i.type=i.type==='password'?'text':'password';"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">👁</button>
+                    </div>
+                    {% for e in form.password.errors %}<p class="text-xs text-rose-600 mt-1">{{ e }}</p>{% endfor %}
+                </div>
+
+                <div id="error-box" class="hidden bg-rose-50 border border-rose-200 text-rose-700 rounded-xl p-3 text-sm"></div>
+
+                {{ form.submit(type="submit", class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl py-3 transition cursor-pointer") }}
+            </form>
+
+            <p class="text-center text-sm text-slate-500 mt-6">
+                Нет аккаунта?
+                <a href="/register" class="text-emerald-600 font-medium hover:underline">Создать</a>
+            </p>
+        </div>
+    </div>
+</main>
+<script>
+    function showError(msg) {
+        const box = document.getElementById('error-box');
+        box.textContent = msg;
+        box.classList.remove('hidden');
+    }
+    document.getElementById('LoginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch('/user/login', { method: 'POST', body: new FormData(this) })
+            .then(r => r.ok ? window.location.href = '/' : r.json().then(err => { throw new Error(err.detail); }))
+            .catch(err => {
+                if (err.message === 'Неправильный пароль') showError('Неправильный пароль');
+                else if (err.message === '[object Object]') showError('Введите корректную почту');
+                else showError(err.message || 'Ошибка входа');
+            });
+    });
+</script>
+{% endblock %}

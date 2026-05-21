@@ -1,0 +1,1096 @@
+{% extends 'base.html' %}
+{% block title %}Главная — MoneySaver{% endblock %}
+{% block body %}
+<style>
+    @keyframes fadeIn {
+        from { opacity:0; transform:translateY(6px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+    .limit-item   { animation: fadeIn 0.22s ease both; }
+    .progress-bar { transition: width 0.7s cubic-bezier(0.4,0,0.2,1); }
+
+    @keyframes pulse-red {
+        0%,100% { opacity:1; } 50% { opacity:0.5; }
+    }
+    .exceeded-pulse { animation: pulse-red 1.8s ease-in-out infinite; }
+
+    .mode-tab { transition: all 0.18s ease; }
+    .mode-tab.active {
+        background: white;
+        color: #1e293b;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .period-card { transition: all 0.15s ease; }
+    .period-card.active {
+        border-color: #6366f1;
+        background: #eef2ff;
+    }
+    .period-card:not(.active):hover {
+        border-color: #c7d2fe;
+        background: #f5f3ff;
+    }
+
+    .cat-chip { transition: all 0.15s ease; }
+    .cat-chip.active { outline: 2px solid currentColor; outline-offset: 1px; }
+</style>
+<main class="max-w-5xl mx-auto px-4 py-10 space-y-8">
+    <!-- ══════════════════════════════════════
+             СПИСОК АНТИЦЕЛЕЙ
+             ══════════════════════════════════════ -->
+    <section>
+        <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">🚫 Антицели</h1>
+                <p class="text-sm text-slate-500 mt-0.5">
+                    Лимиты на расходы — повторяющиеся и одноразовые
+                </p>
+            </div>
+            <span id="exceeded_badge"
+                  class="exceeded-pulse hidden text-sm font-semibold
+                         bg-rose-500 text-white rounded-full px-3 py-1">
+            </span>
+        </div>
+
+        <div id="limits_list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {% for item in limits %}
+            {% set pct_raw = (item.spent / item.value * 100) | round | int if item.value > 0 else 0 %}
+            {% set pct = [pct_raw, 100] | min %}
+            {% set exceeded = item.spent > item.value %}
+            {% set warning = (not exceeded) and pct >= 75 %}
+
+            <div class="limit-item rounded-2xl border p-5 hover:shadow-sm transition group
+                        {% if exceeded %}bg-rose-50/60 border-rose-200
+                        {% elif warning %}bg-white border-amber-200
+                        {% else %}bg-white border-slate-100{% endif %}"
+                 data-id="{{ item.id }}"
+                 data-name="{{ item.name }}"
+                 data-amount="{{ item.value }}"
+                 data-spent="{{ item.spent }}">
+
+                <div class="flex items-start justify-between gap-2 mb-4">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <p class="text-base font-bold text-slate-900">{{ item.name }}</p>
+
+                            {# Тип лимита #}
+                            {% if item.period %}
+                            <span class="text-xs font-medium bg-slate-100 text-slate-500
+                                             px-2 py-0.5 rounded-full">
+                                    🔁 повторяющийся
+                                </span>
+                            {% else %}
+                            <span class="text-xs font-medium bg-violet-100 text-violet-700
+                                             px-2 py-0.5 rounded-full">
+                                    1️⃣ одноразовый
+                                </span>
+                            {% endif %}
+
+                            {# Статус #}
+                            {% if exceeded %}
+                            <span class="exceeded-pulse text-xs font-semibold bg-rose-500
+                                             text-white px-2 py-0.5 rounded-full">
+                                    Превышен!
+                                </span>
+                            {% elif warning %}
+                            <span class="text-xs font-medium bg-amber-100 text-amber-700
+                                             px-2 py-0.5 rounded-full">
+                                    ⚠ Замедляйся
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {# Кнопка удаления #}
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <button type="button"
+                                onclick="askDel(this)"
+                                class="del-ask w-8 h-8 rounded-xl text-slate-300
+                                       hover:bg-rose-50 hover:text-rose-500
+                                       flex items-center justify-center transition
+                                       opacity-0 group-hover:opacity-100 cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862
+                                         a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6
+                                         M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/>
+                            </svg>
+                        </button>
+                        <div class="del-confirm hidden flex items-center gap-1">
+                            <span class="text-xs text-rose-600 font-medium whitespace-nowrap">
+                                Удалить?
+                            </span>
+                            <button onclick="confirmDel(this)"
+                                    class="text-xs font-semibold bg-rose-500 hover:bg-rose-600
+                                           text-white rounded-lg px-2 py-1.5 cursor-pointer">
+                                Да
+                            </button>
+                            <button onclick="cancelDel(this)"
+                                    class="text-xs font-semibold bg-slate-200 hover:bg-slate-300
+                                           text-slate-600 rounded-lg px-2 py-1.5 cursor-pointer">
+                                Нет
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {# Прогресс #}
+                <div class="flex items-end justify-between mb-2">
+                    <div>
+                        <span class="text-2xl font-bold
+                            {% if exceeded %}text-rose-700
+                            {% elif warning %}text-amber-700
+                            {% else %}text-slate-900{% endif %}">
+                            {{ "{:,}".format(item.spent).replace(",", " ") }}
+                        </span>
+                        <span class="text-sm text-slate-400 ml-1">
+                            / {{ "{:,}".format(item.value).replace(",", " ") }} ₽
+                        </span>
+                    </div>
+                    <span class="text-sm font-bold
+                        {% if exceeded %}text-rose-600
+                        {% elif warning %}text-amber-600
+                        {% else %}text-emerald-600{% endif %}">
+                        {{ pct_raw }}%
+                    </span>
+                </div>
+
+                <div class="w-full rounded-full h-2.5 overflow-hidden
+                            {% if exceeded %}bg-rose-100{% else %}bg-slate-100{% endif %}">
+                    <div class="progress-bar h-full rounded-full
+                                {% if exceeded %}bg-rose-500
+                                {% elif warning %}bg-amber-400
+                                {% elif pct >= 60 %}bg-amber-400
+                                {% else %}bg-emerald-500{% endif %}"
+                         style="width: {{ pct }}%">
+                    </div>
+                </div>
+
+                {% if exceeded %}
+                <p class="text-xs text-rose-600 font-medium mt-1.5">
+                    Перерасход:
+                    <span class="font-bold">
+                            {{ "{:,}".format(item.spent - item.value).replace(",", " ") }} ₽
+                        </span>
+                </p>
+                {% else %}
+                <p class="text-xs mt-1.5
+                              {% if warning %}text-amber-700{% else %}text-slate-400{% endif %}">
+                    Осталось
+                    <span class="font-semibold
+                            {% if warning %}text-amber-700{% else %}text-slate-600{% endif %}">
+                            {{ "{:,}".format(item.value - item.spent).replace(",", " ") }} ₽
+                        </span>
+                </p>
+                {% endif %}
+
+            </div>
+            {% else %}
+            <div class="col-span-2 text-center py-12 text-slate-400">
+                <p class="text-4xl mb-3">🎯</p>
+                <p class="text-sm font-medium">Антицелей пока нет — добавьте первую!</p>
+            </div>
+            {% endfor %}
+
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         ФОРМА ДОБАВЛЕНИЯ
+         ══════════════════════════════════════ -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-6 border-b border-slate-100">
+            <h2 class="text-lg font-semibold text-slate-900">➕ Новая антицель</h2>
+        </div>
+
+        {#
+        Форма отправляется через fetch() из JS.
+        action и method здесь декоративны — JS перехватывает submit.
+        #}
+        <form id="limit_form" novalidate>
+            {{ form.hidden_tag }}
+
+            {# Скрытые поля, которые JS заполняет перед отправкой #}
+            {{ form.period(id="f_period_hidden", class="hidden") }}
+            {{ form.start(id="f_start_hidden", class="hidden") }}
+            {{ form.end(id="f_end_hidden", class="hidden") }}
+
+            <div class="p-6 space-y-6">
+
+                <!-- Название -->
+                <div>
+                    <label class="text-sm font-semibold text-slate-700 block mb-1.5">
+                        Название
+                    </label>
+                    {{ form.name(
+                    id="f_name",
+                    placeholder='например: «Кофе» или «Поездка в Казань»',
+                    maxlength=60,
+                    class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm
+                    focus:ring-2 focus:ring-rose-400 focus:border-transparent
+                    outline-none transition placeholder:text-slate-400"
+                    ) }}
+                </div>
+
+                <!-- Сумма -->
+                <div>
+                    <label class="text-sm font-semibold text-slate-700 block mb-1.5">
+                        Максимальная сумма трат
+                    </label>
+                    <div class="relative max-w-xs">
+                        {{ form.value(
+                        id="f_amount",
+                        placeholder="0",
+                        min=1,
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 pr-10
+                        text-sm font-semibold focus:ring-2 focus:ring-rose-400
+                        focus:border-transparent outline-none transition"
+                        ) }}
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2
+                                     text-slate-400 font-medium pointer-events-none">₽</span>
+                    </div>
+                </div>
+
+                <!-- Переключатель режима -->
+                <div>
+                    <label class="text-sm font-semibold text-slate-700 block mb-3">
+                        Тип лимита
+                    </label>
+                    <div class="bg-slate-100 rounded-xl p-1 flex w-full max-w-sm">
+                        <button type="button"
+                                id="tab_repeat"
+                                onclick="setMode('repeat')"
+                                class="mode-tab active flex-1 text-sm font-semibold
+                                       rounded-lg px-4 py-2 cursor-pointer text-slate-800">
+                            🔁 Повторяющийся
+                        </button>
+                        <button type="button"
+                                id="tab_once"
+                                onclick="setMode('once')"
+                                class="mode-tab flex-1 text-sm font-semibold rounded-lg
+                                       px-4 py-2 cursor-pointer text-slate-500">
+                            1️⃣ Одноразовый
+                        </button>
+                    </div>
+                    <p id="mode_hint" class="text-xs text-slate-500 mt-2">
+                        Лимит автоматически сбрасывается каждый период и действует постоянно
+                    </p>
+                </div>
+
+                <!-- Параметры: Повторяющийся -->
+                <div id="section_repeat" class="space-y-4">
+                    <label class="text-sm font-semibold text-slate-700 block">
+                        Период сброса
+                    </label>
+                    <div class="grid grid-cols-3 gap-3">
+
+                        <button type="button" data-value="day" onclick="selectPeriod(this)"
+                                class="period-card border-2 border-slate-200 rounded-2xl p-4
+                                       text-center cursor-pointer bg-slate-50">
+                            <div class="text-2xl mb-1.5">☀️</div>
+                            <p class="text-sm font-bold text-slate-800">День</p>
+                            <p class="text-xs text-slate-400 mt-1">сброс в 00:00</p>
+                            <p class="text-xs font-medium text-indigo-600 mt-2 bg-indigo-50
+                                      rounded-lg py-1" id="prev_day"></p>
+                        </button>
+
+                        <button type="button" data-value="week" onclick="selectPeriod(this)"
+                                class="period-card border-2 border-slate-200 rounded-2xl p-4
+                                       text-center cursor-pointer bg-slate-50">
+                            <div class="text-2xl mb-1.5">📅</div>
+                            <p class="text-sm font-bold text-slate-800">Неделя</p>
+                            <p class="text-xs text-slate-400 mt-1">сброс в пон.</p>
+                            <p class="text-xs font-medium text-indigo-600 mt-2 bg-indigo-50
+                                      rounded-lg py-1" id="prev_week"></p>
+                        </button>
+
+                        <button type="button" data-value="month" onclick="selectPeriod(this)"
+                                class="period-card active border-2 rounded-2xl p-4
+                                       text-center cursor-pointer">
+                            <div class="text-2xl mb-1.5">🗓</div>
+                            <p class="text-sm font-bold">Месяц</p>
+                            <p class="text-xs mt-1 opacity-60">сброс 1-го</p>
+                            <p class="text-xs font-medium text-indigo-600 mt-2 bg-indigo-50
+                                      rounded-lg py-1" id="prev_month"></p>
+                        </button>
+
+                    </div>
+                </div>
+
+                <!-- Параметры: Одноразовый -->
+                <div id="section_once" class="hidden space-y-4">
+
+                    <div>
+                        <label class="text-sm font-semibold text-slate-700 block mb-1.5">
+                            Диапазон дат
+                        </label>
+                        <!-- Быстрые пресеты -->
+                        <div class="flex flex-wrap gap-2 mb-3" id="presets">
+                            <button type="button" onclick="applyPreset(this)" data-days="7"
+                                    class="preset-btn text-xs font-medium bg-slate-100
+                                           hover:bg-indigo-100 hover:text-indigo-700
+                                           text-slate-600 rounded-lg px-3 py-1.5
+                                           transition cursor-pointer">
+                                Следующие 7 дней
+                            </button>
+                            <button type="button" onclick="applyPreset(this)" data-days="14"
+                                    class="preset-btn text-xs font-medium bg-slate-100
+                                           hover:bg-indigo-100 hover:text-indigo-700
+                                           text-slate-600 rounded-lg px-3 py-1.5
+                                           transition cursor-pointer">
+                                2 недели
+                            </button>
+                            <button type="button" onclick="applyPreset(this)" data-days="30"
+                                    class="preset-btn text-xs font-medium bg-slate-100
+                                           hover:bg-indigo-100 hover:text-indigo-700
+                                           text-slate-600 rounded-lg px-3 py-1.5
+                                           transition cursor-pointer">
+                                30 дней
+                            </button>
+                            <button type="button" onclick="applyPreset(this)"
+                                    data-special="month_rest"
+                                    class="preset-btn text-xs font-medium bg-slate-100
+                                           hover:bg-indigo-100 hover:text-indigo-700
+                                           text-slate-600 rounded-lg px-3 py-1.5
+                                           transition cursor-pointer">
+                                До конца месяца
+                            </button>
+                        </div>
+
+                        <!-- Поля дат (визуальные, не в WTForm) -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-xs font-medium text-slate-500 block mb-1">
+                                    Начало
+                                </label>
+                                <input type="date" id="f_start_ui"
+                                       class="w-full border border-slate-200 rounded-xl
+                                              px-4 py-2.5 text-sm focus:ring-2
+                                              focus:ring-rose-400 focus:border-transparent
+                                              outline-none transition">
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-500 block mb-1">
+                                    Конец
+                                </label>
+                                <input type="date" id="f_end_ui"
+                                       class="w-full border border-slate-200 rounded-xl
+                                              px-4 py-2.5 text-sm focus:ring-2
+                                              focus:ring-rose-400 focus:border-transparent
+                                              outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- Превью диапазона -->
+                        <div id="range_preview"
+                             class="hidden mt-3 flex items-center gap-2 bg-indigo-50
+                                    border border-indigo-100 rounded-xl px-4 py-2.5">
+                            <span class="text-indigo-500">📅</span>
+                            <span id="range_text"
+                                  class="text-sm font-medium text-indigo-700"></span>
+                        </div>
+                    </div>
+
+                    <!-- Подсказка -->
+                    <div class="flex items-start gap-2 bg-amber-50 border border-amber-100
+                                rounded-xl px-4 py-3 text-xs text-amber-700">
+                        <span class="flex-shrink-0 mt-0.5">💡</span>
+                        <span>
+                            После окончания периода антицель автоматически архивируется —
+                            вы сможете увидеть итог в истории
+                        </span>
+                    </div>
+
+                </div>
+
+                <!-- Категории -->
+                <div>
+                    <label class="text-sm font-semibold text-slate-700 block mb-1">
+                        Категории расходов
+                    </label>
+                    <p class="text-xs text-slate-500 mb-3">
+                        Расходы из выбранных категорий будут считаться в лимит
+                    </p>
+                    <div class="flex flex-wrap gap-2" id="cat_chips">
+                        {#
+                        Палитра цветов для категорий.
+                        Если категорий больше 6 — цикл начнётся заново.
+                        #}
+                        {% set palette = [
+                        ("border-orange-200", "bg-orange-50", "text-orange-700", "bg-orange-400"),
+                        ("border-blue-200", "bg-blue-50", "text-blue-700", "bg-blue-400"),
+                        ("border-pink-200", "bg-pink-50", "text-pink-700", "bg-pink-400"),
+                        ("border-purple-200", "bg-purple-50", "text-purple-700", "bg-purple-400"),
+                        ("border-teal-200", "bg-teal-50", "text-teal-700", "bg-teal-400"),
+                        ("border-yellow-200", "bg-yellow-50", "text-yellow-700", "bg-yellow-400"),
+                        ] %}
+
+                        {% for cat in categories %}
+                        {% set colors = palette[loop.index0 % palette | length] %}
+                        <button type="button"
+                                data-value="{{ cat }}"
+                                onclick="toggleCat(this)"
+                                class="cat-chip flex items-center gap-1.5 px-3 py-2
+                                       rounded-xl text-sm font-medium border-2
+                                       {{ colors[0] }} {{ colors[1] }} {{ colors[2] }}
+                                       cursor-pointer">
+                            <span class="w-2 h-2 rounded-full {{ colors[3] }}"></span>
+                            {{ cat }}
+                            <svg class="cat-check w-3.5 h-3.5 opacity-0"
+                                 xmlns="http://www.w3.org/2000/svg"
+                                 viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414L8.414
+                                         14l-4.121-4.121a1 1 0 011.414-1.414L8.414
+                                         11.172l6.879-6.879a1 1 0 011.414 0z"/>
+                            </svg>
+                        </button>
+                        {% endfor %}
+                    </div>
+                    <p id="cats_hint" class="text-xs text-slate-400 mt-2">
+                        Не выбрано — считаются все расходы
+                    </p>
+                </div>
+
+                <!-- Ошибка -->
+                <p id="f_error"
+                   class="hidden text-sm text-rose-600 bg-rose-50 border border-rose-200
+                          rounded-xl px-4 py-2.5">
+                </p>
+
+                <!-- Кнопка -->
+                <button type="button"
+                        id="submit_btn"
+                        onclick="addLimit()"
+                        class="w-full flex items-center justify-center gap-2 bg-rose-500
+                               hover:bg-rose-600 active:bg-rose-700 text-white font-semibold
+                               rounded-xl py-3 transition cursor-pointer text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Добавить антицель
+                </button>
+
+            </div>
+        </form>
+    </section>
+</main>
+<!-- Toast -->
+<div id="toast"
+     class="fixed bottom-6 left-1/2 -translate-x-1/2 translate-y-24 opacity-0
+            bg-slate-900 text-white text-sm font-medium rounded-2xl px-5 py-3
+            shadow-xl transition-all duration-300 z-50 flex items-center gap-2
+            pointer-events-none">
+    <span id="toast_icon"></span>
+    <span id="toast_text"></span>
+</div>
+
+<script>
+    /* ═══════════════════════════════════════════
+       УТИЛИТЫ
+       ═══════════════════════════════════════════ */
+    const RU_M = [
+        'января','февраля','марта','апреля','мая','июня',
+        'июля','августа','сентября','октября','ноября','декабря'
+    ];
+    const RU_MN = [
+        'январь','февраль','март','апрель','май','июнь',
+        'июль','август','сентябрь','октябрь','ноябрь','декабрь'
+    ];
+
+    function fmt(n)     { return n.toLocaleString('ru-RU'); }
+    function pad(n)     { return String(n).padStart(2, '0'); }
+    function isoDate(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+
+    function humanDate(iso) {
+        const [y, m, d] = iso.split('-').map(Number);
+        return `${d} ${RU_M[m-1]} ${y}`;
+    }
+
+    function showToast(msg, ok = true) {
+        const t = document.getElementById('toast');
+        document.getElementById('toast_icon').textContent = ok ? '✓' : '✕';
+        document.getElementById('toast_text').textContent = msg;
+        t.classList.toggle('bg-slate-900', ok);
+        t.classList.toggle('bg-rose-600',  !ok);
+        t.classList.remove('translate-y-24', 'opacity-0');
+        t.classList.add('translate-y-0', 'opacity-100');
+        setTimeout(() => {
+            t.classList.add('translate-y-24', 'opacity-0');
+            t.classList.remove('translate-y-0', 'opacity-100');
+        }, 2800);
+    }
+
+    /* ═══════════════════════════════════════════
+       ВЫЧИСЛЕНИЕ ДАТ ПЕРИОДОВ
+       ═══════════════════════════════════════════ */
+
+    /**
+     * Возвращает { start: Date, end: Date } для текущего периода.
+     * end — последний день периода (включительно).
+     */
+    function getPeriodDates(period) {
+    const now = new Date();
+    const y   = now.getFullYear();
+    const m   = now.getMonth();
+    const d   = now.getDate();
+
+    if (period === 'day') {
+        // end = завтра
+        return {
+            start: new Date(y, m, d),
+            end:   new Date(y, m, d + 1),
+        };
+    }
+
+    if (period === 'week') {
+        const wd  = now.getDay() || 7;
+        const mon = new Date(y, m, d - wd + 1);
+        // end = следующий понедельник (не вс, а пн следующей недели)
+        const nextMon = new Date(y, m, d - wd + 8);
+        return { start: mon, end: nextMon };
+    }
+
+    // month: end = первое число следующего месяца
+    return {
+        start: new Date(y, m, 1),
+        end:   new Date(y, m + 1, 1),
+    };
+}
+// ── Добавить после закрывающей } функции getPeriodDates ──
+
+function getPeriodLabel(period) {
+    const { start, end } = getPeriodDates(period);
+    // Показываем пользователю человекочитаемый диапазон без +1 (end эксклюзивный)
+    const displayEnd = new Date(end);
+    displayEnd.setDate(displayEnd.getDate() - 1);
+
+    const sm = start.getMonth(), sd = start.getDate();
+    const em = displayEnd.getMonth(), ed = displayEnd.getDate();
+    if (sm === em) return `${sd}–${ed} ${RU_M[sm]}`;
+    return `${sd} ${RU_M[sm]} – ${ed} ${RU_M[em]}`;
+}
+
+// Инициализация превью в карточках периода
+['day', 'week', 'month'].forEach(p => {
+    const el = document.getElementById('prev_' + p);
+    if (el) el.textContent = getPeriodLabel(p);
+});
+
+
+    /* ═══════════════════════════════════════════
+       ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА
+       ═══════════════════════════════════════════ */
+    let currentMode = 'repeat';
+
+    function setMode(mode) {
+    currentMode = mode;
+    const isRepeat = mode === 'repeat';
+
+    const tabRepeat = document.getElementById('tab_repeat');
+    const tabOnce   = document.getElementById('tab_once');
+
+    // Активный/неактивный фон (уже был)
+    tabRepeat.classList.toggle('active', isRepeat);
+    tabOnce.classList.toggle('active',  !isRepeat);
+
+    // ── Новое: переключаем цвет и жирность текста ──
+    tabRepeat.classList.toggle('text-slate-800',  isRepeat);
+    tabRepeat.classList.toggle('font-bold',        isRepeat);
+    tabRepeat.classList.toggle('text-slate-500',  !isRepeat);
+    tabRepeat.classList.toggle('font-semibold',   !isRepeat);
+
+    tabOnce.classList.toggle('text-slate-800',   !isRepeat);
+    tabOnce.classList.toggle('font-bold',         !isRepeat);
+    tabOnce.classList.toggle('text-slate-500',    isRepeat);
+    tabOnce.classList.toggle('font-semibold',     isRepeat);
+    // ────────────────────────────────────────────
+
+    document.getElementById('section_repeat').classList.toggle('hidden', !isRepeat);
+    document.getElementById('section_once').classList.toggle('hidden',    isRepeat);
+
+    document.getElementById('mode_hint').textContent = isRepeat
+        ? 'Лимит автоматически сбрасывается каждый период и действует постоянно'
+        : 'Лимит действует один раз — в выбранный диапазон дат, затем архивируется';
+}
+
+
+    /* ═══════════════════════════════════════════
+       ВЫБОР ПЕРИОДА (повторяющийся)
+       ═══════════════════════════════════════════ */
+    let selectedPeriod = 'month';
+
+    function selectPeriod(btn) {
+    document.querySelectorAll('.period-card').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    selectedPeriod = btn.dataset.value;
+    // ── Добавить эту строку ──
+    document.getElementById('f_period_hidden').value = selectedPeriod;
+}
+
+
+    /* ═══════════════════════════════════════════
+       ПРЕСЕТЫ ДАТ (одноразовый)
+       ═══════════════════════════════════════════ */
+    function applyPreset(btn) {
+        document.querySelectorAll('.preset-btn').forEach(b => {
+            b.classList.remove('bg-indigo-100','text-indigo-700');
+            b.classList.add('bg-slate-100','text-slate-600');
+        });
+        btn.classList.remove('bg-slate-100','text-slate-600');
+        btn.classList.add('bg-indigo-100','text-indigo-700');
+
+        const now   = new Date();
+        const start = document.getElementById('f_start_ui');
+        const end   = document.getElementById('f_end_ui');
+
+            if (btn.dataset.days) {
+        const days    = parseInt(btn.dataset.days);
+        const endDate = new Date(now);
+        // +days (без -1), потому что end эксклюзивный
+        endDate.setDate(now.getDate() + days);
+        start.value = isoDate(now);
+        end.value   = isoDate(endDate);
+    } else if (btn.dataset.special === 'month_rest') {
+        // первое число следующего месяца
+        const firstNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        start.value = isoDate(now);
+        end.value   = isoDate(firstNextMonth);
+    }
+
+        updateRangePreview();
+    }
+
+    function updateRangePreview() {
+        const s       = document.getElementById('f_start_ui').value;
+        const e       = document.getElementById('f_end_ui').value;
+        const preview = document.getElementById('range_preview');
+        const text    = document.getElementById('range_text');
+
+        if (s && e) {
+            const startD = new Date(s + 'T00:00:00');
+            const endD   = new Date(e + 'T00:00:00');
+            const diffMs = endD - startD;
+            const days   = Math.round(diffMs / 86400000) + 1;
+
+            if (diffMs < 0) {
+                text.textContent = '⚠ Дата конца раньше начала';
+                text.className   = 'text-sm font-medium text-rose-600';
+            } else {
+                const dStr = days === 1 ? '1 день'
+                           : days  < 5 ? `${days} дня`
+                           : `${days} дней`;
+                text.textContent = `${humanDate(s)} — ${humanDate(e)} · ${dStr}`;
+                text.className   = 'text-sm font-medium text-indigo-700';
+            }
+            preview.classList.remove('hidden');
+        } else {
+            preview.classList.add('hidden');
+        }
+    }
+
+    document.getElementById('f_start_ui').addEventListener('change', updateRangePreview);
+    document.getElementById('f_end_ui').addEventListener('change', updateRangePreview);
+
+    /* ═══════════════════════════════════════════
+       КАТЕГОРИИ
+       ═══════════════════════════════════════════ */
+    const selectedCats = new Set();
+
+    function toggleCat(btn) {
+        const val   = btn.dataset.value;
+        const check = btn.querySelector('.cat-check');
+
+        if (selectedCats.has(val)) {
+            selectedCats.delete(val);
+            btn.classList.remove('active');
+            check.classList.add('opacity-0');
+        } else {
+            selectedCats.add(val);
+            btn.classList.add('active');
+            check.classList.remove('opacity-0');
+        }
+
+        const hint = document.getElementById('cats_hint');
+        if (selectedCats.size === 0) {
+            hint.textContent  = 'Не выбрано — считаются все расходы';
+            hint.className    = 'text-xs text-slate-400 mt-2';
+        } else {
+            hint.textContent  = 'Выбрано: ' + [...selectedCats].join(', ');
+            hint.className    = 'text-xs font-medium text-indigo-600 mt-2';
+        }
+    }
+
+    /* ═══════════════════════════════════════════
+       ДОБАВЛЕНИЕ ЛИМИТА (POST /limits/)
+       ═══════════════════════════════════════════ */
+    async function addLimit() {
+        const name     = document.getElementById('f_name').value.trim();
+        const amount   = parseInt(document.getElementById('f_amount').value);
+        const errorEl  = document.getElementById('f_error');
+        const submitBtn = document.getElementById('submit_btn');
+
+        errorEl.classList.add('hidden');
+
+        /* Валидация */
+        if (!name) {
+    showError(errorEl, '⚠ Введите название антицели');
+    document.getElementById('f_name').focus();
+    return;
+}
+if (!amount || amount < 1) {
+    showError(errorEl, '⚠ Введите сумму больше 0 ₽');
+    document.getElementById('f_amount').focus();
+    return;
+}
+if (selectedCats.size === 0) {
+    showError(errorEl, '⚠ Выберите хотя бы одну категорию');
+    document.getElementById('cat_chips').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+}
+
+        let startIso, endIso, periodValue;
+
+        if (currentMode === 'repeat') {
+            /* Для повторяющегося — генерируем даты текущего периода на клиенте */
+            const { start, end } = getPeriodDates(selectedPeriod);
+            startIso    = isoDate(start);
+            endIso      = isoDate(end);
+            periodValue = selectedPeriod;
+            } else {
+        startIso    = document.getElementById('f_start_ui').value;
+        const endRaw = document.getElementById('f_end_ui').value;
+        periodValue = 'once';
+
+        if (!startIso || !endRaw) {
+            showError(errorEl, '⚠ Укажите даты начала и конца');
+            return;
+        }
+        if (new Date(endRaw) < new Date(startIso)) {
+            showError(errorEl, '⚠ Дата конца раньше даты начала');
+            return;
+        }
+
+        // Сдвигаем end на следующий день (сервер проверяет строго <, не <=)
+        const endDate = new Date(endRaw + 'T00:00:00');
+        endDate.setDate(endDate.getDate() + 1);
+        endIso = isoDate(endDate);
+    }
+
+
+        /* Заполняем скрытые WTForms-поля */
+        document.getElementById('f_period_hidden').value = periodValue;
+        document.getElementById('f_start_hidden').value  = startIso;
+        document.getElementById('f_end_hidden').value    = endIso;
+
+        /* Собираем FormData из всей формы
+           (включает csrf_token, period, start, end от WTForms) */
+        const fd = new FormData(document.getElementById('limit_form'));
+
+        /* Имя и value — добавляем отдельно (они в input, но убедимся) */
+        fd.set('name',  name);
+        fd.set('value', amount);
+
+        /* Категории: удаляем старые значения поля и добавляем выбранные */
+        fd.delete('categories');
+        selectedCats.forEach(c => fd.append('categories', c));
+
+        /* Блокируем кнопку */
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Сохраняем…';
+
+        try {
+            const resp = await fetch('/limits/', {
+                method: 'POST',
+                body:   fd,
+            });
+
+            if (resp.ok) {
+                const data = await resp.json().catch(() => ({}));
+                const newId = data.id ?? Date.now();
+
+                /* Добавляем карточку в DOM */
+                appendCard({
+                    id:     newId,
+                    name:   name,
+                    value:  amount,
+                    spent:  0,
+                    period: currentMode === 'repeat',
+                }, periodValue, startIso, endIso);
+
+                resetForm();
+                updateExceededBadge();
+                showToast('Антицель «' + name + '» добавлена');
+            } else {
+                /* Пробуем прочитать detail из FastAPI */
+                const err = await resp.json().catch(() => ({}));
+                const msg = err.detail
+                    ?? (err.name?.[0])
+                    ?? 'Ошибка сервера — попробуйте снова';
+                showError(errorEl, '⚠ ' + msg);
+                showToast(msg, false);
+            }
+        } catch (e) {
+            showError(errorEl, '⚠ Нет соединения с сервером');
+            showToast('Нет соединения с сервером', false);
+        } finally {
+            submitBtn.disabled    = false;
+            submitBtn.innerHTML   = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                Добавить антицель`;
+        }
+    }
+
+    function showError(el, msg) {
+        el.textContent = msg;
+        el.classList.remove('hidden');
+    }
+
+    /* ═══════════════════════════════════════════
+       ДОБАВЛЕНИЕ КАРТОЧКИ В DOM
+       ═══════════════════════════════════════════ */
+    function barColor(pct) {
+        if (pct >= 100) return 'bg-rose-500';
+        if (pct >= 75)  return 'bg-amber-400';
+        if (pct >= 60)  return 'bg-amber-400';
+        return 'bg-emerald-500';
+    }
+
+    function appendCard(item, periodValue, startIso, endIso) {
+        /* Убираем заглушку «нет антицелей» если она есть */
+        const empty = document.querySelector('#limits_list .col-span-2');
+        if (empty) empty.remove();
+
+        const pct       = 0;
+        const modeBadge = item.period
+            ? `<span class="text-xs font-medium bg-slate-100 text-slate-500
+                            px-2 py-0.5 rounded-full">🔁 повторяющийся</span>`
+            : `<span class="text-xs font-medium bg-violet-100 text-violet-700
+                            px-2 py-0.5 rounded-full">1️⃣ одноразовый</span>`;
+
+        const periodLine = item.period
+            ? `<p class="text-xs font-medium text-indigo-600 mt-1">
+                   🗓 ${getPeriodLabel(periodValue)} · текущий период
+               </p>`
+            : `<p class="text-xs font-medium text-indigo-600 mt-1">
+                   📅 ${humanDate(startIso)} — ${humanDate(endIso)}
+               </p>`;
+
+        const cats = [...selectedCats];
+        const catBadges = cats.length > 0
+            ? `<span class="text-xs text-slate-400">по:</span>` +
+              cats.map(c =>
+                  `<span class="text-xs font-medium bg-slate-100 text-slate-600
+                                px-2 py-0.5 rounded-full">${c}</span>`
+              ).join('')
+            : `<span class="text-xs text-slate-400">все расходы</span>`;
+
+        const card = document.createElement('div');
+        card.className = 'limit-item bg-white rounded-2xl border border-slate-100 ' +
+                         'p-5 hover:shadow-sm transition group';
+        card.dataset.id     = item.id;
+        card.dataset.name   = item.name;
+        card.dataset.amount = item.value;
+        card.dataset.spent  = item.spent;
+
+        card.innerHTML = `
+            <div class="flex items-start justify-between gap-2 mb-4">
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <p class="text-base font-bold text-slate-900">${item.name}</p>
+                        ${modeBadge}
+                    </div>
+                    ${periodLine}
+                    <div class="flex items-center gap-1.5 mt-2 flex-wrap">${catBadges}</div>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                    <button type="button" onclick="askDel(this)"
+                            class="del-ask w-8 h-8 rounded-xl text-slate-300
+                                   hover:bg-rose-50 hover:text-rose-500
+                                   flex items-center justify-center transition
+                                   opacity-0 group-hover:opacity-100 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862
+                                     a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6
+                                     M1 7h22M9 7V4a2 2 0 012-2h2a2 2 0 012 2v3"/>
+                        </svg>
+                    </button>
+                    <div class="del-confirm hidden flex items-center gap-1">
+                        <span class="text-xs text-rose-600 font-medium whitespace-nowrap">
+                            Удалить?
+                        </span>
+                        <button onclick="confirmDel(this)"
+                                class="text-xs font-semibold bg-rose-500 hover:bg-rose-600
+                                       text-white rounded-lg px-2 py-1.5 cursor-pointer">
+                            Да
+                        </button>
+                        <button onclick="cancelDel(this)"
+                                class="text-xs font-semibold bg-slate-200 hover:bg-slate-300
+                                       text-slate-600 rounded-lg px-2 py-1.5 cursor-pointer">
+                            Нет
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-end justify-between mb-2">
+                <div>
+                    <span class="text-2xl font-bold text-slate-900">0</span>
+                    <span class="text-sm text-slate-400 ml-1">/ ${fmt(item.value)} ₽</span>
+                </div>
+                <span class="text-sm font-bold text-emerald-600">0%</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                <div class="progress-bar h-full rounded-full bg-emerald-500" style="width:0%"></div>
+            </div>
+            <p class="text-xs text-slate-400 mt-1.5">
+                Осталось <span class="font-semibold text-slate-600">${fmt(item.value)} ₽</span>
+            </p>`;
+
+        document.getElementById('limits_list').appendChild(card);
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    /* ═══════════════════════════════════════════
+       СБРОС ФОРМЫ
+       ═══════════════════════════════════════════ */
+    function resetForm() {
+        document.getElementById('f_name').value    = '';
+        document.getElementById('f_amount').value  = '';
+        document.getElementById('f_start_ui').value = '';
+        document.getElementById('f_end_ui').value   = '';
+        document.getElementById('range_preview').classList.add('hidden');
+        document.getElementById('f_error').classList.add('hidden');
+
+        selectedCats.clear();
+        document.querySelectorAll('.cat-chip').forEach(c => {
+            c.classList.remove('active');
+            c.querySelector('.cat-check').classList.add('opacity-0');
+        });
+        document.getElementById('cats_hint').textContent = 'Не выбрано — считаются все расходы';
+        document.getElementById('cats_hint').className   = 'text-xs text-slate-400 mt-2';
+
+        document.querySelectorAll('.preset-btn').forEach(b => {
+            b.classList.remove('bg-indigo-100','text-indigo-700');
+            b.classList.add('bg-slate-100','text-slate-600');
+        });
+    }
+
+    /* ═══════════════════════════════════════════
+       УДАЛЕНИЕ (DELETE /limits/{id})
+       ═══════════════════════════════════════════ */
+    function askDel(btn) {
+        const item = btn.closest('.limit-item');
+        item.querySelector('.del-ask').classList.add('hidden');
+        item.querySelector('.del-confirm').classList.remove('hidden');
+    }
+
+    function cancelDel(btn) {
+        const item = btn.closest('.limit-item');
+        item.querySelector('.del-confirm').classList.add('hidden');
+        item.querySelector('.del-ask').classList.remove('hidden');
+    }
+
+    async function confirmDel(btn) {
+        const item  = btn.closest('.limit-item');
+        const id    = item.dataset.id;
+        const name  = item.dataset.name;
+
+        /* Оптимистично скрываем */
+        item.style.transition = 'opacity .2s, transform .2s';
+        item.style.opacity    = '0';
+        item.style.transform  = 'scale(0.97)';
+
+        try {
+            const resp = await fetch(`/limits/${name}`, { method: 'DELETE' });
+
+            if (resp.ok) {
+                setTimeout(() => {
+                    item.remove();
+                    updateExceededBadge();
+                    /* Показываем заглушку если список пуст */
+                    if (document.querySelectorAll('#limits_list .limit-item').length === 0) {
+                        document.getElementById('limits_list').innerHTML = `
+                            <div class="col-span-2 text-center py-12 text-slate-400">
+                                <p class="text-4xl mb-3">🎯</p>
+                                <p class="text-sm font-medium">Антицелей пока нет — добавьте первую!</p>
+                            </div>`;
+                    }
+                }, 200);
+                showToast('Антицель «' + name + '» удалена');
+            } else {
+                /* Откатываем если сервер отказал */
+                item.style.opacity   = '1';
+                item.style.transform = 'scale(1)';
+                cancelDel(btn);
+                showToast('Не удалось удалить антицель', false);
+            }
+        } catch {
+            item.style.opacity   = '1';
+            item.style.transform = 'scale(1)';
+            cancelDel(btn);
+            showToast('Нет соединения с сервером', false);
+        }
+    }
+
+    /* ═══════════════════════════════════════════
+       БЕЙДЖ ПРЕВЫШЕНИЙ
+       ═══════════════════════════════════════════ */
+    function updateExceededBadge() {
+        let n = 0;
+        document.querySelectorAll('.limit-item').forEach(i => {
+            if (parseInt(i.dataset.spent  || 0) >
+                parseInt(i.dataset.amount || 1)) n++;
+        });
+        const b = document.getElementById('exceeded_badge');
+        if (n > 0) {
+            b.textContent = n + (n === 1 ? ' превышен' : ' превышено');
+            b.classList.remove('hidden');
+        } else {
+            b.classList.add('hidden');
+        }
+    }
+
+    /* ═══════════════════════════════════════════
+       ИНИЦИАЛИЗАЦИЯ
+       ═══════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', () => {
+
+        document.getElementById('f_period_hidden').value = selectedPeriod; // 'month'
+        selectedPeriod = 'month';
+
+        /* Устанавливаем min для дейтпикеров */
+        const today = isoDate(new Date());
+        document.getElementById('f_start_ui').min = today;
+        document.getElementById('f_end_ui').min   = today;
+
+        /* Анимируем прогресс-бары серверных карточек */
+        document.querySelectorAll('.limit-item').forEach(item => {
+            const bar    = item.querySelector('.progress-bar');
+            if (!bar) return;
+            const spent  = parseInt(item.dataset.spent  || 0);
+            const amount = parseInt(item.dataset.amount || 1);
+            const pct    = Math.min(Math.round(spent / amount * 100), 100);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                bar.style.width = pct + '%';
+            }));
+        });
+
+        updateExceededBadge();
+    });
+    console.log('prev_day el:', document.getElementById('prev_day'));
+console.log('getPeriodLabel day:', getPeriodLabel('day'));
+console.log('getPeriodLabel week:', getPeriodLabel('week'));
+console.log('getPeriodLabel month:', getPeriodLabel('month'));
+</script>
+{% endblock %}
+
