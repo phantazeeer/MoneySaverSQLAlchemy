@@ -419,6 +419,11 @@ function applyFilters() {
 
     isFiltered = currentType !== 'all' || currentCats.size > 0;
     document.getElementById('reset_btn').classList.toggle('hidden', !isFiltered);
+    
+    const exportLabel = document.getElementById('export_label');
+    if (exportLabel) {
+        exportLabel.textContent = isFiltered ? 'Экспорт с фильтрами в Excel' : 'Экспорт в Excel';
+    }
 }
 
 function setTypeFilter(type, btn) {
@@ -504,7 +509,18 @@ async function exportToExcel(btn) {
     label.textContent = 'Подготовка...';
 
     try {
-        const response = await fetch(`/user/me/records/excel`, {
+        const params = new URLSearchParams();
+        if (currentType !== 'all') {
+            params.append('operation_type', currentType);
+        }
+        if (currentCats.size > 0) {
+            currentCats.forEach(cat => {
+                params.append('categories', cat);
+            });
+        }
+        const qs = params.toString() ? '?' + params.toString() : '';
+
+        const response = await fetch(`/user/me/records/excel${qs}`, {
             method: 'GET',
         });
 
@@ -540,7 +556,7 @@ async function exportToExcel(btn) {
         btn.disabled = false;
         icon.classList.remove('hidden');
         spinner.classList.add('hidden');
-        label.textContent = 'Экспорт в Excel';
+        label.textContent = isFiltered ? 'Экспорт с фильтрами в Excel' : 'Экспорт в Excel';
     }
 }
 
