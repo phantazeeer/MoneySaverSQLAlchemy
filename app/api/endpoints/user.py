@@ -1,17 +1,19 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Response, status
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Response, status
 from fastapi.responses import StreamingResponse
 
 from app.api.endpoints.costs_and_earnings import CEService, Record
 from app.api.endpoints.costs_and_earnings import get_service as get_ce_service
-from app.api.schemas import User, UserChange, UserLogin, UserRegister
+from app.api.schemas import ExportFilter, User, UserChange, UserLogin, UserRegister
 from app.services import CategoryService, LimitService, UserService
 from app.utils import get_jwt_payload
 from app.utils.dependencies import get_categories_service, get_limit_service
 from app.utils.dependencies import get_user_service as get_service
+from app.utils.logger import get_logger
 
 router = APIRouter(prefix="/user", tags=["Working with user"])
+log = get_logger(__name__)
 
 
 @router.get("/me")
@@ -137,9 +139,10 @@ async def delete_limits(
 async def export(
     user_id: Annotated[int, Depends(get_jwt_payload)],
     service: Annotated[UserService, Depends(get_service)],
+    filters: Annotated[ExportFilter, Query()],
 ) -> StreamingResponse:
     try:
-        table = await service.export_to_excel(user_id)
+        table = await service.export_to_excel(user_id, filters)
         return StreamingResponse(
             table,
             media_type="application/vnd.ms-excel",
