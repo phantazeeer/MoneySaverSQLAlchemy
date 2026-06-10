@@ -9,7 +9,7 @@ discovery.docker "only_server" {
 
     filter {
         name = "name"
-        values = ["^/MoneySaver$"]
+        values = ["^MoneySaverBackend"]
     }
 }
 

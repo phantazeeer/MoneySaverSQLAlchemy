@@ -1,7 +1,8 @@
 from datetime import datetime
 from types import NoneType
+from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 
 class UserRegister(BaseModel):
@@ -41,3 +42,14 @@ class User(BaseModel):
     goal_name: str | None = None
     goal_value: int | None = None
     created_at: datetime
+
+
+class ExportFilter(BaseModel):
+    operation_type: Literal["all", "income", "expense"] = Field(
+        default="all",
+        description="Тип операции для фильтрации: 'all', 'income', 'expense'",
+    )
+    categories: Optional[List[str]] = Field(
+        default=None,
+        description="Список категорий для фильтрации. Передайте 'none' для записей без категории",
+    )

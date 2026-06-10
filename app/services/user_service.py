@@ -4,7 +4,7 @@ from io import BytesIO
 from openpyxl import Workbook
 from sqlalchemy.exc import NoResultFound
 
-from app.api.schemas import Category, User
+from app.api.schemas import Category, ExportFilter, User
 from app.utils import create_token, get_password_hash, verify_password
 from app.utils.logger import get_logger
 from app.utils.uow import IUnitOfWork
@@ -114,15 +114,27 @@ class UserService:
             )
             raise
 
-    async def export_to_excel(self, user_id: int):
+    async def export_to_excel(self, user_id: int, filters: ExportFilter | None = None):
         try:
             async with self.uow:
                 buffer = BytesIO()
                 table = Workbook()
                 ws = table.active
                 ws.append(["№", "Дата", "Время", "Тип операции", "Сумма", "Категория", "Комментарий"])
-                db_records = (await self.uow.records.get_list_by(user_id=user_id)).all()
+
+                filter_kwargs = {"user_id": user_id}
+                if filters:
+                    if filters.operation_type != "all":
+                        filter_kwargs["operation_type"] = int(filters.operation_type == "expense")
+                log.debug("%s, %s, %s", user_id, filter_kwargs, filters)
+                db_records = (await self.uow.records.get_list_by(**filter_kwargs)).all()
+
                 for idx, el in enumerate(db_records):
+                    if filters:
+                        if filters.categories:
+                            cat_name = el.category.name if el.category else "none"
+                            if cat_name not in filters.categories:
+                                continue
                     ws.append(
                         [
                             idx + 1,
@@ -139,3 +151,6 @@ class UserService:
                 return buffer
         except NoResultFound:
             raise Exception("У пользователя нет записей") from None
+        except Exception:
+            log.exception("Exception in export_to_excel user_id=%s, filters=%s", user_id, filters, exc_info=False)
+            raise
