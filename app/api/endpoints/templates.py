@@ -193,7 +193,7 @@ async def statistics(
     if not isinstance(delta, NoneType):
         return RedirectResponse(
             f"/statistics/choose_date?start={(datetime.now(timezone.utc) - timedelta(days=int(delta) * 30)).date()}"
-            f"&end={(datetime.now(timezone.utc)).date()}",
+            f"&end={datetime.now(timezone.utc).date()}",
         )
     try:
         user = await user_service.get_user_by(id=user_id)
@@ -221,11 +221,10 @@ async def statistics_with_delta(
         if not (isinstance(end, NoneType) or isinstance(start, NoneType)):
             try:
                 start = datetime.strptime(start, "%Y-%m-%d")
-                end = datetime.strptime(end, "%Y-%m-%d")
+                end = datetime.strptime(end, "%Y-%m-%d") + timedelta(days=1)
                 if start >= end and datetime.now() < start:
                     raise ValueError
                 image = await ce_service.create_graphics(period=(start, end), user_id=user_id)
-                log.debug(image)
                 return templates.TemplateResponse(
                     request=req,
                     name="statistics.html",
@@ -261,6 +260,7 @@ async def statistics_with_delta(
     except Exception as err:
         if str(err) == "Пользователь не найден":
             raise HTTPException(400, "Пользователь не найден") from None
+        raise
 
 
 @router.get("/control_limits")

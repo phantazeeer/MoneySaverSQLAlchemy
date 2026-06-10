@@ -15,7 +15,7 @@ class UserRepository(BasicRepository):
         try:
             await self.add_one(username=username, email=email, password=password)
         except IntegrityError as err:
-            if "user.email" in str(err):
+            if "user" in str(err) and "email" in str(err):
                 raise ValueError("Почта неуникальна") from None
             raise err
 

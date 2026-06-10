@@ -45,6 +45,8 @@ async def create_user_limit(
     except Exception as err:
         if str(err) == "У пользователя нет этой категории":
             raise HTTPException(400, "У вас нет этой категории") from None
+        if str(err) == "Имя этого лимита занято":
+            raise HTTPException(400, "Имя этого лимита занято") from None
         raise
 
 
