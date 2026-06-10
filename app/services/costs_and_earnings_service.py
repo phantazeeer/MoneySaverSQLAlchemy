@@ -220,22 +220,41 @@ class CostsAndEarningsService:
     async def create_graphics(self, period: tuple[datetime, datetime], user_id: int):
         try:
             async with self.uow:
-                records = [
-                    Record.model_validate(i)
-                    for i in await self.uow.records.get_list_by_date(
-                        start=period[0].replace(tzinfo=timezone.utc),
-                        end=period[1].replace(tzinfo=timezone.utc),
-                        user_id=user_id,
+                db_records = await self.uow.records.get_list_by_date(
+                    start=period[0],
+                    end=period[1],
+                    user_id=user_id,
+                )
+                res = []
+                for record in db_records:
+                    if record.category_id:
+                        category_name = (await self.uow.categories.get_one(id=record.category_id)).name
+                    else:
+                        category_name = None
+                    res.append(
+                        {
+                            "id": record.id,
+                            "user_id": record.user_id,
+                            "operation_type": record.operation_type,
+                            "value": record.value,
+                            "comment": record.comment,
+                            "category": category_name,
+                            "created_at": record.created_at,
+                        },
                     )
-                ]
+                records = [Record.model_validate(i) for i in res]
                 balance = (await self.uow.users.get_one(id=user_id)).balance
                 if not records:
                     return None
 
             now = datetime.now(timezone.utc)
-            if now - records[0].created_at.replace(tzinfo=timezone.utc) < timedelta(days=30):
+            if records[0].created_at.tzinfo is None:
+                now = now.replace(tzinfo=None)
+
+            delta = now - records[0].created_at
+            if delta < timedelta(days=30):
                 x = [i.created_at.date().strftime("%d") for i in records]
-            elif now - records[0].created_at.replace(tzinfo=timezone.utc) <= timedelta(days=360):
+            elif delta <= timedelta(days=360):
                 x = [i.created_at.date().strftime("%d.%m") for i in records]
             else:
                 x = [i.created_at.date().strftime("%d.%m.%Y") for i in records]

@@ -125,6 +125,8 @@ class LimitService:
             except Exception as err:
                 if isinstance(err, ValueError) and str(err) == "Период должен быть день, неделя или месяц":
                     raise err
+                if str(err) == "Имя этого лимита занято":
+                    raise err
                 else:
                     log.exception("Exception in create_limit with CreateLimit=%s", limit, exc_info=False)
                     raise

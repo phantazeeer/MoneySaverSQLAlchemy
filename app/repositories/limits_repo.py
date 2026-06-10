@@ -1,5 +1,5 @@
 from sqlalchemy import delete, insert, select
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from app.db.models import CategoriesLimits, UserLimits
 from app.utils.logger import get_logger
@@ -52,8 +52,11 @@ class LimitsRepository(BasicRepository):
             raise Exception("Такого лимита не существует") from None
 
     async def add_one(self, categories, **kwargs):
-        limit = await super().add_one(**kwargs)
-        await self.session.execute(
-            insert(CategoriesLimits),
-            [{"limit_id": limit.id, "categ_id": i} for i in categories],
-        )
+        try:
+            limit = await super().add_one(**kwargs)
+            await self.session.execute(
+                insert(CategoriesLimits),
+                [{"limit_id": limit.id, "categ_id": i} for i in categories],
+            )
+        except IntegrityError:
+            raise Exception("Имя этого лимита занято") from None

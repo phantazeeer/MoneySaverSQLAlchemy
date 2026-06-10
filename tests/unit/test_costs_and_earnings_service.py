@@ -256,22 +256,13 @@ async def test_create_graphics_with_records_less_30_days(service, uow_mock):
     # Подготовка данных
     now = datetime(2023, 2, 1, tzinfo=timezone.utc)
 
-    uow_mock.records.get_list_by_date.return_value = [
-        {
-            "id": 1,
-            "user_id": 1,
-            "operation_type": bool(0),
-            "value": 100,
-            "created_at": datetime(2023, 1, 15, tzinfo=timezone.utc),
-        },
-        {
-            "id": 2,
-            "user_id": 1,
-            "operation_type": bool(1),
-            "value": 30,
-            "created_at": datetime(2023, 1, 20, tzinfo=timezone.utc),
-        },
-    ]
+    rec1 = MagicMock(id=1, user_id=1, operation_type=False, value=100,
+                     created_at=datetime(2023, 1, 15, tzinfo=timezone.utc),
+                     category_id=None, comment="c1")
+    rec2 = MagicMock(id=2, user_id=1, operation_type=True, value=30,
+                     created_at=datetime(2023, 1, 20, tzinfo=timezone.utc),
+                     category_id=None, comment="c2")
+    uow_mock.records.get_list_by_date.return_value = [rec1, rec2]
 
     user_mock = AsyncMock(balance=1000)
     uow_mock.users.get_one.return_value = user_mock
@@ -282,7 +273,6 @@ async def test_create_graphics_with_records_less_30_days(service, uow_mock):
             mock_fig = MagicMock()
             mock_ax = MagicMock()
             mock_plt.subplots.return_value = (mock_fig, mock_ax)
-
             with patch("app.services.costs_and_earnings_service.base64.b64encode") as mock_b64:
                 mock_b64.return_value = b"encoded_string"
                 result = await service.create_graphics(
@@ -290,64 +280,62 @@ async def test_create_graphics_with_records_less_30_days(service, uow_mock):
                     user_id=1,
                 )
 
-    mock_plt.subplots.assert_called_once()
-    mock_ax.plot.assert_called_once()
-    args, _ = mock_ax.plot.call_args
-    assert args[0] == ["15", "20"]
-    assert len(args[1]) == 2
-    mock_plt.savefig.assert_called_once()
-    mock_plt.close.assert_called_once()
-    mock_b64.assert_called_once()
+        mock_plt.subplots.assert_called_once()
+        mock_ax.plot.assert_called_once()
+        args, _ = mock_ax.plot.call_args
+        assert args[0] == ["15", "20"]
+        assert args[1] == [930, 1030]
+        mock_plt.savefig.assert_called_once()
+        mock_plt.close.assert_called_once()
+        mock_b64.assert_called_once()
     assert result == "encoded_string"
 
 
 async def test_create_graphics_between_30_and_360_days(service, uow_mock):
     now = datetime(2023, 12, 1, tzinfo=timezone.utc)
-    uow_mock.records.get_list_by_date.return_value = [
-        {
-            "id": 1,
-            "user_id": 1,
-            "operation_type": bool(0),
-            "value": 50,
-            "created_at": datetime(2023, 6, 15, tzinfo=timezone.utc),
-        },
-    ]
+    rec1 = MagicMock(id=1, user_id=1, operation_type=False, value=50,
+                     created_at=datetime(2023, 6, 15, tzinfo=timezone.utc),
+                     category_id=None, comment="c1")
+    uow_mock.records.get_list_by_date.return_value = [rec1]
     uow_mock.users.get_one.return_value = AsyncMock(balance=500)
 
     with patch("app.services.costs_and_earnings_service.datetime") as mock_datetime:
         mock_datetime.now.return_value = now
         with patch("app.services.costs_and_earnings_service.plt") as mock_plt:
-            mock_plt.subplots.return_value = (MagicMock(), MagicMock())
-            with patch("app.services.costs_and_earnings_service.base64.b64encode", return_value=b"img"):
+            mock_fig = MagicMock()
+            mock_ax = MagicMock()
+            mock_plt.subplots.return_value = (mock_fig, mock_ax)
+            with patch("app.services.costs_and_earnings_service.base64.b64encode") as mock_b64:
+                mock_b64.return_value = b"img"
                 await service.create_graphics(
                     period=(datetime(2023, 1, 1), datetime(2023, 12, 31)),
                     user_id=1,
                 )
-    args, _ = mock_plt.subplots.return_value[1].plot.call_args
+    args, _ = mock_ax.plot.call_args
     assert args[0] == ["15.06"]
+    assert args[1] == [450]
 
 
 async def test_create_graphics_more_than_360_days(service, uow_mock):
     now = datetime(2025, 1, 1, tzinfo=timezone.utc)
-    uow_mock.records.get_list_by_date.return_value = [
-        {
-            "id": 1,
-            "user_id": 1,
-            "operation_type": bool(1),
-            "value": 20,
-            "created_at": datetime(2023, 1, 1, tzinfo=timezone.utc),
-        },
-    ]
+    rec1 = MagicMock(id=1, user_id=1, operation_type=True, value=20,
+                     created_at=datetime(2023, 1, 1, tzinfo=timezone.utc),
+                     category_id=None, comment="c1")
+    uow_mock.records.get_list_by_date.return_value = [rec1]
     uow_mock.users.get_one.return_value = AsyncMock(balance=100)
 
     with patch("app.services.costs_and_earnings_service.datetime") as mock_datetime:
         mock_datetime.now.return_value = now
         with patch("app.services.costs_and_earnings_service.plt") as mock_plt:
-            mock_plt.subplots.return_value = (MagicMock(), MagicMock())
-            with patch("app.services.costs_and_earnings_service.base64.b64encode", return_value=b"img"):
+            mock_fig = MagicMock()
+            mock_ax = MagicMock()
+            mock_plt.subplots.return_value = (mock_fig, mock_ax)
+            with patch("app.services.costs_and_earnings_service.base64.b64encode") as mock_b64:
+                mock_b64.return_value = b"img"
                 await service.create_graphics(
                     period=(datetime(2023, 1, 1), datetime(2025, 1, 1)),
                     user_id=1,
                 )
-    args, _ = mock_plt.subplots.return_value[1].plot.call_args
+    args, _ = mock_ax.plot.call_args
     assert args[0] == ["01.01.2023"]
+    assert args[1] == [120]
