@@ -256,8 +256,12 @@ async def test_create_graphics_with_records_less_30_days(service, uow_mock):
     # Подготовка данных
     now = datetime(2023, 2, 1, tzinfo=timezone.utc)
 
-    rec1 = MagicMock(id=1, user_id=1, operation_type=False, value=100, created_at=datetime(2023, 1, 15, tzinfo=timezone.utc), category_id=None, comment="c1")
-    rec2 = MagicMock(id=2, user_id=1, operation_type=True, value=30, created_at=datetime(2023, 1, 20, tzinfo=timezone.utc), category_id=None, comment="c2")
+    rec1 = MagicMock(id=1, user_id=1, operation_type=False, value=100,
+                     created_at=datetime(2023, 1, 15, tzinfo=timezone.utc),
+                     category_id=None, comment="c1")
+    rec2 = MagicMock(id=2, user_id=1, operation_type=True, value=30,
+                     created_at=datetime(2023, 1, 20, tzinfo=timezone.utc),
+                     category_id=None, comment="c2")
     uow_mock.records.get_list_by_date.return_value = [rec1, rec2]
 
     user_mock = AsyncMock(balance=1000)
@@ -289,7 +293,9 @@ async def test_create_graphics_with_records_less_30_days(service, uow_mock):
 
 async def test_create_graphics_between_30_and_360_days(service, uow_mock):
     now = datetime(2023, 12, 1, tzinfo=timezone.utc)
-    rec1 = MagicMock(id=1, user_id=1, operation_type=False, value=50, created_at=datetime(2023, 6, 15, tzinfo=timezone.utc), category_id=None, comment="c1")
+    rec1 = MagicMock(id=1, user_id=1, operation_type=False, value=50,
+                     created_at=datetime(2023, 6, 15, tzinfo=timezone.utc),
+                     category_id=None, comment="c1")
     uow_mock.records.get_list_by_date.return_value = [rec1]
     uow_mock.users.get_one.return_value = AsyncMock(balance=500)
 
@@ -312,7 +318,9 @@ async def test_create_graphics_between_30_and_360_days(service, uow_mock):
 
 async def test_create_graphics_more_than_360_days(service, uow_mock):
     now = datetime(2025, 1, 1, tzinfo=timezone.utc)
-    rec1 = MagicMock(id=1, user_id=1, operation_type=True, value=20, created_at=datetime(2023, 1, 1, tzinfo=timezone.utc), category_id=None, comment="c1")
+    rec1 = MagicMock(id=1, user_id=1, operation_type=True, value=20,
+                     created_at=datetime(2023, 1, 1, tzinfo=timezone.utc),
+                     category_id=None, comment="c1")
     uow_mock.records.get_list_by_date.return_value = [rec1]
     uow_mock.users.get_one.return_value = AsyncMock(balance=100)
 
