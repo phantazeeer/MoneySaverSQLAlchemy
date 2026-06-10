@@ -1,5 +1,5 @@
 from sqlalchemy import delete, insert, select
-from sqlalchemy.exc import NoResultFound, IntegrityError
+from sqlalchemy.exc import IntegrityError, NoResultFound
 
 from app.db.models import CategoriesLimits, UserLimits
 from app.utils.logger import get_logger

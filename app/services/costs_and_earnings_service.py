@@ -240,7 +240,7 @@ class CostsAndEarningsService:
                             "comment": record.comment,
                             "category": category_name,
                             "created_at": record.created_at,
-                        }
+                        },
                     )
                 records = [Record.model_validate(i) for i in res]
                 balance = (await self.uow.users.get_one(id=user_id)).balance
