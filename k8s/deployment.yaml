@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: moneysaver-api
+spec:
+  selector:
+    app: moneysaver-api
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moneysaver-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: moneysaver-api
+  template:
+    metadata:
+      labels:
+        app: moneysaver-api
+    spec:
+      imagePullSecrets:
+      - name: dockerhub-secret
+      containers:
+      - name: fastapi-container
+        image: phantazeeer/moneysaver:python-app
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: moneysaver-config
+        - secretRef:
+            name: moneysaver-secret
+        readinessProbe:
+          httpGet:
+            path: "/healthcheck/readiness"
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+          timeoutSeconds: 3
+
+        livenessProbe:
+          httpGet:
+            path: "/healthcheck/liveness"
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          failureThreshold: 3
+          timeoutSeconds: 5

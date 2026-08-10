@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration-job
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: alembic-migration
+        image: phantazeeer/moneysaver:python-app
+        command: ["uv", "run", "alembic", "upgrade", "head"]
+        envFrom:
+        - configMapRef:
+            name: moneysaver-config
+        - secretRef:
+            name: moneysaver-secret
+      imagePullSecrets:
+      - name: dockerhub-secret

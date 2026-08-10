@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: moneysaver-db
+spec:
+  clusterIP: None
+  ports:
+  - port: 5432
+  selector:
+    app: moneysaver-db
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: moneysaver-db
+spec:
+  serviceName: "moneysaver-db"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: moneysaver-db
+  template:
+    metadata:
+      labels:
+        app: moneysaver-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: moneysaver-secret
+              key: DB_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: moneysaver-secret
+              key: DB_PASS
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: moneysaver-secret
+              key: DB_NAME
+        volumeMounts:
+        - name: pg-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: pg-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi

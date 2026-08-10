@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: moneysaver-config
+data:
+  ENVIRONMENT: "production"
+  DB_HOST: "moneysaver-db"
+  DB_PORT: "5432"
+  LOG_LEVEL: "INFO"
+  LOG_FILE: "app.log"
+  ENCRYPT_ALG: "HS256"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: moneysaver-secret
+type: Opaque
+stringData:
+  DB_USER: "postgres"
+  DB_PASS: "SuperSecretPassword"
+  DB_NAME: "moneysaver"
+  JWT_SECRET_KEY: "some_loooooooooooooooooooooooooong_secret"
+  ACCESS_TOKEN_LT: "100000"
