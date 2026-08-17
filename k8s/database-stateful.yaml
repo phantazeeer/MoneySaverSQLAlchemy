@@ -54,6 +54,9 @@ spec:
       name: pg-data
     spec:
       accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "local-path"
       resources:
         requests:
+          storage: 10Gi
+        limits:
           storage: 10Gi
